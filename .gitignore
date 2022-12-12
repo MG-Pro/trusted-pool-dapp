@@ -33,10 +33,18 @@ yarn-error.log
 .sass-cache/
 /connect.lock
 /coverage
+/coverage.json
 /libpeerconnection.log
 testem.log
 /typings
+.env
 
 # System files
 .DS_Store
 Thumbs.db
+
+#Hardhat files
+cache
+artifacts
+typechain
+typechain-types
