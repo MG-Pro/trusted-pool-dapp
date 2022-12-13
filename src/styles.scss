@@ -1,1 +1,18 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bs-body-font-family: Roboto, sans-serif;
+  --app-bg: #1c0b44;
+  --app-font-color: #dad3da;
+}
+
+.main-layout {
+  background:var(--app-bg);
+  color: var(--app-font-color);
+}
+
+a {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
