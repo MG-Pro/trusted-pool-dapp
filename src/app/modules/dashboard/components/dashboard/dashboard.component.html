@@ -1,5 +1,9 @@
 <ng-container>
-  <app-header class="mb-auto"></app-header>
+  <app-header
+    [connected]="connected"
+    (connectWallet)="onConnectWallet()"
+    class="mb-auto"
+  ></app-header>
   <main class="content">
     <div class="container">content</div>
   </main>

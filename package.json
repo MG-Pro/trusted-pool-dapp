@@ -38,6 +38,8 @@
     "@types/jasmine": "~4.3.0",
     "dotenv": "^16.0.0",
     "hardhat": "^2.12.4",
+    "hardhat-abi-exporter": "^2.10.1",
+    "hardhat-address-exporter": "^0.0.4",
     "jasmine-core": "~4.5.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.1.0",

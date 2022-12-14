@@ -2,7 +2,9 @@
   <div class="container">
     <p class="fs-2 mb-0">TrustedPoolDapp</p>
     <div class="mr-auto">
-      <button class="btn btn-warning" (click)="onConnectWallet()">Connect Wallet</button>
+      <button *ngIf="!connected" class="btn btn-warning" (click)="onConnectWallet()">
+        Connect Wallet
+      </button>
     </div>
   </div>
 </ng-container>
