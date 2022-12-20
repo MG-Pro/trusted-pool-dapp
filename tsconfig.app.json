@@ -3,7 +3,6 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ES2020",
-    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./out-tsc/app",
     "types": []

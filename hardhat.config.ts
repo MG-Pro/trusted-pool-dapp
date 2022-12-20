@@ -7,14 +7,14 @@ import * as path from 'path'
 const config: HardhatUserConfig = {
   solidity: '0.8.17',
   abiExporter: {
-    path: './src/app/abi',
+    path: path.resolve('./src/app/contracts'),
     runOnCompile: true,
     spacing: 2,
     pretty: false,
     clear: true,
   },
   addressExporter: {
-    outDir: path.resolve('./src/app/addresses'),
+    outDir: path.resolve('./src/app/contracts/addresses'),
     runPrettier: true,
   },
 }
