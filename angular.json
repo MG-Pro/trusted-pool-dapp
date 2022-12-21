@@ -25,6 +25,9 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "allowedCommonJsDependencies": [
+              "bn.js", "aes-js","scrypt-js", "js-sha3", "bech32", "hash.js"
+            ],
             "assets": [
               "src/favicon.ico",
               "src/assets"

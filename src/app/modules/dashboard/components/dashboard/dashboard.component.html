@@ -1,6 +1,6 @@
-<ng-container>
+<ng-container *ngIf="{ connectionState: connectionState$ | async } as params">
   <app-header
-    [connected]="connected"
+    [connected]="params.connectionState.connected"
     (connectWallet)="onConnectWallet()"
     class="mb-auto"
   ></app-header>
