@@ -4,11 +4,18 @@ import { RouterModule, Routes } from '@angular/router'
 import { DashboardComponent } from './components/dashboard/dashboard.component'
 import { HeaderModule } from '../header/header.module'
 import { FooterModule } from '../footer/footer.module'
+import { NotificationModule } from '../notification/notification.module'
 
 const routes: Routes = [{ path: '', component: DashboardComponent }]
 
 @NgModule({
   declarations: [DashboardComponent],
-  imports: [CommonModule, HeaderModule, FooterModule, RouterModule.forChild(routes)],
+  imports: [
+    CommonModule,
+    HeaderModule,
+    FooterModule,
+    RouterModule.forChild(routes),
+    NotificationModule,
+  ],
 })
 export class DashboardModule {}

@@ -23,10 +23,6 @@ export class DashboardComponent implements OnInit {
   public async ngOnInit(): Promise<void> {}
 
   public async onConnectWallet(): Promise<void> {
-    const mm: Metamask = (window as any).ethereum
-    if (!mm) {
-      return
-    }
-    this.connectionService.connect(mm)
+    this.connectionService.connect()
   }
 }

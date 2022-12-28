@@ -6,6 +6,9 @@ import { ContractAddresses } from '../contracts/addresses/addresses'
 import { allowedNetworks } from '../settings'
 import { TrustedPool } from '../../../typechain-types'
 import abi from '../contracts/contracts/TrustedPool.sol/TrustedPool.json'
+import { Network } from '@ethersproject/networks'
+import detectEthereumProvider from '@metamask/detect-provider'
+import { Metamask } from '../types/metamask'
 
 @Injectable({
   providedIn: 'root',
@@ -20,11 +23,13 @@ export class ConnectionService {
 
   constructor() {}
 
-  public async connect(wallet: ethers.providers.ExternalProvider): Promise<void> {
+  public async connect(): Promise<void> {
+    const wallet: Metamask = await detectEthereumProvider()
     if (!wallet) {
       return
     }
-    this.provider = new ethers.providers.Web3Provider(wallet)
+    console.log(wallet)
+    this.provider = new ethers.providers.Web3Provider(wallet, 'any')
     await this.provider.getNetwork()
 
     this.setListeners(wallet)
@@ -54,6 +59,11 @@ export class ConnectionService {
     this.state$.next({ ...this.state$.value, ...state })
   }
 
+  private async checkConnection(): Promise<void> {
+    const accounts = await this.provider.send('eth_accounts', [])
+    console.log(accounts)
+  }
+
   private checkNetwork(): boolean {
     return this.allowedNetworks.includes(this.provider.network.chainId)
   }
@@ -63,12 +73,13 @@ export class ConnectionService {
   }
 
   private setListeners(wallet): void {
-    wallet.on('accountsChanged', (v) => {
-      console.log('accountsChanged', v)
+    wallet.on('accountsChanged', (accounts) => {
+      console.log('accountsChanged', accounts)
     })
 
-    this.provider.on('chainChanged', (v) => {
-      console.log('chainChanged', parseInt(v, 16))
+    // @ts-ignore
+    this.provider.on('network', async (network: Network, oldNetwork: Network) => {
+      await this.provider.getNetwork()
       console.log(this.checkNetwork())
     })
   }

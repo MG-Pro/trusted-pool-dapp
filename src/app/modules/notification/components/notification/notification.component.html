@@ -1,0 +1,3 @@
+<ng-container *ngIf="{ messages: messages$ | async } as params">
+  <p *ngFor="let message of params.messages">{{ message }}</p>
+</ng-container>
