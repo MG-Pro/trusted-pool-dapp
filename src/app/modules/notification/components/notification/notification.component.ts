@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core'
 import { NotificationService } from '../../services/notification.service'
-import { filter, map, Observable } from 'rxjs'
+import { map, Observable } from 'rxjs'
 import { MessageData } from '../../types/notification.types'
 
 @Component({
@@ -10,23 +10,27 @@ import { MessageData } from '../../types/notification.types'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationComponent {
-  @Input() id: number
+  @Input() id: string
 
-  public messages$: Observable<string[]> = this.notificationService.messageData$.pipe(
-    map((data) => {
-      return Array.from(data).map((value) => value[1])
-    }),
-    filter((messageData: MessageData[]) => {
-      return messageData.some((item) => {
+  public messages$: Observable<MessageData[]> = this.notificationService.messageData$.pipe(
+    map((messagesMap) => {
+      const messages: MessageData[] = []
+      messagesMap.forEach((item) => {
         if (!this.id) {
-          return true
-        } else if (this.id === item.outId) {
-          return true
+          messages.push(item)
+          return
         }
-        return false
+
+        if (!item.outId || this.id === item.outId) {
+          messages.push(item)
+        }
       })
-    }),
-    map((data) => data.map(({ message }) => message))
+      return messages
+    })
   )
   constructor(private notificationService: NotificationService) {}
+
+  public close(id: number): void {
+    this.notificationService.hideMessage(id)
+  }
 }

@@ -9,6 +9,8 @@ import abi from '../contracts/contracts/TrustedPool.sol/TrustedPool.json'
 import { Network } from '@ethersproject/networks'
 import detectEthereumProvider from '@metamask/detect-provider'
 import { Metamask } from '../types/metamask'
+import { NotificationService } from '../modules/notification/services/notification.service'
+import { StatusClasses } from '../modules/notification/types/notification.types'
 
 @Injectable({
   providedIn: 'root',
@@ -21,14 +23,16 @@ export class ConnectionService {
   private trustedPoolContract: TrustedPool
   private allowedNetworks: number[] = allowedNetworks
 
-  constructor() {}
+  constructor(private notificationService: NotificationService) {
+    this.notificationService.showMessage('Connected!', null, '1', 1000 * 60)
+  }
 
   public async connect(): Promise<void> {
     const wallet: Metamask = await detectEthereumProvider()
     if (!wallet) {
       return
     }
-    console.log(wallet)
+
     this.provider = new ethers.providers.Web3Provider(wallet, 'any')
     await this.provider.getNetwork()
 
@@ -39,7 +43,9 @@ export class ConnectionService {
 
     await this.provider.send('eth_requestAccounts', [])
     const signer: Signer = this.provider.getSigner()
-    console.log(await signer.getAddress())
+
+    this.notificationService.showMessage(await signer.getAddress(), StatusClasses.danger, '1')
+
     const address: string = this.getContractAddress()
     this.trustedPoolContract = new ethers.Contract(address, abi, this.provider) as TrustedPool
 
@@ -77,8 +83,7 @@ export class ConnectionService {
       console.log('accountsChanged', accounts)
     })
 
-    // @ts-ignore
-    this.provider.on('network', async (network: Network, oldNetwork: Network) => {
+    this.provider.on('network', async () => {
       await this.provider.getNetwork()
       console.log(this.checkNetwork())
     })
