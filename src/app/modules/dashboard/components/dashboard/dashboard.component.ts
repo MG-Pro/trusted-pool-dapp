@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
-import { Metamask } from '../../../../types/metamask'
-import { ConnectionService } from '../../../../servises/connection.service'
 import { Observable, tap } from 'rxjs'
+
+import { ConnectionService } from '../../../../servises/connection.service'
 import { GlobalState } from '../../../../types/global-state'
 
 @Component({
@@ -11,16 +11,19 @@ import { GlobalState } from '../../../../types/global-state'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
+  @HostBinding('class') private readonly classes = 'main-layout d-flex h-100 mx-auto flex-column '
+
   public connectionState$: Observable<GlobalState> = this.connectionService.state$.pipe(
     tap((s) => {
       console.log(s)
-    })
+    }),
   )
-  @HostBinding('class') private readonly classes = 'main-layout d-flex h-100 mx-auto flex-column '
 
   constructor(private connectionService: ConnectionService) {}
 
-  public async ngOnInit(): Promise<void> {}
+  public async ngOnInit(): Promise<void> {
+    console.log()
+  }
 
   public async onConnectWallet(): Promise<void> {
     this.connectionService.connect()

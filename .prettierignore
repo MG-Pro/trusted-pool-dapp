@@ -1,0 +1,6 @@
+package.json
+package-lock.json
+dist
+coverage
+.vscode/*
+/projects/data/src/api-clients/

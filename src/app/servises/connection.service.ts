@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core'
-import { BehaviorSubject, from, Observable } from 'rxjs'
-import { GlobalState } from '../types/global-state'
-import { ethers, Signer } from 'ethers'
-import { ContractAddresses } from '../contracts/addresses/addresses'
-import { allowedNetworks } from '../settings'
-import { TrustedPool } from '../../../typechain-types'
-import abi from '../contracts/contracts/TrustedPool.sol/TrustedPool.json'
-import { Network } from '@ethersproject/networks'
 import detectEthereumProvider from '@metamask/detect-provider'
-import { Metamask } from '../types/metamask'
+import { ethers, Signer } from 'ethers'
+import { BehaviorSubject, from, Observable } from 'rxjs'
+
+import { TrustedPool } from '../../../typechain-types'
+import { ContractAddresses } from '../contracts/addresses/addresses'
+import abi from '../contracts/contracts/TrustedPool.sol/TrustedPool.json'
 import { NotificationService } from '../modules/notification/services/notification.service'
 import { StatusClasses } from '../modules/notification/types/notification.types'
+import { allowedNetworks } from '../settings'
+import { GlobalState } from '../types/global-state'
+import { Metamask } from '../types/metamask'
 
 @Injectable({
   providedIn: 'root',

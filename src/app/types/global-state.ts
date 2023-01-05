@@ -1,4 +1,5 @@
 import { ethers } from 'ethers'
+
 import { TrustedPool } from '../../../typechain-types'
 
 export interface GlobalState {

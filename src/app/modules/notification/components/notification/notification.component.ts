@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core'
-import { NotificationService } from '../../services/notification.service'
 import { map, Observable } from 'rxjs'
+
+import { NotificationService } from '../../services/notification.service'
 import { MessageData } from '../../types/notification.types'
 
 @Component({
@@ -26,7 +27,7 @@ export class NotificationComponent {
         }
       })
       return messages
-    })
+    }),
   )
   constructor(private notificationService: NotificationService) {}
 

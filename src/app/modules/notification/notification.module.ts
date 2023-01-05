@@ -1,5 +1,6 @@
-import { NgModule } from '@angular/core'
 import { CommonModule } from '@angular/common'
+import { NgModule } from '@angular/core'
+
 import { NotificationComponent } from './components/notification/notification.component'
 
 @NgModule({

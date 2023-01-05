@@ -1,6 +1,9 @@
+import { MessageData, StatusClasses } from '../types/notification.types'
 import { Injectable } from '@angular/core'
 import { BehaviorSubject, first, timer } from 'rxjs'
-import { MessageData, StatusClasses } from '../types/notification.types'
+
+
+
 
 @Injectable({
   providedIn: 'root',
