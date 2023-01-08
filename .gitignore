@@ -38,6 +38,8 @@ yarn-error.log
 testem.log
 /typings
 .env
+.husky
+.angular
 
 # System files
 .DS_Store

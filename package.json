@@ -77,8 +77,11 @@
     }
   },
   "lint-staged": {
-    "{**/*,*}.{js,ts,jsx,tsx,sol,html,json}": [
+    "{**/*,*}.{js,ts,jsx,tsx,html}": [
       "eslint --fix"
+    ],
+    "{**/*,*}.{sol,json}": [
+      "prettier --write"
     ]
   }
 }

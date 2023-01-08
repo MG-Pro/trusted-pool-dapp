@@ -15,7 +15,7 @@ export class DashboardComponent implements OnInit {
 
   public connectionState$: Observable<GlobalState> = this.connectionService.state$.pipe(
     tap((s) => {
-      console.log(s)
+      console.log('f', s)
     }),
   )
 
