@@ -14,9 +14,10 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
-  @HostBinding('class') private classes = 'navbar sticky-top d-flex'
   @Input() public connected = false
   @Output() public connectWallet = new EventEmitter<void>()
+
+  @HostBinding('class') private readonly classes = 'navbar sticky-top d-flex'
 
   public onConnectWallet(): void {
     this.connectWallet.emit()

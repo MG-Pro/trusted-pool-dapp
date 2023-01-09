@@ -22,26 +22,29 @@ export class ConnectionService {
   private provider: ethers.providers.Web3Provider
   private trustedPoolContract: TrustedPool
   private allowedNetworks: number[] = allowedNetworks
+  private wallet: Metamask
 
   constructor(private notificationService: NotificationService) {
-    this.notificationService.showMessage('Connected!', null, '1', 1000 * 60)
+    this.init()
   }
 
   public async connect(): Promise<void> {
-    const wallet: Metamask = await detectEthereumProvider()
-    if (!wallet) {
+    if (!this.wallet?.isMetaMask) {
+      this.notificationService.showMessage('Set up Metamask wallet', StatusClasses.danger, '1')
       return
     }
 
-    this.provider = new ethers.providers.Web3Provider(wallet, 'any')
-    await this.provider.getNetwork()
-
-    this.setListeners(wallet)
     if (!this.checkNetwork()) {
+      this.notificationService.showMessage(
+        'App does`t work on this network',
+        StatusClasses.danger,
+        '1',
+      )
       return
     }
 
-    await this.provider.send('eth_requestAccounts', [])
+    const accs = await this.provider.send('eth_requestAccounts', [])
+    console.log(accs)
     const signer: Signer = this.provider.getSigner()
 
     this.notificationService.showMessage(await signer.getAddress(), StatusClasses.danger, '1')
@@ -57,8 +60,20 @@ export class ConnectionService {
     })
   }
 
+  // public async disconnect(): Promise<void> {
+  //   await this.provider.send('wallet_requestPermissions', [])
+  // }
+
   public getData(): Observable<string> {
     return from(this.state$.value?.trustedPoolContract.getData())
+  }
+
+  private async init(): Promise<void> {
+    this.wallet = await detectEthereumProvider()
+    this.provider = new ethers.providers.Web3Provider(this.wallet, 'any')
+    await this.provider.getNetwork()
+
+    this.setListeners()
   }
 
   private patchState(state: Partial<GlobalState>): void {
@@ -78,14 +93,17 @@ export class ConnectionService {
     return ContractAddresses[this.provider.network.chainId].TrustedPool
   }
 
-  private setListeners(wallet): void {
-    wallet.on('accountsChanged', (accounts) => {
+  private setListeners(): void {
+    this.wallet.on('accountsChanged', (accounts) => {
       console.log('accountsChanged', accounts)
+      this.checkConnection()
     })
 
     this.provider.on('network', async () => {
       await this.provider.getNetwork()
-      console.log(this.checkNetwork())
+      this.patchState({
+        connected: this.checkNetwork(),
+      })
     })
   }
 }
