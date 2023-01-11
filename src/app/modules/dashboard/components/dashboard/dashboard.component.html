@@ -1,11 +1,11 @@
 <ng-container *ngIf="{ connectionState: connectionState$ | async } as params">
   <app-header
-    [connected]="params.connectionState.connected"
+    [connected]="params.connectionState.userConnected"
     (connectWallet)="onConnectWallet()"
     class="mb-auto"
   ></app-header>
   <main class="content pt-3 pb-3">
-    <app-notification id="1"></app-notification>
+    <app-notification id="main"></app-notification>
     <div class="container">content</div>
   </main>
   <app-footer class="mt-auto"></app-footer>
