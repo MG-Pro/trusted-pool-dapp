@@ -30,15 +30,17 @@ export class ConnectionService {
 
   public async connect(): Promise<void> {
     if (!this.wallet?.isMetaMask) {
-      this.notificationService.showMessage('Install Metamask wallet', StatusClasses.danger, 'main')
-      return
+      return this.notificationService.showMessage(
+        'Please, install Metamask wallet',
+        StatusClasses.danger,
+        'main',
+      )
     }
 
     if (!this.checkNetwork()) {
       return this.wrongNetworkMessage()
     }
-
-    const accounts = await this.checkConnection()
+    const accounts = await this.getAccountConnection()
 
     if (!accounts.length) {
       return this.wrongAccountMessage()
@@ -59,26 +61,70 @@ export class ConnectionService {
     return from(this.state$.value?.trustedPoolContract.getData())
   }
 
+  public disconnect(): void {
+    this.patchState({
+      userConnected: false,
+    })
+  }
+
   private async init(): Promise<void> {
     this.wallet = await detectEthereumProvider()
     this.provider = new ethers.providers.Web3Provider(this.wallet, 'any')
-
     await this.provider.getNetwork()
+    const accounts = await this.provider.send('eth_accounts', [])
+
     this.patchState({
       networkConnected: true,
       chainId: this.provider.network.chainId,
       provider: this.provider,
     })
     this.setListeners()
-    await this.connect()
+
+    if (accounts.length) {
+      await this.connect()
+    }
   }
 
   private patchState(state: Partial<GlobalState>): void {
     this.state$.next({ ...this.state$.value, ...state })
   }
 
-  private async checkConnection(): Promise<string[]> {
+  private async getAccountConnection(): Promise<string[]> {
     return this.provider.send('eth_requestAccounts', [])
+  }
+
+  private checkNetwork(): boolean {
+    return this.allowedNetworks.includes(this.provider.network?.chainId)
+  }
+
+  private getContractAddress(): string {
+    return ContractAddresses[this.provider.network.chainId].TrustedPool
+  }
+
+  private setListeners(): void {
+    this.wallet.on('accountsChanged', (accounts: string[]) => {
+      console.log('accountsChanged', accounts)
+      if (accounts.length) {
+        this.connect()
+      } else {
+        this.disconnect()
+        this.wrongAccountMessage()
+      }
+    })
+
+    this.provider.on('network', async () => {
+      console.log('network')
+      await this.provider.getNetwork()
+      const isRightNetwork = this.checkNetwork()
+      this.patchState({
+        networkConnected: isRightNetwork,
+        userConnected: isRightNetwork,
+      })
+      if (!isRightNetwork) {
+        return this.wrongNetworkMessage()
+      }
+      await this.connect()
+    })
   }
 
   private wrongNetworkMessage(name: string = ''): void {
@@ -93,37 +139,5 @@ export class ConnectionService {
       StatusClasses.danger,
       'main',
     )
-  }
-
-  private checkNetwork(): boolean {
-    return this.allowedNetworks.includes(this.provider.network.chainId)
-  }
-
-  private getContractAddress(): string {
-    return ContractAddresses[this.provider.network.chainId].TrustedPool
-  }
-
-  private setListeners(): void {
-    this.wallet.on('accountsChanged', (accounts: string[]) => {
-      console.log('accountsChanged', accounts)
-      this.checkConnection()
-    })
-
-    this.provider.on('network', async () => {
-      console.log('network')
-      await this.provider.getNetwork()
-      const isRightNetwork = this.checkNetwork()
-      this.patchState({
-        networkConnected: isRightNetwork,
-      })
-      if (!isRightNetwork) {
-        return this.wrongNetworkMessage()
-      }
-      await this.connect()
-    })
-
-    // this.wallet.on('disconnect', (error: ProviderRpcError) => {
-    //   console.log('disconnect', error)
-    // })
   }
 }
