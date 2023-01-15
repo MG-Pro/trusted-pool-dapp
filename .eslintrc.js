@@ -29,7 +29,7 @@ module.exports = {
       },
     ],
   },
-  plugins: ['@typescript-eslint', 'jest'],
+  plugins: ['@typescript-eslint'],
   overrides: [
     {
       files: ['*.ts'],
@@ -205,19 +205,17 @@ module.exports = {
       },
     },
     {
-      files: ['*.component.html'],
-      extends: ['plugin:@angular-eslint/template/recommended'],
+      files: ['*.html'],
+      plugins: ['html'],
       rules: {
         'max-len': ['error', { code: 140 }],
       },
     },
     {
-      files: ['*.spec.ts'],
-      plugins: ['jest'],
-      extends: ['plugin:jest/recommended'],
+      files: ['*.component.html'],
+      extends: ['plugin:@angular-eslint/template/recommended'],
       rules: {
-        'jest/prefer-expect-assertions': 'off',
-        '@typescript-eslint/no-explicit-any': 'off',
+        'max-len': ['error', { code: 140 }],
       },
     },
   ],

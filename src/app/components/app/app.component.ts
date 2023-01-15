@@ -1,6 +1,6 @@
 import { Component, OnDestroy } from '@angular/core'
 
-import { ConnectionService } from '../../../../services/connection.service'
+import { ConnectionService } from '../../services/connection.service'
 
 @Component({
   selector: 'app-root',

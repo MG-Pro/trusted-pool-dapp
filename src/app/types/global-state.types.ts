@@ -1,6 +1,5 @@
+import { TrustedPool } from '@app/typechain'
 import { ethers, Signer } from 'ethers'
-
-import { TrustedPool } from '../../../typechain-types'
 
 export interface GlobalState {
   networkConnected: boolean
