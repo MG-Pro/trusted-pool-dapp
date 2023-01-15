@@ -1,6 +1,6 @@
 import { addressExporter, ethers } from 'hardhat'
 
-async function main() {
+async function main(): Promise<void> {
   const [, deployer] = await ethers.getSigners()
   console.log('Deploying contracts with the account:', deployer.address)
 
