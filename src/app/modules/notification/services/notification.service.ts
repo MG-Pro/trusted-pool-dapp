@@ -1,23 +1,21 @@
-import { MessageData, StatusClasses } from '../types/notification.types'
 import { Injectable } from '@angular/core'
 import { BehaviorSubject, first, timer } from 'rxjs'
 
-
-
+import { MessageData, StatusClasses } from '../types/notification.types'
 
 @Injectable({
   providedIn: 'root',
 })
 export class NotificationService {
   public messageData$ = new BehaviorSubject<Map<number, MessageData>>(new Map())
-  private nextMsgId: number = 0
+  private nextMsgId = 0
   private DEFAULT_DURATION = 1000 * 5
 
   public showMessage(
     message: string,
     status: StatusClasses = StatusClasses.success,
     outId: string = null,
-    duration?: number
+    duration?: number,
   ): void {
     const msg = message.trim()
 
@@ -37,7 +35,7 @@ export class NotificationService {
     this.nextMsgId++
   }
 
-  public hideMessage(id: number) {
+  public hideMessage(id: number): void {
     this.messageData$.value.delete(id)
     this.messageData$.next(this.messageData$.value)
   }

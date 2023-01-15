@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
+import { ConnectionService } from '@app/services'
+import { GlobalState } from '@app/types'
 import { Observable, tap } from 'rxjs'
-
-import { ConnectionService } from '../../../../servises/connection.service'
-import { GlobalState } from '../../../../types/global-state'
 
 @Component({
   selector: 'app-dashboard',
@@ -26,6 +25,6 @@ export class DashboardComponent implements OnInit {
   }
 
   public async onConnectWallet(): Promise<void> {
-    this.connectionService.connect()
+    await this.connectionService.connect()
   }
 }

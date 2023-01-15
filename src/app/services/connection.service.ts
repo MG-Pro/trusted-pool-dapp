@@ -1,16 +1,14 @@
 import { Injectable } from '@angular/core'
+import { ContractAddresses } from '@app/contracts/addresses/addresses'
+import abi from '@app/contracts/contracts/TrustedPool.sol/TrustedPool.json'
+import { allowedNetworks } from '@app/settings'
+import { TrustedPool } from '@app/typechain'
+import { GlobalState, Metamask } from '@app/types'
 import detectEthereumProvider from '@metamask/detect-provider'
 import { ethers, Signer } from 'ethers'
 import { BehaviorSubject, from, Observable } from 'rxjs'
 
-import { TrustedPool } from '../../../typechain-types'
-import { ContractAddresses } from '../contracts/addresses/addresses'
-import abi from '../contracts/contracts/TrustedPool.sol/TrustedPool.json'
-import { NotificationService } from '../modules/notification/services/notification.service'
-import { StatusClasses } from '../modules/notification/types/notification.types'
-import { allowedNetworks } from '../settings'
-import { Metamask } from '../types/connection.types'
-import { GlobalState } from '../types/global-state'
+import { NotificationService, StatusClasses } from '../modules/notification'
 
 @Injectable({
   providedIn: 'root',
@@ -65,6 +63,11 @@ export class ConnectionService {
     this.patchState({
       userConnected: false,
     })
+  }
+
+  public destroy(): void {
+    this.wallet.removeAllListeners('accountsChanged')
+    this.provider.removeAllListeners('network')
   }
 
   private async init(): Promise<void> {

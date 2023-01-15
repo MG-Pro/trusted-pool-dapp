@@ -21,10 +21,14 @@
     "module": "commonjs",
     "resolveJsonModule": true,
     "useDefineForClassFields": false,
-    "lib": [
-      "ES2020",
-      "dom"
-    ]
+    "lib": ["ES2020", "dom"],
+    "paths": {
+      "@app/types": ["src/app/types/index"],
+      "@app/contracts/*": ["src/app/contracts/*"],
+      "@app/settings": ["src/app/settings"],
+      "@app/typechain": ["typechain-types/index"],
+      "@app/services": ["src/app/services/index.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
