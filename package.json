@@ -82,7 +82,10 @@
       "eslint --fix"
     ],
     "{**/*,*}.{sol,json}": [
-      "prettier --write"
+      "prettier ./contracts/*.sol --write"
+    ],
+    "{**/*,*}.{sol}": [
+      "solhint ./contracts/*.sol --fix"
     ]
   }
 }

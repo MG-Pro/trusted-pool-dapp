@@ -5,7 +5,7 @@ import "hardhat/console.sol";
 import "./PooledTemplate.sol";
 
 contract TrustedPool {
-  mapping(address => PooledTemplate) internal pooledContracts;
+  mapping(address => address) internal pooledContracts; //creator -> contract
 
   string internal data = "123";
   address public owner;
@@ -19,7 +19,13 @@ contract TrustedPool {
     owner = msg.sender;
   }
 
-  function createPooledContact(address _creator) external {}
+  function createPooledContract(address _creator) external {
+    pooledContracts[_creator] = new PooledTemplate(_creator);
+  }
+
+  function getPooledContractAddress(address _creator) external returns (address) {
+    return pooledContracts[_creator];
+  }
 
   function getData() external view onlyOwner returns (string memory) {
     return data;
