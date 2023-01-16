@@ -1,1 +1,21 @@
-<p>new-pool works!</p>
+<div class="" [formGroup]="form">
+  <div class="d-flex justify-content-end">
+    <button class="btn-close btn-close-white fs-5" (click)="close()"></button>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Name of pool</label>
+    <input class="form-control" formControlName="name" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Token address</label>
+    <input class="form-control" formControlName="tokenAddress" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Token name</label>
+    <input class="form-control" formControlName="tokenName" />
+  </div>
+
+  <button class="btn btn-success" (click)="save()">Save</button>
+</div>

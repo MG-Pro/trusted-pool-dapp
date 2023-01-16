@@ -30,8 +30,12 @@ export class DashboardComponent implements OnInit {
     await this.connectionService.connect()
   }
 
-  public showCreatingForm(): void {
+  public async showCreatingForm(): Promise<void> {
     this.patchLocalState({ showCreatingForm: true })
+  }
+
+  public closeNewForm(): void {
+    this.patchLocalState({ showCreatingForm: false })
   }
 
   private patchLocalState(patch): void {

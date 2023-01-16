@@ -9,14 +9,22 @@
   <main class="content pt-3 pb-3">
     <app-notification id="main"></app-notification>
     <div class="container">
-      <div class="dasboard">
-        <p>You participated in {{ params.connectionState.userPools.length }} pools</p>
-        <div class="d-flex align-items-center" *ngIf="!params.localState.showCreatingForm">
+      <div class="dashboard row fs-5 mb-3" *ngIf="params.connectionState.userConnected">
+        <p class="col m-0">
+          You participated in {{ params.connectionState.userPools?.length || 0 }} pools
+        </p>
+        <div
+          class="d-flex align-items-center col justify-content-end"
+          *ngIf="!params.localState.showCreatingForm"
+        >
           <p class="m-0">You can create new pool</p>
-          <button class="btn btn-danger ms-3" (click)="showCreatingForm()">Add</button>
+          <button class="btn btn-danger ms-3 fs-5" (click)="showCreatingForm()">Add</button>
         </div>
       </div>
-      <app-new-pool *ngIf="params.localState.showCreatingForm"></app-new-pool>
+      <app-new-pool
+        *ngIf="params.localState.showCreatingForm"
+        (closeForm)="closeNewForm()"
+      ></app-new-pool>
       <app-pool-item *ngFor="let pool of params.connectionState.userPools"></app-pool-item>
     </div>
   </main>

@@ -12,6 +12,7 @@ export interface IParticipantShare {
 }
 
 export interface IPool {
+  name: string
   contractAddress: string
   tokenAddress: string
   tokenName: string
