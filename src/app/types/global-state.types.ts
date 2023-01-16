@@ -1,7 +1,9 @@
 import { TrustedPool } from '@app/typechain'
 import { ethers, Signer } from 'ethers'
 
-export interface GlobalState {
+import { IPool } from './pool.types'
+
+export interface IGlobalState {
   networkConnected: boolean
   userConnected?: boolean
   userAccount?: string
@@ -9,4 +11,5 @@ export interface GlobalState {
   chainId?: number
   trustedPoolContract?: TrustedPool
   signer?: Signer
+  userPools?: IPool[]
 }

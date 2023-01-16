@@ -3,10 +3,10 @@ import { ContractAddresses } from '@app/contracts/addresses/addresses'
 import abi from '@app/contracts/contracts/TrustedPool.sol/TrustedPool.json'
 import { allowedNetworks } from '@app/settings'
 import { TrustedPool } from '@app/typechain'
-import { GlobalState, Metamask } from '@app/types'
+import { IGlobalState, IMetamask } from '@app/types'
 import detectEthereumProvider from '@metamask/detect-provider'
 import { ethers, Signer } from 'ethers'
-import { BehaviorSubject, from, Observable } from 'rxjs'
+import { BehaviorSubject } from 'rxjs'
 
 import { NotificationService, StatusClasses } from '../modules/notification'
 
@@ -14,13 +14,13 @@ import { NotificationService, StatusClasses } from '../modules/notification'
   providedIn: 'root',
 })
 export class ConnectionService {
-  public state$: BehaviorSubject<GlobalState> = new BehaviorSubject<GlobalState>({
+  public state$: BehaviorSubject<IGlobalState> = new BehaviorSubject<IGlobalState>({
     networkConnected: false,
   })
   private provider: ethers.providers.Web3Provider
   private trustedPoolContract: TrustedPool
   private allowedNetworks: number[] = allowedNetworks
-  private wallet: Metamask
+  private wallet: IMetamask
 
   constructor(private notificationService: NotificationService) {
     this.init()
@@ -53,10 +53,12 @@ export class ConnectionService {
       userAccount: accounts[0],
       signer,
     })
+
+    await this.fetchPoolsData()
   }
 
-  public getData(): Observable<string> {
-    return from(this.state$.value?.trustedPoolContract.getData())
+  public async fetchPoolsData(): Promise<void> {
+    this.patchState({ userPools: [] })
   }
 
   public disconnect(): void {
@@ -88,7 +90,7 @@ export class ConnectionService {
     }
   }
 
-  private patchState(state: Partial<GlobalState>): void {
+  private patchState(state: Partial<IGlobalState>): void {
     this.state$.next({ ...this.state$.value, ...state })
   }
 

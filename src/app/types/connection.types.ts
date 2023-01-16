@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 
-export interface Metamask extends ethers.providers.ExternalProvider {
+export interface IMetamask extends ethers.providers.ExternalProvider {
   networkVersion: string
   once(eventName: string | symbol, listener: (...args: unknown[]) => void): this
   on(eventName: string | symbol, listener: (...args: unknown[]) => void): this

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
 import { ConnectionService } from '@app/services'
-import { GlobalState } from '@app/types'
-import { Observable, tap } from 'rxjs'
+import { IGlobalState } from '@app/types'
+import { BehaviorSubject, Observable, tap } from 'rxjs'
 
 @Component({
   selector: 'app-dashboard',
@@ -12,11 +12,13 @@ import { Observable, tap } from 'rxjs'
 export class DashboardComponent implements OnInit {
   @HostBinding('class') private readonly classes = 'main-layout d-flex h-100 mx-auto flex-column '
 
-  public connectionState$: Observable<GlobalState> = this.connectionService.state$.pipe(
+  public connectionState$: Observable<IGlobalState> = this.connectionService.state$.pipe(
     tap((s) => {
       console.log('state', s)
     }),
   )
+
+  public localState$ = new BehaviorSubject({ showCreatingForm: false })
 
   constructor(private connectionService: ConnectionService) {}
 
@@ -26,5 +28,13 @@ export class DashboardComponent implements OnInit {
 
   public async onConnectWallet(): Promise<void> {
     await this.connectionService.connect()
+  }
+
+  public showCreatingForm(): void {
+    this.patchLocalState({ showCreatingForm: true })
+  }
+
+  private patchLocalState(patch): void {
+    this.localState$.next({ ...this.localState$.value, ...patch })
   }
 }
