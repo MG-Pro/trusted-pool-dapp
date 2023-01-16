@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common'
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,8 +7,11 @@ import {
   Input,
   Output,
 } from '@angular/core'
+import { LogoComponent } from '@app/components/logo/logo.component'
 
 @Component({
+  standalone: true,
+  imports: [CommonModule, LogoComponent],
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],

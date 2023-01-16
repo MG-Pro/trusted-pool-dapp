@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common'
 import { NgModule } from '@angular/core'
 import { RouterModule, Routes } from '@angular/router'
-import { FooterModule } from '@app/components/footer/footer.module'
-import { HeaderModule } from '@app/components/header/header.module'
+import { FooterComponent } from '@app/components/footer/footer.component'
+import { HeaderComponent } from '@app/components/header/header.component'
+import { NewPoolComponent } from '@app/components/new-pool/new-pool.component'
+import { PoolItemComponent } from '@app/components/pool-item/pool-item.component'
 import { NotificationModule } from '@app/modules/notification/notification.module'
 
 import { DashboardComponent } from './dashboard.component'
@@ -13,10 +15,12 @@ const routes: Routes = [{ path: '', component: DashboardComponent }]
   declarations: [DashboardComponent],
   imports: [
     CommonModule,
-    HeaderModule,
-    FooterModule,
+    HeaderComponent,
+    FooterComponent,
     RouterModule.forChild(routes),
     NotificationModule,
+    PoolItemComponent,
+    NewPoolComponent,
   ],
 })
 export class DashboardModule {}
