@@ -6,7 +6,7 @@
     (connectWallet)="onConnectWallet()"
     class="mb-auto"
   ></app-header>
-  <main class="content pt-3 pb-3">
+  <main class="pt-3 pb-3">
     <app-notification id="main"></app-notification>
     <div class="container">
       <div class="dashboard row fs-5 mb-3" *ngIf="params.connectionState.userConnected">
@@ -28,5 +28,4 @@
       <app-pool-item *ngFor="let pool of params.connectionState.userPools"></app-pool-item>
     </div>
   </main>
-  <app-footer class="mt-auto"></app-footer>
 </ng-container>

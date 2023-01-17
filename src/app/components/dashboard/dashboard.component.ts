@@ -10,7 +10,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
-  @HostBinding('class') private readonly classes = 'main-layout d-flex h-100 mx-auto flex-column '
+  @HostBinding('class') private readonly classes = 'main-layout flex-shrink-0 flex-grow-1'
 
   public connectionState$: Observable<IGlobalState> = this.connectionService.state$.pipe(
     tap((s) => {
@@ -18,7 +18,7 @@ export class DashboardComponent implements OnInit {
     }),
   )
 
-  public localState$ = new BehaviorSubject({ showCreatingForm: false })
+  public localState$ = new BehaviorSubject({ showCreatingForm: true })
 
   constructor(private connectionService: ConnectionService) {}
 

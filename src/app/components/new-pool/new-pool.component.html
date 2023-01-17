@@ -1,21 +1,98 @@
-<div class="" [formGroup]="form">
-  <div class="d-flex justify-content-end">
+<form class="card text-bg-dark shadow-lg bg-opacity-75" [formGroup]="form">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title m-0">Creating new pool</h5>
     <button class="btn-close btn-close-white fs-5" (click)="close()"></button>
   </div>
-  <div class="mb-3">
-    <label class="form-label">Name of pool</label>
-    <input class="form-control" formControlName="name" />
-  </div>
+  <div class="card-body">
+    <h6 class="card-subtitle mb-4 fs-6 text-success">
+      Please, fill the form for creating new pool. All fields is required.
+    </h6>
+    <div class="mb-3">
+      <label class="form-label">Pool name</label>
+      <input
+        class="form-control bg-dark text-light"
+        formControlName="name"
+        [class.is-invalid]="hasError('name')"
+      />
+      <p class="invalid-feedback">Input from 3 to 10 symbols</p>
+    </div>
 
-  <div class="mb-3">
-    <label class="form-label">Token address</label>
-    <input class="form-control" formControlName="tokenAddress" />
-  </div>
+    <div class="mb-3">
+      <label class="form-label">Token name</label>
+      <input
+        class="form-control bg-dark text-light"
+        formControlName="tokenName"
+        [class.is-invalid]="hasError('tokenName')"
+      />
+      <p class="invalid-feedback">Input from 1 to 10 symbols</p>
+    </div>
 
-  <div class="mb-3">
-    <label class="form-label">Token name</label>
-    <input class="form-control" formControlName="tokenName" />
-  </div>
+    <div class="mb-3">
+      <label class="form-label">Token address</label>
+      <input
+        class="form-control bg-dark text-light"
+        formControlName="tokenAddress"
+        [class.is-invalid]="hasError('tokenAddress')"
+      />
+      <p class="invalid-feedback">Token address not valid</p>
+    </div>
 
-  <button class="btn btn-success" (click)="save()">Save</button>
-</div>
+    <div class="mb-3">
+      <label class="form-label">Token amount</label>
+      <input
+        type="number"
+        class="form-control bg-dark text-light"
+        formControlName="tokenAmount"
+        [class.is-invalid]="hasError('tokenAmount')"
+      />
+      <p class="invalid-feedback">
+        Input value more than {{ form.getError('min', 'tokenAmount')?.min }} tokens
+      </p>
+    </div>
+    <ng-container formArrayName="participants">
+      <ng-container *ngFor="let participant of $any(participantsForm.controls); let i = index">
+        <div class="card text-bg-dark border border-secondary mb-3">
+          <div
+            class="card-header d-flex justify-content-between align-items-center border-bottom border-secondary"
+          >
+            <h5 class="card-title m-0">Participant #{{ i + 1 }}</h5>
+            <button class="btn-close btn-close-white fs-5" (click)="deleteParticipant(i)"></button>
+          </div>
+          <div class="card-body">
+            <div class="mb-3" [formGroup]="participant">
+              <label class="form-label">Participant address</label>
+              <input
+                class="form-control bg-dark text-light"
+                formControlName="participant"
+                [class.is-invalid]="hasError('participant')"
+              />
+              <p class="invalid-feedback">Participant address not valid</p>
+            </div>
+
+            <div class="mb-3" [formGroup]="participant">
+              <label class="form-label">Participant share</label>
+              <input
+                type="number"
+                class="form-control bg-dark text-light"
+                formControlName="share"
+                [class.is-invalid]="hasError('share')"
+              />
+              <p class="invalid-feedback">
+                Input value more than {{ form.getError('min', 'share')?.min }} tokens
+              </p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+    <div class="d-flex justify-content-center mb-3">
+      <button class="btn btn-danger" [disabled]="false" (click)="addParticipant()">
+        Add participant
+      </button>
+    </div>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-success" [disabled]="form.invalid" (click)="save()">Save</button>
+    </div>
+  </div>
+</form>
