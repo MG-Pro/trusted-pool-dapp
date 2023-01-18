@@ -18,7 +18,7 @@ export class DashboardComponent implements OnInit {
     }),
   )
 
-  public localState$ = new BehaviorSubject({ showCreatingForm: true })
+  public localState$ = new BehaviorSubject({ showCreatingForm: false })
 
   constructor(private connectionService: ConnectionService) {}
 
@@ -40,6 +40,7 @@ export class DashboardComponent implements OnInit {
 
   public onSaveNewForm(poolData: Partial<IPool>): void {
     console.log(poolData)
+    this.onCloseNewForm()
   }
 
   private patchLocalState(patch): void {

@@ -5,7 +5,7 @@
 }
 
 .main-layout {
-  background: var(--app-bg);
+  background: linear-gradient(0deg, rgba(2, 0, 36, 1) 0%, rgba(28, 11, 68, 1) 24%, rgba(15, 50, 157, 1) 82%, rgba(6, 0, 255, 1) 100%);
   color: var(--app-font-color);
 }
 
@@ -17,4 +17,17 @@ button:focus,
 input:focus {
   box-shadow: none !important;
   outline: none !important;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--app-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: RGBA(255, 193, 7, var(--bs-bg-opacity, 1));
 }
