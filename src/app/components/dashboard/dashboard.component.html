@@ -23,7 +23,8 @@
       </div>
       <app-new-pool
         *ngIf="params.localState.showCreatingForm"
-        (closeForm)="closeNewForm()"
+        (closeForm)="onCloseNewForm()"
+        (saveForm)="onSaveNewForm($event)"
       ></app-new-pool>
       <app-pool-item *ngFor="let pool of params.connectionState.userPools"></app-pool-item>
     </div>

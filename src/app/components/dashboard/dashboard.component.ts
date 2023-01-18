@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
 import { ConnectionService } from '@app/services'
-import { IGlobalState } from '@app/types'
+import { IGlobalState, IPool } from '@app/types'
 import { BehaviorSubject, Observable, tap } from 'rxjs'
 
 @Component({
@@ -34,8 +34,12 @@ export class DashboardComponent implements OnInit {
     this.patchLocalState({ showCreatingForm: true })
   }
 
-  public closeNewForm(): void {
+  public onCloseNewForm(): void {
     this.patchLocalState({ showCreatingForm: false })
+  }
+
+  public onSaveNewForm(poolData: Partial<IPool>): void {
+    console.log(poolData)
   }
 
   private patchLocalState(patch): void {

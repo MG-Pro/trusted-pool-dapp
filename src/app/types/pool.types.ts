@@ -1,24 +1,23 @@
-import { IUser } from './user.types'
-
 export enum PoolStatuses {
   Active = 'Active',
   Finished = 'Finished',
 }
 
-export interface IParticipantShare {
-  participant: IUser
+export interface IParticipant {
   share: number
   progress: number
+  address: string
+  telegramId?: string
+  twitterId?: string
 }
 
 export interface IPool {
   name: string
-  contractAddress: string
-  tokenAddress: string
+  contractAddress?: string
+  tokenAddress?: string
   tokenName: string
   tokenAmount: number
-  participantShares: IParticipantShare[]
-  creator: IUser
-  participants: IUser[]
+  creatorAddress: string
+  participants: IParticipant[]
   status: PoolStatuses
 }

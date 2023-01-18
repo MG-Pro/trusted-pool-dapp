@@ -1,8 +1,27 @@
 import { CommonModule } from '@angular/common'
-import { ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output } from '@angular/core'
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms'
-import { EVM_ADDRESS_REGEXP, MIN_POOL_AMOUNT } from '@app/settings'
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core'
+import {
+  FormArray,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms'
+import {
+  EVM_ADDRESS_REGEXP,
+  MAX_POOL_PARTICIPANTS,
+  MIN_POOL_AMOUNT,
+  MIN_SHARE_AMOUNT,
+} from '@app/settings'
 import { IPool } from '@app/types'
+import { Subject, takeUntil } from 'rxjs'
 
 @Component({
   selector: 'app-new-pool',
@@ -12,19 +31,23 @@ import { IPool } from '@app/types'
   styleUrls: ['./new-pool.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NewPoolComponent implements OnInit {
+export class NewPoolComponent implements OnInit, OnDestroy {
   @Output() public closeForm = new EventEmitter<void>()
   @Output() public saveForm = new EventEmitter<Partial<IPool>>()
 
   public form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
-    tokenAddress: ['', [Validators.required, Validators.pattern(EVM_ADDRESS_REGEXP)]],
+    tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
     tokenName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(10)]],
-    tokenAmount: [0, [Validators.required, Validators.min(MIN_POOL_AMOUNT)]],
-    participants: this.fb.array([]),
+    tokenAmount: [null, [Validators.required, Validators.min(MIN_POOL_AMOUNT)]],
+    participants: this.fb.array(
+      [],
+      [this.participantNumberValidator, this.participantsAmountValidator],
+    ),
   })
 
   private formData: Partial<IPool>
+  private destroyed$ = new Subject<void>()
 
   constructor(private fb: FormBuilder) {}
 
@@ -32,24 +55,46 @@ export class NewPoolComponent implements OnInit {
     return this.form.get('participants') as FormArray
   }
 
+  public get addingDisabled(): boolean {
+    return this.participantsForm.length >= MAX_POOL_PARTICIPANTS
+  }
+
   public ngOnInit(): void {
-    this.form.valueChanges.subscribe((val) => {
-      // console.log(this.form.get('tokenAmount'))
+    this.form.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
+      this.formData = val as Partial<IPool>
     })
   }
 
-  public hasError(field: string): boolean {
+  public ngOnDestroy(): void {
+    this.destroyed$.next()
+    this.destroyed$.complete()
+  }
+
+  public hasErrors(field: string): boolean {
     return this.form.get(field)?.dirty && this.hasFieldError(field)
+  }
+
+  public hasFormArrayError(field: string, id: number): boolean {
+    const form = this.participantsForm.at(id)
+    switch (field) {
+      case 'address':
+        return form.hasError('pattern', [field])
+      case 'share':
+        return form.hasError('min', [field])
+      default:
+        return false
+    }
   }
 
   public addParticipant(): void {
     this.participantsForm.push(
       this.fb.group({
-        participant: ['', Validators.required, Validators.pattern(EVM_ADDRESS_REGEXP)],
-        share: [0, Validators.required],
+        address: ['', [Validators.required, Validators.pattern(EVM_ADDRESS_REGEXP)]],
+        share: [null, [Validators.required, Validators.min(MIN_SHARE_AMOUNT)]],
+        telegramId: '',
+        twitterId: '',
       }),
     )
-    console.log(this.form)
   }
 
   public deleteParticipant(id: number): void {
@@ -73,8 +118,23 @@ export class NewPoolComponent implements OnInit {
         return this.form.hasError('pattern', [field])
       case 'tokenAmount':
         return this.form.hasError('min', [field])
+      case 'participants':
+        return this.form.hasError('participantsAmount', [field])
       default:
         return false
     }
+  }
+
+  private participantNumberValidator(formArray: FormArray): ValidationErrors {
+    return !formArray.length ? { participantNumber: true } : null
+  }
+
+  private participantsAmountValidator(formArray: FormArray): ValidationErrors {
+    const tokenAmount = formArray.parent?.get('tokenAmount')?.value || 0
+    const amount = formArray.controls.reduce((acc, form) => {
+      acc += parseInt(form.get('share').value || 0, 10)
+      return acc
+    }, 0)
+    return tokenAmount !== amount ? { participantsAmount: true } : null
   }
 }

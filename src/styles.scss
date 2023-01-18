@@ -5,10 +5,16 @@
 }
 
 .main-layout {
-  background:var(--app-bg);
+  background: var(--app-bg);
   color: var(--app-font-color);
 }
 
 a {
   text-decoration: none;
+}
+
+button:focus,
+input:focus {
+  box-shadow: none !important;
+  outline: none !important;
 }
