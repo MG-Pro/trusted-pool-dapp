@@ -9,16 +9,27 @@
   <main class="pt-3 pb-3">
     <app-notification id="main"></app-notification>
     <div class="container">
-      <div class="dashboard row fs-5 mb-3" *ngIf="params.connectionState.userConnected">
-        <p class="col m-0">
-          You participated in {{ params.connectionState.userPools?.length || 0 }} pools
-        </p>
-        <div
-          class="d-flex align-items-center col justify-content-end"
-          *ngIf="!params.localState.showCreatingForm"
-        >
-          <p class="m-0">You can create new pool</p>
-          <button class="btn btn-danger ms-3 fs-5" (click)="showCreatingForm()">Add</button>
+      <div class="dashboard fs-5 mb-3" *ngIf="params.connectionState.userConnected">
+        <div class="row">
+          <p
+            *ngIf="params.connectionState.userPools?.length"
+            class="col m-0 d-flex align-items-center"
+          >
+            You participated in {{ params.connectionState.userPools?.length }} pools
+          </p>
+          <p
+            *ngIf="!params.connectionState.userPools?.length"
+            class="col m-0 d-flex align-items-center"
+          >
+            You have not participated in pools, yet
+          </p>
+          <div
+            class="d-flex align-items-center col justify-content-end"
+            *ngIf="!params.localState.showCreatingForm"
+          >
+            <p class="m-0">You can create new pool</p>
+            <button class="btn btn-danger ms-3 fs-5" (click)="showCreatingForm()">Add</button>
+          </div>
         </div>
       </div>
       <app-new-pool

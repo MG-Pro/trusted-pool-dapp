@@ -3,28 +3,27 @@ import { ContractAddresses } from '@app/contracts/addresses/addresses'
 import abi from '@app/contracts/contracts/TrustedPool.sol/TrustedPool.json'
 import { allowedNetworks } from '@app/settings'
 import { TrustedPool } from '@app/typechain'
-import { IGlobalState, IMetamask } from '@app/types'
+import { IMetamask } from '@app/types'
 import detectEthereumProvider from '@metamask/detect-provider'
 import { ethers, Signer } from 'ethers'
-import { BehaviorSubject } from 'rxjs'
 
 import { NotificationService, StatusClasses } from '../modules/notification'
+
+import { GlobalStateService } from './global-state.service'
 
 @Injectable({
   providedIn: 'root',
 })
 export class ConnectionService {
-  public state$: BehaviorSubject<IGlobalState> = new BehaviorSubject<IGlobalState>({
-    networkConnected: false,
-  })
   private provider: ethers.providers.Web3Provider
   private trustedPoolContract: TrustedPool
   private allowedNetworks: number[] = allowedNetworks
   private wallet: IMetamask
 
-  constructor(private notificationService: NotificationService) {
-    this.init()
-  }
+  constructor(
+    private notificationService: NotificationService,
+    private stateService: GlobalStateService,
+  ) {}
 
   public async connect(): Promise<void> {
     if (!this.wallet?.isMetaMask) {
@@ -47,22 +46,16 @@ export class ConnectionService {
     const address: string = this.getContractAddress()
     this.trustedPoolContract = new ethers.Contract(address, abi, this.provider) as TrustedPool
     const signer: Signer = this.provider.getSigner()
-    this.patchState({
+    this.stateService.patchState({
       userConnected: true,
       trustedPoolContract: this.trustedPoolContract,
       userAccount: accounts[0],
       signer,
     })
-
-    await this.fetchPoolsData()
-  }
-
-  public async fetchPoolsData(): Promise<void> {
-    this.patchState({ userPools: [] })
   }
 
   public disconnect(): void {
-    this.patchState({
+    this.stateService.patchState({
       userConnected: false,
     })
   }
@@ -72,26 +65,22 @@ export class ConnectionService {
     this.provider.removeAllListeners('network')
   }
 
-  private async init(): Promise<void> {
+  public async initConnection(): Promise<void> {
     this.wallet = await detectEthereumProvider()
     this.provider = new ethers.providers.Web3Provider(this.wallet, 'any')
     await this.provider.getNetwork()
-    const accounts = await this.provider.send('eth_accounts', [])
 
-    this.patchState({
+    this.stateService.patchState({
       networkConnected: true,
       chainId: this.provider.network.chainId,
       provider: this.provider,
     })
     this.setListeners()
 
+    const accounts = await this.provider.send('eth_accounts', [])
     if (accounts.length) {
       await this.connect()
     }
-  }
-
-  private patchState(state: Partial<IGlobalState>): void {
-    this.state$.next({ ...this.state$.value, ...state })
   }
 
   private async getAccountConnection(): Promise<string[]> {
@@ -108,7 +97,6 @@ export class ConnectionService {
 
   private setListeners(): void {
     this.wallet.on('accountsChanged', (accounts: string[]) => {
-      console.log('accountsChanged', accounts)
       if (accounts.length) {
         this.connect()
       } else {
@@ -118,10 +106,9 @@ export class ConnectionService {
     })
 
     this.provider.on('network', async () => {
-      console.log('network')
       await this.provider.getNetwork()
       const isRightNetwork = this.checkNetwork()
-      this.patchState({
+      this.stateService.patchState({
         networkConnected: isRightNetwork,
         userConnected: isRightNetwork,
       })

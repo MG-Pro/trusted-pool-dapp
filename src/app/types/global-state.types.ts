@@ -5,11 +5,11 @@ import { IPool } from './pool.types'
 
 export interface IGlobalState {
   networkConnected: boolean
+  userPools: IPool[]
   userConnected?: boolean
   userAccount?: string
   provider?: ethers.providers.Web3Provider
   chainId?: number
   trustedPoolContract?: TrustedPool
   signer?: Signer
-  userPools?: IPool[]
 }

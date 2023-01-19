@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
-import { ConnectionService } from '@app/services'
+import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
 import { IGlobalState, IPool } from '@app/types'
 import { BehaviorSubject, Observable, tap } from 'rxjs'
 
@@ -12,7 +12,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs'
 export class DashboardComponent implements OnInit {
   @HostBinding('class') private readonly classes = 'main-layout flex-shrink-0 flex-grow-1'
 
-  public connectionState$: Observable<IGlobalState> = this.connectionService.state$.pipe(
+  public connectionState$: Observable<IGlobalState> = this.stateService.state$.pipe(
     tap((s) => {
       console.log('state', s)
     }),
@@ -20,10 +20,15 @@ export class DashboardComponent implements OnInit {
 
   public localState$ = new BehaviorSubject({ showCreatingForm: false })
 
-  constructor(private connectionService: ConnectionService) {}
+  constructor(
+    private connectionService: ConnectionService,
+    private stateService: GlobalStateService,
+    private contractService: ContractService,
+  ) {}
 
   public async ngOnInit(): Promise<void> {
-    console.log()
+    await this.connectionService.initConnection()
+    await this.contractService.dispatchPoolsData()
   }
 
   public async onConnectWallet(): Promise<void> {
