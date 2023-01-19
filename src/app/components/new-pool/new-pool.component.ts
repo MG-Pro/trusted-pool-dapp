@@ -8,6 +8,7 @@ import {
   Output,
 } from '@angular/core'
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
   ReactiveFormsModule,
@@ -89,7 +90,14 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   public addParticipant(): void {
     this.participantsForm.push(
       this.fb.group({
-        address: ['', [Validators.required, Validators.pattern(EVM_ADDRESS_REGEXP)]],
+        address: [
+          '',
+          [
+            Validators.required,
+            Validators.pattern(EVM_ADDRESS_REGEXP),
+            this.participantsUniqValidator,
+          ],
+        ],
         share: [null, [Validators.required, Validators.min(MIN_SHARE_AMOUNT)]],
         telegramId: '',
         twitterId: '',
@@ -136,5 +144,14 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       return acc
     }, 0)
     return tokenAmount !== amount ? { participantsAmount: true } : null
+  }
+
+  private participantsUniqValidator(control: AbstractControl): ValidationErrors {
+    const formArray = control.parent?.parent as FormArray
+    const isUniq =
+      formArray?.controls.some((formGroup) => formGroup.get('address')?.value === control.value) ||
+      true
+    console.log(isUniq)
+    return !isUniq ? { participantsAmount: true } : null
   }
 }
