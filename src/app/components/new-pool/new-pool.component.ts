@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
+  HostBinding,
   OnDestroy,
   OnInit,
   Output,
@@ -35,6 +36,8 @@ import { Subject, takeUntil } from 'rxjs'
 export class NewPoolComponent implements OnInit, OnDestroy {
   @Output() public closeForm = new EventEmitter<void>()
   @Output() public saveForm = new EventEmitter<Partial<IPool>>()
+
+  @HostBinding('class') private readonly classes = 'row justify-content-center'
 
   public form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
@@ -79,7 +82,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     const form = this.participantsForm.at(id)
     switch (field) {
       case 'address':
-        return form.hasError('pattern', [field])
+        return form.hasError('pattern', [field]) || form.hasError('participantsUniq', [field])
       case 'share':
         return form.hasError('min', [field])
       default:
@@ -151,7 +154,6 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     const isUniq =
       formArray?.controls.some((formGroup) => formGroup.get('address')?.value === control.value) ||
       true
-    console.log(isUniq)
-    return !isUniq ? { participantsAmount: true } : null
+    return !isUniq ? { participantsUniq: true } : null
   }
 }

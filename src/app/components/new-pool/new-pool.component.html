@@ -1,4 +1,4 @@
-<form class="card text-bg-dark shadow-lg bg-opacity-75" [formGroup]="form">
+<form class="card text-bg-dark shadow-lg bg-opacity-75 col-8" [formGroup]="form">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="card-title m-0">Creating new pool</h5>
     <button class="btn-close btn-close-white fs-5" (click)="close()"></button>
@@ -68,7 +68,7 @@
                 formControlName="address"
                 [class.is-invalid]="hasFormArrayError('address', i)"
               />
-              <p class="invalid-feedback">Participant address not valid</p>
+              <p class="invalid-feedback">Participant address not valid or not uniq</p>
             </div>
 
             <div class="mb-3">
