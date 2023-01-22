@@ -1,12 +1,17 @@
+@import "../node_modules/bootstrap/scss/bootstrap";
+
 :root {
   --bs-body-font-family: Roboto, sans-serif;
   --app-bg: #1c0b44;
-  --app-font-color: #dad3da;
+  --app-font-light-color: #dad3da;
+  --app-font-dark-color: #232323;
+  --app-danger-color: RGBA(220, 53, 69, var(--bs-bg-opacity, 1));
+  --app-warn-color: RGBA(255, 193, 7, var(--bs-bg-opacity, 1));
 }
 
 .main-layout {
   background: linear-gradient(0deg, rgba(2, 0, 36, 1) 0%, rgba(28, 11, 68, 1) 24%, rgba(15, 50, 157, 1) 82%, rgba(6, 0, 255, 1) 100%);
-  color: var(--app-font-color);
+  color: var(--app-font-light-color);
 }
 
 a {
@@ -29,5 +34,5 @@ input:focus {
 
 ::-webkit-scrollbar-thumb {
   border-radius: 5px;
-  background: RGBA(255, 193, 7, var(--bs-bg-opacity, 1));
+  background: var(--app-warn-color);
 }

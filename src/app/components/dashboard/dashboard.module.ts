@@ -4,7 +4,7 @@ import { RouterModule, Routes } from '@angular/router'
 import { FooterComponent } from '@app/components/footer/footer.component'
 import { HeaderComponent } from '@app/components/header/header.component'
 import { NewPoolComponent } from '@app/components/new-pool/new-pool.component'
-import { PoolItemComponent } from '@app/components/pool-item/pool-item.component'
+import { PoolsComponent } from '@app/components/pools/pools.component'
 import { NotificationModule } from '@app/modules/notification/notification.module'
 
 import { DashboardComponent } from './dashboard.component'
@@ -19,7 +19,7 @@ const routes: Routes = [{ path: '', component: DashboardComponent }]
     FooterComponent,
     RouterModule.forChild(routes),
     NotificationModule,
-    PoolItemComponent,
+    PoolsComponent,
     NewPoolComponent,
   ],
 })

@@ -1,0 +1,21 @@
+<ng-container>
+  <div class="col-2">
+    <div class="list-group list-group-light">
+      <a
+        href="#"
+        class="list-group-item list-group-item-action"
+        [class.text-bg-warning]="isTabActive(pool)"
+        (click)="seActivePool(pool)"
+        *ngFor="let pool of pools"
+      >
+        {{ pool.name }}({{ pool.tokenName }})
+      </a>
+    </div>
+  </div>
+
+  <div class="col-10">
+    <div class="card">
+      {{ activePool?.tokenName }}
+    </div>
+  </div>
+</ng-container>

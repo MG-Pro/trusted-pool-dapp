@@ -15,7 +15,7 @@
     <app-notification id="main"></app-notification>
     <div class="container">
       <div class="dashboard fs-5 mb-3" *ngIf="params.connectionState.userConnected">
-        <div class="row">
+        <div class="row mb-5">
           <p
             *ngIf="params.connectionState.userPools?.length"
             class="col m-0 d-flex align-items-center"
@@ -43,7 +43,7 @@
         (saveForm)="onSaveNewForm($event)"
       ></app-new-pool>
       <ng-container *ngIf="params.connectionState.userConnected">
-        <app-pool-item *ngFor="let pool of params.connectionState.userPools"></app-pool-item>
+        <app-pools [pools]="params.connectionState.userPools"></app-pools>
       </ng-container>
     </div>
   </main>
