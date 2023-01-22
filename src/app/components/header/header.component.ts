@@ -19,6 +19,7 @@ import { LogoComponent } from '@app/components/logo/logo.component'
 })
 export class HeaderComponent {
   @Input() public connected = false
+  @Input() public loading = false
   @Output() public connectWallet = new EventEmitter<void>()
 
   @HostBinding('class') private readonly classes = 'navbar sticky-top d-flex'

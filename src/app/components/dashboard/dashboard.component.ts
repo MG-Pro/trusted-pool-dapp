@@ -21,7 +21,7 @@ export class DashboardComponent implements OnInit {
   public localState$ = new BehaviorSubject({ showCreatingForm: false })
 
   constructor(
-    private connectionService: ConnectionService,
+    public connectionService: ConnectionService,
     private stateService: GlobalStateService,
     private contractService: ContractService,
   ) {}

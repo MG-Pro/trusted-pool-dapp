@@ -6,6 +6,7 @@ import { TrustedPool } from '@app/typechain'
 import { IMetamask } from '@app/types'
 import detectEthereumProvider from '@metamask/detect-provider'
 import { ethers, Signer } from 'ethers'
+import { BehaviorSubject } from 'rxjs'
 
 import { NotificationService, StatusClasses } from '../modules/notification'
 
@@ -15,6 +16,8 @@ import { GlobalStateService } from './global-state.service'
   providedIn: 'root',
 })
 export class ConnectionService {
+  public loading$ = new BehaviorSubject(false)
+
   private provider: ethers.providers.Web3Provider
   private trustedPoolContract: TrustedPool
   private allowedNetworks: number[] = allowedNetworks
@@ -33,7 +36,7 @@ export class ConnectionService {
         'main',
       )
     }
-
+    this.setLoadingStatus()
     const accounts = await this.getAccountConnection()
 
     if (!this.checkNetwork()) {
@@ -53,6 +56,7 @@ export class ConnectionService {
       userAccount: accounts[0],
       signer,
     })
+    this.setLoadingStatus(false)
   }
 
   public disconnect(): void {
@@ -67,6 +71,7 @@ export class ConnectionService {
   }
 
   public async initConnection(): Promise<void> {
+    this.setLoadingStatus(true)
     this.wallet = await detectEthereumProvider({ mustBeMetaMask: true })
     if (!this.wallet) {
       return
@@ -85,6 +90,11 @@ export class ConnectionService {
     if (accounts.length) {
       await this.connect()
     }
+    this.setLoadingStatus(false)
+  }
+
+  public setLoadingStatus(status = true): void {
+    this.loading$.next(status)
   }
 
   private async getAccountConnection(): Promise<string[]> {

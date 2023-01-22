@@ -1,8 +1,13 @@
 <ng-container
-  *ngIf="{ connectionState: connectionState$ | async, localState: localState$ | async } as params"
+  *ngIf="{
+    connectionState: connectionState$ | async,
+    localState: localState$ | async,
+    loading: connectionService.loading$ | async
+  } as params"
 >
   <app-header
     [connected]="params.connectionState.userConnected"
+    [loading]="params.loading"
     (connectWallet)="onConnectWallet()"
     class="mb-auto"
   ></app-header>
@@ -37,7 +42,9 @@
         (closeForm)="onCloseNewForm()"
         (saveForm)="onSaveNewForm($event)"
       ></app-new-pool>
-      <app-pool-item *ngFor="let pool of params.connectionState.userPools"></app-pool-item>
+      <ng-container *ngIf="params.connectionState.userConnected">
+        <app-pool-item *ngFor="let pool of params.connectionState.userPools"></app-pool-item>
+      </ng-container>
     </div>
   </main>
 </ng-container>

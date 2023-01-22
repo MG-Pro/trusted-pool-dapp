@@ -36,6 +36,8 @@ export class ContractService {
   ) {}
 
   public async dispatchPoolsData(): Promise<void> {
+    this.connectionService.setLoadingStatus()
     this.stateService.patchState({ userPools: [fakePoolData] })
+    this.connectionService.setLoadingStatus(false)
   }
 }
