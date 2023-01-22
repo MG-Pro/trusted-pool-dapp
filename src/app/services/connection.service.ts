@@ -34,10 +34,11 @@ export class ConnectionService {
       )
     }
 
+    const accounts = await this.getAccountConnection()
+
     if (!this.checkNetwork()) {
       return this.wrongNetworkMessage()
     }
-    const accounts = await this.getAccountConnection()
 
     if (!accounts.length) {
       return this.wrongAccountMessage()
@@ -66,7 +67,10 @@ export class ConnectionService {
   }
 
   public async initConnection(): Promise<void> {
-    this.wallet = await detectEthereumProvider()
+    this.wallet = await detectEthereumProvider({ mustBeMetaMask: true })
+    if (!this.wallet) {
+      return
+    }
     this.provider = new ethers.providers.Web3Provider(this.wallet, 'any')
     await this.provider.getNetwork()
 
