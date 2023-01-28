@@ -1,1 +1,68 @@
-<p>pool-item works!</p>
+<div class="card text-bg-dark shadow-lg bg-opacity-75">
+  <div class="card-header d-flex">
+    <h5 class="m-0"># {{ pool?.name }} ({{ pool?.tokenName }})</h5>
+    <div class="ms-auto text-success">
+      <span class="">Status: </span>
+      <span class="">{{ pool?.status }}</span>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="row mb-3">
+      <div class="col">
+        <h6 class="card-title">Token name</h6>
+        <p class="card-text">{{ pool?.tokenName }}</p>
+      </div>
+      <div class="col">
+        <h6 class="card-title">Pool contract address</h6>
+        <p class="card-text">{{ pool?.contractAddress }}</p>
+      </div>
+    </div>
+    <div class="row mb-3">
+      <div class="col">
+        <h6 class="card-title">Token amount</h6>
+        <p class="card-text">{{ pool?.tokenAmount }}</p>
+      </div>
+      <div class="col">
+        <h6 class="card-title">Token contract address</h6>
+        <p class="card-text d-flex">
+          {{ pool?.tokenAddress ? pool?.tokenAddress : 'N/A' }}
+          <button
+            class="ms-auto btn btn-success btn-sm"
+            [disabled]="disabledEditTokenAddress"
+            (click)="onEditTokenAddress()"
+          >
+            Edit
+          </button>
+        </p>
+        <div class="d-flex" *ngIf="isEditTokenAddress">
+          <input
+            class="form-control form-control-sm bg-dark text-light me-2"
+            [formControl]="editTokenAddressControl"
+            [class.is-invalid]="editTokenAddressControl.invalid"
+          />
+          <button
+            class="btn btn-success btn-sm me-2"
+            [disabled]="editTokenAddressControl.invalid"
+            (click)="saveTokenAddress()"
+          >
+            Save
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="cancelEditTokenAddress()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex">
+      <div class="card text-bg-dark me-2 w250" *ngFor="let participant of pool?.participants">
+        <div class="card-header">
+          {{ participant.address }}
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Share: {{ participant.share }}</h5>
+          <p class="card-text">Telegram ID: {{ participant.telegramId }}</p>
+          <p class="card-text">Twitter ID: {{ participant.twitterId }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

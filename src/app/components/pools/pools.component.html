@@ -5,7 +5,7 @@
         href="#"
         class="list-group-item list-group-item-action"
         [class.text-bg-warning]="isTabActive(pool)"
-        (click)="seActivePool(pool)"
+        (click)="setActivePool(pool)"
         *ngFor="let pool of pools"
       >
         {{ pool.name }}({{ pool.tokenName }})
@@ -14,8 +14,6 @@
   </div>
 
   <div class="col-10">
-    <div class="card">
-      {{ activePool?.tokenName }}
-    </div>
+    <app-pool-item [pool]="activePool"></app-pool-item>
   </div>
 </ng-container>
