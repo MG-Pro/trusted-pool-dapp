@@ -16,7 +16,12 @@ const fakePoolData: IPool[] = [
       {
         share: 50_000,
         progress: 0,
-        address: '0xa19Ad61447e5EA79bdDCeB037986944c41e198BC',
+        address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      },
+      {
+        share: 50_000,
+        progress: 0,
+        address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92264',
       },
       {
         share: 50_000,
@@ -26,12 +31,7 @@ const fakePoolData: IPool[] = [
       {
         share: 50_000,
         progress: 0,
-        address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-      },
-      {
-        share: 50_000,
-        progress: 0,
-        address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+        address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
       },
       {
         share: 50_000,

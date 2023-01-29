@@ -42,8 +42,15 @@
         (closeForm)="onCloseNewForm()"
         (saveForm)="onSaveNewForm($event)"
       ></app-new-pool>
-      <ng-container *ngIf="params.connectionState.userConnected">
-        <app-pools [pools]="params.connectionState.userPools"></app-pools>
+      <ng-container
+        *ngIf="params.connectionState.userConnected && !params.localState.showCreatingForm"
+      >
+        <app-pools
+          [pools]="params.connectionState.userPools"
+          [userAccount]="params.connectionState.userAccount"
+          (claimTokens)="onClaimTokens($event)"
+          (tokenAddressChange)="onTokenAddressChange($event)"
+        ></app-pools>
       </ng-container>
     </div>
   </main>

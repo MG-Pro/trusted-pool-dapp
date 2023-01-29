@@ -48,6 +48,10 @@ export class DashboardComponent implements OnInit {
     this.onCloseNewForm()
   }
 
+  public onTokenAddressChange(eventData: [string, IPool]): void {}
+
+  public onClaimTokens(pool: IPool): void {}
+
   private patchLocalState(patch): void {
     this.localState$.next({ ...this.localState$.value, ...patch })
   }
