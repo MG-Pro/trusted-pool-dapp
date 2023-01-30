@@ -5,13 +5,92 @@
     "type": "constructor"
   },
   {
-    "inputs": [],
-    "name": "getData",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "string",
-        "name": "",
+        "name": "_name",
         "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "_tokenAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "share",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claimed",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "telegramId",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "twitterId",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct PooledTemplate.Participant[]",
+        "name": "_participants",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "createPooledContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_creator",
+        "type": "address"
+      }
+    ],
+    "name": "getPooledContractAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

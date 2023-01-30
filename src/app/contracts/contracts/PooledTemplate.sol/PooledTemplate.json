@@ -5,6 +5,58 @@
         "internalType": "address",
         "name": "_creator",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "_tokenAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "share",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claimed",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "telegramId",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "twitterId",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct PooledTemplate.Participant[]",
+        "name": "_participants",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "nonpayable",
@@ -18,6 +70,89 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getData",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_creator",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "_tokenAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum PooledTemplate.Statuses",
+        "name": "_status",
+        "type": "uint8"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "share",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claimed",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "telegramId",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "twitterId",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct PooledTemplate.Participant[]",
+        "name": "_participants",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "status",
+    "outputs": [
+      {
+        "internalType": "enum PooledTemplate.Statuses",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
