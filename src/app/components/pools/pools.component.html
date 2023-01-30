@@ -81,11 +81,11 @@
             [class.border-warning]="isOwnable(participant)"
           >
             <h6 class="card-header">
-              {{ participant.address }}
+              {{ participant.account }}
             </h6>
             <div class="card-body">
               <h5 class="card-title fs-6 m-0">
-                Share: {{ participant.share }}/{{ participant.progress }}
+                Share: {{ participant.share }}/{{ participant.claimed }}
               </h5>
               <p class="card-text m-0">Telegram ID: {{ participant.telegramId }}</p>
               <p class="card-text m-0">Twitter ID: {{ participant.twitterId }}</p>

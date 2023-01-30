@@ -26,6 +26,7 @@ export class PoolsComponent implements OnChanges {
   @Input() public userAccount: string
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
+
   @HostBinding('class') private readonly classes = 'row'
 
   public activePool: IPool
@@ -51,9 +52,9 @@ export class PoolsComponent implements OnChanges {
 
   public prepParticipants(participants: IParticipant[] = []): IParticipant[] {
     return participants
-      .map((p) => ({ ...p, address: p.address.toLowerCase() }))
+      .map((p) => ({ ...p, account: p.account.toLowerCase() }))
       .sort((a, b) => {
-        if (a.address === this.userAccount) {
+        if (a.account === this.userAccount) {
           return -1
         }
 
@@ -62,7 +63,7 @@ export class PoolsComponent implements OnChanges {
   }
 
   public isOwnable(participant: IParticipant): boolean {
-    return participant.address === this.userAccount
+    return participant.account === this.userAccount
   }
 
   public onEditTokenAddress(): void {
