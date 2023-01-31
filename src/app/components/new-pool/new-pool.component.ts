@@ -18,6 +18,7 @@ import {
 } from '@angular/forms'
 import {
   EVM_ADDRESS_REGEXP,
+  MAX_PARTICIPANT_DESCRIPTION,
   MAX_POOL_PARTICIPANTS,
   MIN_POOL_AMOUNT,
   MIN_SHARE_AMOUNT,
@@ -85,6 +86,8 @@ export class NewPoolComponent implements OnInit, OnDestroy {
         return form.hasError('pattern', [field]) || form.hasError('participantsUniq', [field])
       case 'share':
         return form.hasError('min', [field])
+      case 'description':
+        return form.hasError('maxlength', [field])
       default:
         return false
     }
@@ -102,8 +105,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
           ],
         ],
         share: [null, [Validators.required, Validators.min(MIN_SHARE_AMOUNT)]],
-        telegramId: '',
-        twitterId: '',
+        description: ['', [Validators.maxLength(MAX_PARTICIPANT_DESCRIPTION)]],
       }),
     )
   }

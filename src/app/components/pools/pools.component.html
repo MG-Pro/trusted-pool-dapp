@@ -87,8 +87,7 @@
               <h5 class="card-title fs-6 m-0">
                 Share: {{ participant.share }}/{{ participant.claimed }}
               </h5>
-              <p class="card-text m-0">Telegram ID: {{ participant.telegramId }}</p>
-              <p class="card-text m-0">Twitter ID: {{ participant.twitterId }}</p>
+              <p class="card-text m-0">Description: {{ participant.description }}</p>
               <div class="d-flex">
                 <button
                   *ngIf="isOwnable(participant)"

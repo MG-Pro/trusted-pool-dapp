@@ -7,8 +7,7 @@ export interface IParticipant {
   share: number
   claimed: number
   account: string
-  telegramId?: string
-  twitterId?: string
+  description?: string
 }
 
 export interface IPool {

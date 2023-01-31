@@ -72,16 +72,6 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label"> Participant Telegram ID </label>
-              <input class="form-control bg-dark text-light" formControlName="telegramId" />
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label"> Participant Twitter ID </label>
-              <input class="form-control bg-dark text-light" formControlName="twitterId" />
-            </div>
-
-            <div class="mb-3">
               <label class="form-label">
                 Participant share in tokens <span class="text-danger">*</span>
               </label>
@@ -96,6 +86,19 @@
                 {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
               </p>
             </div>
+
+            <div class="mb-3">
+              <label class="form-label"> Participant description </label>
+              <input
+                class="form-control bg-dark text-light"
+                formControlName="description"
+                [class.is-invalid]="hasFormArrayError('description', i)"
+              />
+              <p class="invalid-feedback">
+                Description max length
+                {{ participantsForm.at(i).getError('maxlength', 'description')?.requiredLength }}
+              </p>
+            </div>
           </div>
         </div>
       </ng-container>
@@ -108,7 +111,7 @@
 
     <div class="d-flex justify-content-end align-items-baseline">
       <p class="text-danger me-3" *ngIf="!participantsForm.length">
-        Please, add at list 1 participant
+        Please, add at least 1 participant
       </p>
       <p class="text-danger me-3" *ngIf="hasErrors('participants')">
         Sum of participant shares and token amount is not equal
