@@ -7,7 +7,7 @@ import "./PooledTemplate.sol";
 contract TrustedPool {
   address public owner;
 
-  mapping(address => address) internal pooledContracts; //creator -> contract
+  mapping(address => address[]) internal pooledContracts; //creator -> contract
   mapping(address => address[]) internal participants; //participant -> contract
 
   modifier onlyOwner() {
@@ -23,23 +23,34 @@ contract TrustedPool {
     string memory _name,
     address _tokenAddress,
     string memory _tokenName,
-    uint256 _tokenAmount,
     PooledTemplate.Participant[] memory _participants
   ) external {
-    pooledContracts[msg.sender] = address(
-      new PooledTemplate(msg.sender, _name, _tokenAddress, _tokenName, _tokenAmount, _participants)
+    address contractAddress = address(
+      new PooledTemplate(msg.sender, _name, _tokenAddress, _tokenName, _participants)
     );
+
+    pooledContracts[msg.sender].push(contractAddress);
+    saveParticipants(_participants, contractAddress);
   }
 
-  function saveParticipants(PooledTemplate.Participant[] memory _participants) internal {
+  function saveParticipants(
+    PooledTemplate.Participant[] memory _participants,
+    address contractAddress
+  ) internal {
     for (uint256 i; i < _participants.length; i++) {
-      if (participants[_participants[i].account].length > 0) {} else {
-        participants[_participants[i].account] = [pooledContracts[msg.sender]];
-      }
+      participants[_participants[i].account].push(contractAddress);
     }
   }
 
-  function getPooledContractAddress(address _creator) external view returns (address) {
+  function getContractAddressesByCreator(
+    address _creator
+  ) external view returns (address[] memory) {
     return pooledContracts[_creator];
+  }
+
+  function getContractAddressesByParticipant(
+    address _participants
+  ) external view returns (address[] memory) {
+    return participants[_participants];
   }
 }

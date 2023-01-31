@@ -22,11 +22,6 @@
         "type": "string"
       },
       {
-        "internalType": "uint256",
-        "name": "_tokenAmount",
-        "type": "uint256"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -45,12 +40,7 @@
           },
           {
             "internalType": "string",
-            "name": "telegramId",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "twitterId",
+            "name": "description",
             "type": "string"
           }
         ],
@@ -100,11 +90,6 @@
         "type": "string"
       },
       {
-        "internalType": "uint256",
-        "name": "_tokenAmount",
-        "type": "uint256"
-      },
-      {
         "internalType": "enum PooledTemplate.Statuses",
         "name": "_status",
         "type": "uint8"
@@ -128,12 +113,7 @@
           },
           {
             "internalType": "string",
-            "name": "telegramId",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "twitterId",
+            "name": "description",
             "type": "string"
           }
         ],

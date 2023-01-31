@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core'
+import { IPool } from '@app/types'
 
 import { fakePoolData } from '../../fakeData/fakePools'
 
@@ -17,7 +18,7 @@ export class ContractService {
   public async dispatchPoolsData(): Promise<void> {
     this.connectionService.setLoadingStatus()
     this.stateService.patchState({
-      userPools: fakePoolData,
+      userPools: fakePoolData as IPool[],
     })
     this.connectionService.setLoadingStatus(false)
   }

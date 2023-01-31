@@ -5,7 +5,7 @@ export enum PoolStatuses {
 
 export interface IParticipant {
   share: number
-  claimed: number
+  claimed?: number
   account: string
   description?: string
 }

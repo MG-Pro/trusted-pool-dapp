@@ -22,11 +22,6 @@
         "type": "string"
       },
       {
-        "internalType": "uint256",
-        "name": "_tokenAmount",
-        "type": "uint256"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -45,12 +40,7 @@
           },
           {
             "internalType": "string",
-            "name": "telegramId",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "twitterId",
+            "name": "description",
             "type": "string"
           }
         ],
@@ -72,12 +62,31 @@
         "type": "address"
       }
     ],
-    "name": "getPooledContractAddress",
+    "name": "getContractAddressesByCreator",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "address[]",
         "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_participants",
         "type": "address"
+      }
+    ],
+    "name": "getContractAddressesByParticipant",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
