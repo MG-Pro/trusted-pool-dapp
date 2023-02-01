@@ -43,8 +43,8 @@ export class DashboardComponent implements OnInit {
     this.patchLocalState({ showCreatingForm: false })
   }
 
-  public onSaveNewForm(poolData: Partial<IPool>): void {
-    console.log(poolData)
+  public async onSaveNewForm(poolData: Partial<IPool>): Promise<void> {
+    await this.contractService.createNewPool(poolData)
     this.onCloseNewForm()
   }
 

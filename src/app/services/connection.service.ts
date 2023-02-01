@@ -47,8 +47,8 @@ export class ConnectionService {
       return this.wrongAccountMessage()
     }
 
-    const address: string = this.getContractAddress()
-    this.trustedPoolContract = new ethers.Contract(address, abi, this.provider) as TrustedPool
+    this.trustedPoolContract = await this.getContract()
+
     const signer: Signer = this.provider.getSigner()
     this.stateService.patchState({
       userConnected: true,
@@ -105,8 +105,22 @@ export class ConnectionService {
     return this.allowedNetworks.includes(this.provider.network?.chainId)
   }
 
-  private getContractAddress(): string {
-    return ContractAddresses[this.provider.network.chainId].TrustedPool
+  private async getContract(): Promise<TrustedPool> {
+    const address = ContractAddresses[this.provider.network.chainId].TrustedPool
+    try {
+      if ((await this.provider.getCode(address)) === '0x') {
+        return null
+      }
+    } catch (e) {
+      return null
+    }
+    const contract = new ethers.Contract(address, abi, this.provider.getSigner()) as TrustedPool
+
+    if (await contract.deployed()) {
+      return contract
+    }
+
+    return null
   }
 
   private setListeners(): void {

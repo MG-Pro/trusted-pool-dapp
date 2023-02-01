@@ -50,8 +50,8 @@ export class PoolsComponent implements OnChanges {
     }
   }
 
-  public prepParticipants(participants: IParticipant[] = []): IParticipant[] {
-    return participants
+  public prepParticipants(participants: IParticipant[]): IParticipant[] {
+    return (participants ?? [])
       .map((p) => ({ ...p, account: p.account.toLowerCase() }))
       .sort((a, b) => {
         if (a.account === this.userAccount) {

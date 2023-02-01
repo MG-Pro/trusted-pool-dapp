@@ -1,7 +1,7 @@
 import { addressExporter, ethers } from 'hardhat'
 
 async function main(): Promise<void> {
-  const [, deployer] = await ethers.getSigners()
+  const [deployer] = await ethers.getSigners()
   console.log('Deploying contracts with the account:', deployer.address)
 
   const Contract = await ethers.getContractFactory('TrustedPool')

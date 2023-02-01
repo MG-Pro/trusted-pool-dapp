@@ -44,7 +44,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
     tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
     tokenName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(10)]],
-    tokenAmount: [null, [Validators.required, Validators.min(MIN_POOL_AMOUNT)]],
+    tokenAmount: [0, [Validators.required, Validators.min(MIN_POOL_AMOUNT)]],
     participants: this.fb.array(
       [],
       [this.participantNumberValidator, this.participantsAmountValidator],
@@ -68,6 +68,14 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     this.form.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
       this.formData = val as Partial<IPool>
     })
+    //
+    this.form.patchValue({ name: 'VC1', tokenName: 'MTG', tokenAmount: 5000 })
+    this.participantsForm.push(
+      this.fb.group({
+        address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        share: 5000,
+      }),
+    )
   }
 
   public ngOnDestroy(): void {
