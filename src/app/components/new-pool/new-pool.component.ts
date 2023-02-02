@@ -69,11 +69,19 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       this.formData = val as Partial<IPool>
     })
     //
-    this.form.patchValue({ name: 'VC1', tokenName: 'MTG', tokenAmount: 5000 })
+    this.form.patchValue({ name: 'VC1', tokenName: 'MTG', tokenAmount: 10000 })
     this.participantsForm.push(
       this.fb.group({
-        address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        account: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
         share: 5000,
+        description: 'test',
+      }),
+    )
+    this.participantsForm.push(
+      this.fb.group({
+        account: '0x6459B6FEBCA2f92122Cc741eC5d477ccEa1AA28c',
+        share: 5000,
+        description: 'test1',
       }),
     )
   }
@@ -104,7 +112,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   public addParticipant(): void {
     this.participantsForm.push(
       this.fb.group({
-        address: [
+        account: [
           '',
           [
             Validators.required,

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core'
 import abi from '@app/contracts/contracts/PooledTemplate.sol/PooledTemplate.json'
 import { NotificationService, StatusClasses } from '@app/modules/notification'
 import { PooledTemplate, TrustedPool } from '@app/typechain'
-import { IParticipant, IPool } from '@app/types'
+import { IParticipant, IPool, IPoolResponse, PoolStatuses } from '@app/types'
 import { ethers, Signer } from 'ethers'
 
 import { ConnectionService } from './connection.service'
@@ -31,14 +31,14 @@ export class ContractService {
   }
 
   public async createNewPool(poolData: Partial<IPool>): Promise<void> {
-    console.log(poolData)
     if (!this.trustedPoolContract) {
       return
     }
+    this.connectionService.setLoadingStatus()
+
     const tokenAddress = poolData.tokenAddress
       ? poolData.tokenAddress
       : ethers.constants.AddressZero
-    this.connectionService.setLoadingStatus()
 
     const participants: IParticipant[] = poolData.participants.map((p) => ({
       ...p,
@@ -47,12 +47,13 @@ export class ContractService {
     }))
 
     try {
-      await this.trustedPoolContract.createPooledContract(
+      const tr = await this.trustedPoolContract.createPooledContract(
         poolData.name,
         tokenAddress,
         poolData.tokenName,
         participants,
       )
+      await tr.wait()
     } catch (e) {
       this.showError(e)
     } finally {
@@ -65,22 +66,60 @@ export class ContractService {
       return
     }
     this.connectionService.setLoadingStatus()
-    const poolsAccounts = await this.trustedPoolContract.getContractAddressesByParticipant(
-      this.userAccount,
-    )
-    console.log(poolsAccounts)
+    const poolsAccounts: string[] =
+      await this.trustedPoolContract.getContractAddressesByParticipant(this.userAccount)
+
     if (poolsAccounts.length) {
-      const reqPools = poolsAccounts.map((address) => {
+      const reqPools = poolsAccounts.map((address: string) => {
         return (new ethers.Contract(address, abi, this.signer) as PooledTemplate).getData()
       })
 
-      const pools = await Promise.all(reqPools)
-      console.log(pools)
+      const res: IPoolResponse[] = await Promise.all(reqPools)
+
+      this.stateService.patchState({
+        userPools: this.poolMapper(res, poolsAccounts),
+      })
     }
-    // this.stateService.patchState({
-    //   userPools: fakePoolData as IPool[],
-    // })
+
     this.connectionService.setLoadingStatus(false)
+  }
+
+  private poolMapper(response: IPoolResponse[], poolsAccounts: string[]): IPool[] {
+    return response.map((item, i) => {
+      const participants: IParticipant[] = item._participants.map((p) => ({
+        ...p,
+        share: p.share.toNumber(),
+        claimed: p.claimed.toNumber(),
+      }))
+
+      return {
+        contractAddress: poolsAccounts[i],
+        name: item._name,
+        tokenName: item._tokenName,
+        creatorAddress: item._creator,
+        status: this.convertStatus(item._status),
+        filled: this.getAmount(participants, 'claimed'),
+        tokenAmount: this.getAmount(participants, 'share'),
+        participants,
+      }
+    })
+  }
+
+  private convertStatus(status: number): PoolStatuses {
+    switch (status) {
+      case 0:
+        return PoolStatuses.Active
+      case 1:
+        return PoolStatuses.Finished
+      default:
+        return PoolStatuses.Unknown
+    }
+  }
+
+  private getAmount(participants: IParticipant[], field: 'claimed' | 'share'): number {
+    return participants.reduce((acc, p) => {
+      return acc + p[field]
+    }, 0)
   }
 
   private showError(e): void {

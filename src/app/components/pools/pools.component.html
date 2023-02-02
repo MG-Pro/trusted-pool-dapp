@@ -25,21 +25,22 @@
       <div class="card-body">
         <div class="row mb-3">
           <div class="col">
-            <h6 class="card-title">Token name</h6>
+            <h6 class="card-title">Token name:</h6>
             <p class="card-text">{{ activePool?.tokenName }}</p>
           </div>
           <div class="col">
-            <h6 class="card-title">Pool contract address</h6>
-            <p class="card-text">{{ activePool?.contractAddress }}</p>
+            <h6 class="card-title">Token amount/claimed:</h6>
+            <p class="card-text">{{ activePool?.tokenAmount }}/{{ activePool?.filled }}</p>
           </div>
         </div>
         <div class="row mb-3">
           <div class="col">
-            <h6 class="card-title">Token amount</h6>
-            <p class="card-text">{{ activePool?.tokenAmount }}</p>
+            <h6 class="card-title">Pool contract address:</h6>
+            <p class="card-text">{{ activePool?.contractAddress }}</p>
           </div>
+
           <div class="col">
-            <h6 class="card-title">Token contract address</h6>
+            <h6 class="card-title">Token contract address:</h6>
             <p class="card-text d-flex">
               {{ activePool?.tokenAddress ? activePool?.tokenAddress : 'N/A' }}
               <button
@@ -85,7 +86,7 @@
             </h6>
             <div class="card-body">
               <h5 class="card-title fs-6 m-0">
-                Share: {{ participant.share }}/{{ participant.claimed }}
+                Share/Claimed: {{ participant.share }}/{{ participant.claimed }}
               </h5>
               <p class="card-text m-0">Description: {{ participant.description }}</p>
               <div class="d-flex">

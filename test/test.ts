@@ -40,7 +40,6 @@ describe('TrustedPool', () => {
       .createPooledContract(name, ethers.constants.AddressZero, tokenName, participants)
 
     const pools = await trustedPoolContract.getContractAddressesByParticipant(user2.address)
-    console.log(participants)
 
     const pooledTemplateContract: PooledTemplate = await ethers.getContractAt(
       'PooledTemplate',
