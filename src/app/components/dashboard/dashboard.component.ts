@@ -45,6 +45,7 @@ export class DashboardComponent implements OnInit {
 
   public async onSaveNewForm(poolData: Partial<IPool>): Promise<void> {
     await this.contractService.createNewPool(poolData)
+    await this.contractService.dispatchPoolsData()
     this.onCloseNewForm()
   }
 
