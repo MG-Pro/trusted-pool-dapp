@@ -9,6 +9,7 @@ export enum PoolStatuses {
 export interface IParticipant {
   share: number
   claimed: number
+  accrued: number
   account: string
   description: string
 }
@@ -39,4 +40,5 @@ export interface IParticipantResponse {
   description: string
   share: BigNumber
   claimed: BigNumber
+  accrued: BigNumber
 }

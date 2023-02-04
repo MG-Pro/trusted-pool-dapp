@@ -49,9 +49,13 @@ export class DashboardComponent implements OnInit {
     this.onCloseNewForm()
   }
 
-  public onTokenAddressChange(eventData: [string, IPool]): void {}
+  public async onTokenAddressChange(eventData: [string, IPool]): Promise<void> {
+    await this.contractService.setTokenContract(eventData[0])
+  }
 
-  public onClaimTokens(pool: IPool): void {}
+  public async onClaimTokens(pool: IPool): Promise<void> {
+    await this.contractService.claimToken()
+  }
 
   private patchLocalState(patch): void {
     this.localState$.next({ ...this.localState$.value, ...patch })

@@ -51,19 +51,21 @@ export class PoolsComponent implements OnChanges {
   }
 
   public prepParticipants(participants: IParticipant[]): IParticipant[] {
-    return (participants ?? [])
-      .map((p) => ({ ...p, account: p.account.toLowerCase() }))
-      .sort((a, b) => {
-        if (a.account === this.userAccount) {
-          return -1
-        }
+    return (participants ?? []).sort((a, b) => {
+      if (a.account === this.userAccount) {
+        return -1
+      }
 
-        return 1
-      })
+      return 1
+    })
   }
 
   public isOwnable(participant: IParticipant): boolean {
     return participant.account === this.userAccount
+  }
+
+  public canClaim(participant: IParticipant): boolean {
+    return this.isOwnable(participant)
   }
 
   public onEditTokenAddress(): void {

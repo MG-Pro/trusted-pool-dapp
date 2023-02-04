@@ -61,6 +61,10 @@ export class ContractService {
     }
   }
 
+  public async setTokenContract(address: string): Promise<void> {}
+
+  public async claimToken(): Promise<void> {}
+
   public async dispatchPoolsData(): Promise<void> {
     if (!this.trustedPoolContract) {
       return
@@ -88,8 +92,10 @@ export class ContractService {
     return response.map((item, i) => {
       const participants: IParticipant[] = item._participants.map((p) => ({
         ...p,
+        account: p.account.toLowerCase(),
         share: p.share.toNumber(),
         claimed: p.claimed.toNumber(),
+        accrued: p.accrued.toNumber(),
       }))
 
       return {

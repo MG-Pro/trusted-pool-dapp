@@ -86,12 +86,17 @@
             </h6>
             <div class="card-body">
               <h5 class="card-title fs-6 m-0">
-                Share/Claimed: {{ participant.share }}/{{ participant.claimed }}
+                Share/Accrued/Claimed:
+                <span
+                  >{{ participant.share | number }}/{{ participant.accrued | number }}/{{
+                    participant.claimed | number
+                  }}</span
+                >
               </h5>
               <p class="card-text m-0">Description: {{ participant.description }}</p>
               <div class="d-flex">
                 <button
-                  *ngIf="isOwnable(participant)"
+                  *ngIf="canClaim(participant)"
                   class="ms-auto btn btn-success btn-sm"
                   (click)="claim()"
                 >
