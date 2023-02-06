@@ -25,20 +25,21 @@ contract PooledTemplate {
     string description;
   }
 
-  address public creator;
-  string private name;
-  address private tokenAddress;
-  string private tokenName;
-  Statuses public status;
+  address private poolCreator;
+  string private poolName;
+  address private poolTokenAddress;
+  string private poolTokenName;
+  Statuses private poolStatus;
+
   uint private participantsCount;
   uint private distributedBalance;
-  uint private tokenAmount;
+  uint private poolTokenAmount;
 
   mapping(address => ParticipantData) private participantsData;
   mapping(uint256 => address) private mapper;
 
   modifier onlyCreator() {
-    require(msg.sender == creator, "Only for creator");
+    require(msg.sender == poolCreator, "Only for creator");
     _;
   }
 
@@ -47,8 +48,13 @@ contract PooledTemplate {
     _;
   }
 
+  modifier hasTokenAddress() {
+    require(poolTokenAddress == address(0), "Token contract address no set");
+    _;
+  }
+
   modifier atStatus(Statuses _status) {
-    require(status == _status, "Wrong status");
+    require(poolStatus == _status, "Wrong status");
     _;
   }
 
@@ -59,12 +65,12 @@ contract PooledTemplate {
     string memory _tokenName,
     Participant[] memory _participants
   ) {
-    creator = _creator;
-    name = _name;
-    tokenAddress = _tokenAddress;
-    tokenName = _tokenName;
-    status = Statuses.Active;
-    tokenAmount = calculateTokenAmount(_participants);
+    poolCreator = _creator;
+    poolName = _name;
+    poolTokenAddress = _tokenAddress;
+    poolTokenName = _tokenName;
+    poolStatus = Statuses.Active;
+    poolTokenAmount = calculateTokenAmount(_participants);
     addParticipants(_participants);
   }
 
@@ -72,9 +78,15 @@ contract PooledTemplate {
     for (uint256 i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
       // TODO: CHECK IT!
-      uint ratio = (item.share * 100) / tokenAmount;
+      uint ratio = (item.share * 100) / poolTokenAmount;
 
-      participantsData[item.account] = ParticipantData(item.share, 0, 0, ratio, item.description);
+      participantsData[item.account] = ParticipantData(
+        item.share,
+        item.claimed,
+        ratio,
+        item.accrued,
+        item.description
+      );
       mapper[participantsCount] = item.account;
       participantsCount++;
     }
@@ -84,12 +96,12 @@ contract PooledTemplate {
     public
     view
     returns (
-      address _creator,
-      string memory _name,
-      address _tokenAddress,
-      string memory _tokenName,
-      Statuses _status,
-      Participant[] memory _participants
+      address creator,
+      string memory name,
+      address tokenAddress,
+      string memory tokenName,
+      Statuses status,
+      Participant[] memory participants
     )
   {
     return (creator, name, tokenAddress, tokenName, status, getParticipants());
@@ -97,12 +109,11 @@ contract PooledTemplate {
 
   function setTokenAddress(address _tokenAddress) external onlyParticipant {
     require(isContract(_tokenAddress), "Argument is not contract address");
-    tokenAddress = _tokenAddress;
+    poolTokenAddress = _tokenAddress;
   }
 
-  function tokenBalance() public view returns (uint256) {
-    require(tokenAddress == address(0), "Token contract address no set");
-    return ERC20(tokenAddress).balanceOf(address(this));
+  function tokenBalance() public view hasTokenAddress returns (uint256) {
+    return ERC20(poolTokenAddress).balanceOf(address(this));
   }
 
   function tokenDistribution() public {
@@ -121,18 +132,30 @@ contract PooledTemplate {
     distributedBalance = balance;
   }
 
-  function getParticipants() private view returns (Participant[] memory _participants) {
+  function claimTokens() external hasTokenAddress {
+    require(participantsData[msg.sender].accrued > 0, "There are not tokens for claim");
+    uint accrued = participantsData[msg.sender].accrued;
+    participantsData[msg.sender].claimed += accrued;
+    participantsData[msg.sender].accrued = 0;
+
+    bool success = ERC20(poolTokenAddress).transfer(address(this), accrued);
+    require(success, "Claim error");
+  }
+
+  function getParticipants() private view returns (Participant[] memory) {
+    Participant[] memory participants = new Participant[](participantsCount);
     for (uint i = 0; i < participantsCount; i++) {
-      ParticipantData memory itemData = participantsData[mapper[i]];
-      Participant memory item = Participant(
+      ParticipantData memory data = participantsData[mapper[i]];
+      participants[i] = Participant(
         mapper[i],
-        itemData.share,
-        itemData.claimed,
-        itemData.accrued,
-        itemData.description
+        data.share,
+        data.claimed,
+        data.accrued,
+        data.description
       );
-      _participants[i] = item;
     }
+
+    return participants;
   }
 
   function calculateTokenAmount(

@@ -59,15 +59,9 @@
   },
   {
     "inputs": [],
-    "name": "creator",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "claimTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -76,27 +70,27 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "_creator",
+        "name": "creator",
         "type": "address"
       },
       {
         "internalType": "string",
-        "name": "_name",
+        "name": "name",
         "type": "string"
       },
       {
         "internalType": "address",
-        "name": "_tokenAddress",
+        "name": "tokenAddress",
         "type": "address"
       },
       {
         "internalType": "string",
-        "name": "_tokenName",
+        "name": "tokenName",
         "type": "string"
       },
       {
         "internalType": "enum PooledTemplate.Statuses",
-        "name": "_status",
+        "name": "status",
         "type": "uint8"
       },
       {
@@ -128,7 +122,7 @@
           }
         ],
         "internalType": "struct PooledTemplate.Participant[]",
-        "name": "_participants",
+        "name": "participants",
         "type": "tuple[]"
       }
     ],
@@ -146,19 +140,6 @@
     "name": "setTokenAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "status",
-    "outputs": [
-      {
-        "internalType": "enum PooledTemplate.Statuses",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -27,12 +27,12 @@ export interface IPool {
 }
 
 export interface IPoolResponse {
-  _name: string
-  _tokenAddress: string
-  _tokenName: string
-  _creator: string
-  _participants: IParticipantResponse[]
-  _status: number
+  name: string
+  tokenAddress: string
+  tokenName: string
+  creator: string
+  participants: IParticipantResponse[]
+  status: number
 }
 
 export interface IParticipantResponse {

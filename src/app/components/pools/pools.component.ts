@@ -45,7 +45,7 @@ export class PoolsComponent implements OnChanges {
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
-    if (changes['pools'].currentValue?.length) {
+    if (changes['pools']?.currentValue?.length) {
       this.activePool = this.pools[0]
     }
   }

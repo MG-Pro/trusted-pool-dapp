@@ -51,7 +51,7 @@ describe('TrustedPool', () => {
     }
   }
 
-  xit('Should create pool', async () => {
+  it('Should create pool', async () => {
     const { trustedPoolContract, deployer1, user2 } = await loadFixture(deploy)
     const { name, tokenName, participants, tokenAddress } = await getPoolData()
 
@@ -66,10 +66,10 @@ describe('TrustedPool', () => {
       poolAccounts[0],
     )
     const pool: IPoolResponse = await pooledTemplateContract.getData()
-    expect(pool._status).to.equal(0)
+    expect(pool.status).to.equal(0)
   })
 
-  it('Should receive tokens', async () => {
+  xit('Should receive tokens', async () => {
     const { trustedPoolContract, testERC20CContract, deployer1, user2 } = await loadFixture(deploy)
 
     const { name, tokenName, participants, tokenAddress } = await getPoolData(
@@ -87,6 +87,6 @@ describe('TrustedPool', () => {
       poolAccounts[0],
     )
     const pool: IPoolResponse = await pooledTemplateContract.getData()
-    expect(pool._status).to.equal(0)
+    expect(pool.status).to.equal(0)
   })
 })

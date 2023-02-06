@@ -44,6 +44,7 @@ export class ContractService {
       ...p,
       description: p.description || '1',
       claimed: 0,
+      accrued: 0,
     }))
 
     try {
@@ -70,6 +71,7 @@ export class ContractService {
       return
     }
     this.connectionService.setLoadingStatus()
+
     const poolsAccounts: string[] =
       await this.trustedPoolContract.getContractAddressesByParticipant(this.userAccount)
 
@@ -78,19 +80,22 @@ export class ContractService {
         return (new ethers.Contract(address, abi, this.signer) as PooledTemplate).getData()
       })
 
-      const res: IPoolResponse[] = await Promise.all(reqPools)
-
-      this.stateService.patchState({
-        userPools: this.poolMapper(res, poolsAccounts),
-      })
+      try {
+        const res: IPoolResponse[] = await Promise.all(reqPools)
+        this.stateService.patchState({
+          userPools: this.poolMapper(res, poolsAccounts),
+        })
+      } catch (e) {
+        this.showError(e)
+      } finally {
+        this.connectionService.setLoadingStatus(false)
+      }
     }
-
-    this.connectionService.setLoadingStatus(false)
   }
 
   private poolMapper(response: IPoolResponse[], poolsAccounts: string[]): IPool[] {
     return response.map((item, i) => {
-      const participants: IParticipant[] = item._participants.map((p) => ({
+      const participants: IParticipant[] = item.participants.map((p) => ({
         ...p,
         account: p.account.toLowerCase(),
         share: p.share.toNumber(),
@@ -100,10 +105,10 @@ export class ContractService {
 
       return {
         contractAddress: poolsAccounts[i],
-        name: item._name,
-        tokenName: item._tokenName,
-        creatorAddress: item._creator,
-        status: this.convertStatus(item._status),
+        name: item.name,
+        tokenName: item.tokenName,
+        creatorAddress: item.creator,
+        status: this.convertStatus(item.status),
         filled: this.getAmount(participants, 'claimed'),
         tokenAmount: this.getAmount(participants, 'share'),
         participants,
