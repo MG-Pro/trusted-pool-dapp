@@ -90,6 +90,8 @@ export class ContractService {
       } finally {
         this.connectionService.setLoadingStatus(false)
       }
+    } else {
+      this.connectionService.setLoadingStatus(false)
     }
   }
 

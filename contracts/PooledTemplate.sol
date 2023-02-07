@@ -104,7 +104,7 @@ contract PooledTemplate {
       Participant[] memory participants
     )
   {
-    return (creator, name, tokenAddress, tokenName, status, getParticipants());
+    return (poolCreator, poolName, poolTokenAddress, poolTokenName, poolStatus, getParticipants());
   }
 
   function setTokenAddress(address _tokenAddress) external onlyParticipant {
