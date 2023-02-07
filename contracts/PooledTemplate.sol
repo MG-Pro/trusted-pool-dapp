@@ -49,7 +49,7 @@ contract PooledTemplate {
   }
 
   modifier hasTokenAddress() {
-    require(poolTokenAddress == address(0), "Token contract address no set");
+    require(poolTokenAddress != address(0), "Token contract address no set");
     _;
   }
 
