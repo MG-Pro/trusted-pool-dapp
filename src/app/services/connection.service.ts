@@ -53,7 +53,7 @@ export class ConnectionService {
     this.stateService.patchState({
       userConnected: true,
       trustedPoolContract: this.trustedPoolContract,
-      userAccount: accounts[0],
+      userAccount: accounts[0]?.toLowerCase(),
       signer,
     })
     this.setLoadingStatus(false)

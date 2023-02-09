@@ -10,7 +10,7 @@
     "compile": "hardhat compile",
     "test-contract": "hardhat test",
     "dev-network": "hardhat node",
-    "dev-deploy": "hardhat run scripts/deploy.ts --network localhost",
+    "dev-deploy": "hardhat run scripts/deploy-test.ts --network localhost",
     "prod-deploy": "hardhat run scripts/deploy.ts --network goerli",
     "coverage": "hardhat coverage",
     "prettier": "prettier --write 'contracts/**/*.sol'",

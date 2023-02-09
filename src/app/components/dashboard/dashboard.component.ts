@@ -50,7 +50,9 @@ export class DashboardComponent implements OnInit {
   }
 
   public async onTokenAddressChange(eventData: [string, IPool]): Promise<void> {
-    await this.contractService.setTokenContract(eventData[0])
+    await this.contractService.setTokenContract(eventData[0], eventData[1]).then(() => {
+      this.contractService.dispatchPoolsData()
+    })
   }
 
   public async onClaimTokens(pool: IPool): Promise<void> {

@@ -7,7 +7,7 @@ import { ethers } from 'hardhat'
 import { newPool } from '../src/fakeData/fakePools'
 
 describe('TrustedPool', () => {
-  const totalSupply = 1000_000
+  const totalSupply = 1_000_000
 
   async function deploy(): Promise<Record<string, any>> {
     const [deployer1, deployer2, user1, user2, user3, user4] = await ethers.getSigners()
@@ -126,5 +126,31 @@ describe('TrustedPool', () => {
       const cP: IParticipantResponse = pool.participants[i]
       expect(cP.accrued).to.equal(accrued)
     })
+  })
+
+  it('Should add token address', async () => {
+    const mintAmount = 25_000
+    const { trustedPoolContract, testERC20CContract, deployer2, deployer1, user2 } =
+      await loadFixture(deploy)
+
+    const { name, tokenName, participants, tokenAddress } = await getPoolData()
+
+    await (trustedPoolContract as TrustedPool)
+      .connect(deployer1)
+      .createPooledContract(name, tokenAddress, tokenName, participants)
+
+    const poolAccounts = await trustedPoolContract.getContractAddressesByParticipant(user2.address)
+
+    await (testERC20CContract as TestERC20).connect(deployer2).mint(poolAccounts[0], mintAmount)
+
+    const pooledTemplateContract: PooledTemplate = await ethers.getContractAt(
+      'PooledTemplate',
+      poolAccounts[0],
+    )
+
+    await pooledTemplateContract.setTokenAddress(testERC20CContract.address)
+    const pool: IPoolResponse = await pooledTemplateContract.getData()
+
+    expect(pool.tokenAddress).to.equal(testERC20CContract.address)
   })
 })

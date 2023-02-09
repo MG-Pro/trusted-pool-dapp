@@ -31,7 +31,7 @@ export class ContractService {
   }
 
   public async createNewPool(poolData: Partial<IPool>): Promise<void> {
-    if (!this.trustedPoolContract) {
+    if (!this.checkContract()) {
       return
     }
     this.connectionService.setLoadingStatus()
@@ -62,12 +62,21 @@ export class ContractService {
     }
   }
 
-  public async setTokenContract(address: string): Promise<void> {}
+  public async setTokenContract(tokenAddress: string, pool: IPool): Promise<void> {
+    this.connectionService.setLoadingStatus()
+    try {
+      await this.getPooledTemplateInstance(pool.contractAddress).setTokenAddress(tokenAddress)
+    } catch (e) {
+      this.showError(e)
+    } finally {
+      this.connectionService.setLoadingStatus(false)
+    }
+  }
 
   public async claimToken(): Promise<void> {}
 
   public async dispatchPoolsData(): Promise<void> {
-    if (!this.trustedPoolContract) {
+    if (!this.checkContract()) {
       return
     }
     this.connectionService.setLoadingStatus()
@@ -77,7 +86,7 @@ export class ContractService {
 
     if (poolsAccounts.length) {
       const reqPools = poolsAccounts.map((address: string) => {
-        return (new ethers.Contract(address, abi, this.signer) as PooledTemplate).getData()
+        return this.getPooledTemplateInstance(address).getData()
       })
 
       try {
@@ -106,10 +115,11 @@ export class ContractService {
       }))
 
       return {
-        contractAddress: poolsAccounts[i],
+        contractAddress: poolsAccounts[i]?.toLowerCase(),
         name: item.name,
         tokenName: item.tokenName,
-        creatorAddress: item.creator,
+        tokenAddress: item.tokenAddress?.toLowerCase(),
+        creatorAddress: item.creator?.toLowerCase(),
         status: this.convertStatus(item.status),
         filled: this.getAmount(participants, 'claimed'),
         tokenAmount: this.getAmount(participants, 'share'),
@@ -138,5 +148,17 @@ export class ContractService {
   private showError(e): void {
     console.error(e)
     this.notificationService.showMessage(e?.message || 'Error', StatusClasses.danger, 'main')
+  }
+
+  private checkContract(): boolean {
+    if (!this.trustedPoolContract) {
+      this.showError({ message: 'TrustedPoolContract is not deployed' })
+      return false
+    }
+    return true
+  }
+
+  private getPooledTemplateInstance(address: string): PooledTemplate {
+    return new ethers.Contract(address, abi, this.signer) as PooledTemplate
   }
 }

@@ -4,7 +4,7 @@
       [class]="'align-items-center p-0 d-flex alert ' + msg.statusClass"
       *ngFor="let msg of params.messages"
     >
-      <span>{{ msg.message }}</span>
+      <span class="text-break">{{ msg.message }}</span>
       <button class="btn-close btn-close-white ms-3 fs-6 p-0" (click)="close(msg.id)"></button>
     </div>
   </div>

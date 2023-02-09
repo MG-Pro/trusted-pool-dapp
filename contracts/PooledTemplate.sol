@@ -108,6 +108,7 @@ contract PooledTemplate {
   }
 
   function setTokenAddress(address _tokenAddress) external onlyParticipant {
+    require(poolTokenAddress == address(0), "Token address already set");
     require(isContract(_tokenAddress), "Argument is not contract address");
     poolTokenAddress = _tokenAddress;
   }
@@ -166,11 +167,7 @@ contract PooledTemplate {
     }
   }
 
-  function isContract(address _addr) private view returns (bool) {
-    uint32 size;
-    assembly {
-      size := extcodesize(_addr)
-    }
-    return (size > 0);
+  function isContract(address _address) private view returns (bool) {
+    return _address.code.length != 0;
   }
 }

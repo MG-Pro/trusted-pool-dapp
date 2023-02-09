@@ -40,8 +40,14 @@ export class PoolsComponent implements OnChanges {
     return this.activePool?.creatorAddress === this.userAccount
   }
 
+  public get isParticipant(): boolean {
+    return this.activePool?.participants.some(({ account }) => {
+      return account === this.userAccount
+    })
+  }
+
   public get disabledEditTokenAddress(): boolean {
-    return !!this.activePool?.tokenAddress || this.isEditTokenAddress || !this.isCreator
+    return !!this.activePool?.tokenAddress || this.isEditTokenAddress || !this.isParticipant
   }
 
   public ngOnChanges(changes: SimpleChanges): void {

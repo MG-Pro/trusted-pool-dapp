@@ -7,9 +7,13 @@ async function main(): Promise<void> {
   const TrustedPool = await ethers.getContractFactory('TrustedPool')
   const trustedPool = await TrustedPool.deploy()
 
-  await trustedPool.deployed()
+  const TestERC20 = await ethers.getContractFactory('TestERC20')
+  const testERC20 = await TestERC20.deploy(1_000_000)
+
+  await testERC20.deployed()
 
   console.log(`TrustedPool contract deployed to: ${trustedPool.address}`)
+  console.log(`TestERC20 contract deployed to: ${testERC20.address}`)
 
   await addressExporter.save({
     TrustedPool: trustedPool.address,
