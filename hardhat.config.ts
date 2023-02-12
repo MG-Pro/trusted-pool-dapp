@@ -4,7 +4,6 @@ import { HardhatUserConfig } from 'hardhat/config'
 
 import '@nomicfoundation/hardhat-toolbox'
 import 'hardhat-abi-exporter'
-
 import 'hardhat-address-exporter'
 
 const config: HardhatUserConfig = {
@@ -15,15 +14,20 @@ const config: HardhatUserConfig = {
     },
   },
   abiExporter: {
-    path: path.resolve('./src/app/contracts'),
+    path: path.resolve('./src/app/contracts/abi'),
     runOnCompile: true,
     spacing: 2,
+    only: ['TrustedPool.sol', 'PooledTemplate.sol'],
     pretty: false,
     clear: true,
   },
   addressExporter: {
     outDir: path.resolve('./src/app/contracts/addresses'),
     runPrettier: true,
+  },
+  typechain: {
+    outDir: path.resolve('./src/app/contracts/typechain-types'),
+    target: 'ethers-v5',
   },
 }
 

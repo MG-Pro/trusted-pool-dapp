@@ -1,4 +1,4 @@
-import { PooledTemplate, TestERC20, TrustedPool } from '@app/typechain'
+import { PooledTemplate, TestERC20, TrustedPool } from '@app/contracts/typechain-types'
 import { IParticipantResponse, IPool, IPoolResponse } from '@app/types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
@@ -66,7 +66,7 @@ describe('TrustedPool', () => {
       'PooledTemplate',
       poolAccounts[0],
     )
-    const pool: IPoolResponse = await pooledTemplateContract.getData()
+    const pool: IPoolResponse = await pooledTemplateContract.getPoolData(0, 25)
     expect(pool.status).to.equal(0)
   })
 
@@ -117,9 +117,7 @@ describe('TrustedPool', () => {
       poolAccounts[0],
     )
 
-    await pooledTemplateContract.tokenDistribution()
-
-    const pool: IPoolResponse = await pooledTemplateContract.getData()
+    const pool: IPoolResponse = await pooledTemplateContract.getPoolData(0, 25)
 
     participants.forEach((p, i) => {
       const accrued = (mintAmount * p.share) / tokenAmount
@@ -149,7 +147,7 @@ describe('TrustedPool', () => {
     )
 
     await pooledTemplateContract.setTokenAddress(testERC20CContract.address)
-    const pool: IPoolResponse = await pooledTemplateContract.getData()
+    const pool: IPoolResponse = await pooledTemplateContract.getPoolData(0, 25)
 
     expect(pool.tokenAddress).to.equal(testERC20CContract.address)
   })

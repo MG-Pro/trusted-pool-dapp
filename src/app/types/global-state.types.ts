@@ -1,4 +1,4 @@
-import { TrustedPool } from '@app/typechain'
+import { TrustedPool } from '@app/contracts/typechain-types'
 import { ethers, Signer } from 'ethers'
 
 import { IPool } from './pool.types'

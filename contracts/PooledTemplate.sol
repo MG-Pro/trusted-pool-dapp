@@ -38,7 +38,7 @@ contract PooledTemplate {
   mapping(uint256 => address) private mapper;
 
   modifier onlyCreator() {
-    require(msg.sender == poolCreator, "Only for creator");
+    require(msg.sender == poolCreator, "Only for creator1");
     _;
   }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
-import abi from '@app/contracts/contracts/PooledTemplate.sol/PooledTemplate.json'
+import abi from '@app/contracts/abi/contracts/PooledTemplate.sol/PooledTemplate.json'
+import { PooledTemplate, TrustedPool } from '@app/contracts/typechain-types'
 import { NotificationService, StatusClasses } from '@app/modules/notification'
-import { PooledTemplate, TrustedPool } from '@app/typechain'
 import { IParticipant, IPool, IPoolResponse, PoolStatuses } from '@app/types'
 import { ethers, Signer } from 'ethers'
 
@@ -86,7 +86,7 @@ export class ContractService {
 
     if (poolsAccounts.length) {
       const reqPools = poolsAccounts.map((address: string) => {
-        return this.getPooledTemplateInstance(address).getData()
+        return this.getPooledTemplateInstance(address).getPoolData(0, 10)
       })
 
       try {

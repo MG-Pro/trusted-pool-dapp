@@ -26,7 +26,6 @@
       "@app/types": ["src/app/types/index"],
       "@app/contracts/*": ["src/app/contracts/*"],
       "@app/settings": ["src/app/settings"],
-      "@app/typechain": ["typechain-types/index"],
       "@app/services": ["src/app/services/index.ts"],
       "@app/components/*": ["src/app/components/*"],
       "@app/modules/*": ["src/app/modules/*"]
