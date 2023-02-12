@@ -31,8 +31,9 @@ export interface IPoolResponse {
   tokenAddress: string
   tokenName: string
   creator: string
-  participants: IParticipantResponse[]
   status: number
+  tokenAmount: BigNumber
+  participants: IParticipantResponse[]
 }
 
 export interface IParticipantResponse {
@@ -41,4 +42,11 @@ export interface IParticipantResponse {
   share: BigNumber
   claimed: BigNumber
   accrued: BigNumber
+}
+
+export interface IPoolsLoadParams {
+  poolFirst: number
+  poolSize: number
+  participantFirst: number
+  participantSize: number
 }

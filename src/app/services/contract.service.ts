@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core'
 import abi from '@app/contracts/abi/contracts/PooledTemplate.sol/PooledTemplate.json'
 import { PooledTemplate, TrustedPool } from '@app/contracts/typechain-types'
 import { NotificationService, StatusClasses } from '@app/modules/notification'
-import { IParticipant, IPool, IPoolResponse, PoolStatuses } from '@app/types'
+import { IParticipant, IPool, IPoolResponse, IPoolsLoadParams, PoolStatuses } from '@app/types'
 import { ethers, Signer } from 'ethers'
 
 import { ConnectionService } from './connection.service'
@@ -75,7 +75,7 @@ export class ContractService {
 
   public async claimToken(): Promise<void> {}
 
-  public async dispatchPoolsData(): Promise<void> {
+  public async dispatchPoolsData(params: IPoolsLoadParams): Promise<void> {
     if (!this.checkContract()) {
       return
     }
@@ -85,9 +85,14 @@ export class ContractService {
       await this.trustedPoolContract.getContractAddressesByParticipant(this.userAccount)
 
     if (poolsAccounts.length) {
-      const reqPools = poolsAccounts.map((address: string) => {
-        return this.getPooledTemplateInstance(address).getPoolData(0, 10)
-      })
+      const reqPools = poolsAccounts
+        .slice(params.poolFirst, params.poolSize)
+        .map((address: string) => {
+          return this.getPooledTemplateInstance(address).getPoolData(
+            params.participantFirst,
+            params.participantSize,
+          )
+        })
 
       try {
         const res: IPoolResponse[] = await Promise.all(reqPools)
@@ -122,7 +127,7 @@ export class ContractService {
         creatorAddress: item.creator?.toLowerCase(),
         status: this.convertStatus(item.status),
         filled: this.getAmount(participants, 'claimed'),
-        tokenAmount: this.getAmount(participants, 'share'),
+        tokenAmount: item.tokenAmount.toNumber(),
         participants,
       }
     })
