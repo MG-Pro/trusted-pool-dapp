@@ -28,6 +28,10 @@ export class ConnectionService {
     private stateService: GlobalStateService,
   ) {}
 
+  public get userConnected(): boolean {
+    return !!this.stateService.state$.value?.userConnected
+  }
+
   public async connect(): Promise<void> {
     if (!this.wallet?.isMetaMask) {
       return this.notificationService.showMessage(

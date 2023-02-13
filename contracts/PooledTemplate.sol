@@ -98,6 +98,7 @@ contract PooledTemplate {
   )
     external
     view
+    onlyParticipant
     returns (
       address creator,
       string memory name,
@@ -108,8 +109,8 @@ contract PooledTemplate {
       Participant[] memory participants
     )
   {
-    require(participantsCount > first, '"first" more than count of participants');
-    if (participantsCount > size) {
+    require(participantsCount > first, '"first" greater than count of participants');
+    if (size > participantsCount) {
       size = participantsCount;
     }
 
@@ -153,7 +154,7 @@ contract PooledTemplate {
       return new Participant[](0);
     }
 
-    uint256 overallBalance = tokenBalance();
+    uint256 overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
     Participant[] memory participants = new Participant[](size);
 
     for (uint256 i = first; i < size; i++) {

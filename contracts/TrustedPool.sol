@@ -25,6 +25,7 @@ contract TrustedPool {
     string memory _tokenName,
     PooledTemplate.Participant[] memory _participants
   ) external {
+    require(_participants.length != 0, "Must have at least 1 participant");
     address contractAddress = address(
       new PooledTemplate(msg.sender, _name, _tokenAddress, _tokenName, _participants)
     );
@@ -36,7 +37,7 @@ contract TrustedPool {
   function saveParticipants(
     PooledTemplate.Participant[] memory _participants,
     address contractAddress
-  ) internal {
+  ) private {
     for (uint256 i; i < _participants.length; i++) {
       participants[_participants[i].account].push(contractAddress);
     }

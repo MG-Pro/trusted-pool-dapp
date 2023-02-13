@@ -35,7 +35,9 @@ export class DashboardComponent implements OnInit {
 
   public async ngOnInit(): Promise<void> {
     await this.connectionService.initConnection()
-    await this.contractService.dispatchPoolsData(this.loadParams)
+    if (this.connectionService.userConnected) {
+      await this.contractService.dispatchPoolsData(this.loadParams)
+    }
   }
 
   public async onConnectWallet(): Promise<void> {
