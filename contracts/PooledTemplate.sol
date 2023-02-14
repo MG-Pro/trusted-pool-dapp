@@ -11,16 +11,16 @@ contract PooledTemplate {
 
   struct Participant {
     address account;
-    uint256 share;
-    uint256 claimed;
-    uint256 accrued;
+    uint share;
+    uint claimed;
+    uint accrued;
     string description;
   }
 
   struct ParticipantData {
-    uint256 share;
-    uint256 claimed;
-    uint256 accrued;
+    uint share;
+    uint claimed;
+    uint accrued;
     string description;
   }
 
@@ -30,12 +30,12 @@ contract PooledTemplate {
   string private poolName;
   string private poolTokenName;
 
-  uint256 private participantsCount;
-  uint256 private poolTokenAmount;
+  uint private participantsCount;
+  uint private poolTokenAmount;
   Statuses private poolStatus;
 
   mapping(address => ParticipantData) private participantsData;
-  mapping(uint256 => address) private mapper;
+  mapping(uint => address) private mapper;
 
   modifier onlyCreator() {
     require(msg.sender == poolCreator, "Only for creator1");
@@ -79,7 +79,7 @@ contract PooledTemplate {
   }
 
   function addParticipants(Participant[] memory _participants) private {
-    for (uint256 i; i < _participants.length; i++) {
+    for (uint i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
       participantsData[item.account] = ParticipantData(
         item.share,
@@ -93,8 +93,8 @@ contract PooledTemplate {
   }
 
   function getPoolData(
-    uint256 first,
-    uint256 size
+    uint first,
+    uint size
   )
     external
     view
@@ -104,16 +104,11 @@ contract PooledTemplate {
       string memory name,
       address tokenAddress,
       string memory tokenName,
-      uint256 tokenAmount,
+      uint tokenAmount,
       Statuses status,
       Participant[] memory participants
     )
   {
-    require(participantsCount > first, '"first" greater than count of participants');
-    if (size > participantsCount) {
-      size = participantsCount;
-    }
-
     return (
       poolCreator,
       poolName,
@@ -132,13 +127,13 @@ contract PooledTemplate {
     poolTokenAddress = _tokenAddress;
   }
 
-  function tokenBalance() public view hasTokenAddress onlyParticipant returns (uint256) {
+  function tokenBalance() public view hasTokenAddress onlyParticipant returns (uint) {
     return IERC20(poolTokenAddress).balanceOf(address(this));
   }
 
   function claimTokens() external hasTokenAddress {
     require(participantsData[msg.sender].accrued > 0, "There are not tokens for claim");
-    uint256 accrued = participantsData[msg.sender].accrued;
+    uint accrued = participantsData[msg.sender].accrued;
     participantsData[msg.sender].claimed += accrued;
     participantsData[msg.sender].accrued = 0;
 
@@ -146,22 +141,32 @@ contract PooledTemplate {
     require(success, "Claim error");
   }
 
-  function getParticipants(
-    uint256 first,
-    uint256 size
-  ) private view returns (Participant[] memory) {
+  function getParticipants(uint first, uint size) private view returns (Participant[] memory) {
     if (participantsCount == 0) {
       return new Participant[](0);
     }
+    require(participantsCount > first, "Start index greater than count of participants");
 
-    uint256 overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
+    if (size > participantsCount - first) {
+      size = participantsCount - first;
+    }
     Participant[] memory participants = new Participant[](size);
 
-    for (uint256 i = first; i < size; i++) {
-      ParticipantData memory data = participantsData[mapper[i]];
-      uint256 accrued = (overallBalance * data.share) / poolTokenAmount - data.claimed;
+    uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
+    uint counter;
 
-      participants[i] = Participant(mapper[i], data.share, data.claimed, accrued, data.description);
+    for (uint i = first; i < first + size; i++) {
+      ParticipantData memory data = participantsData[mapper[i]];
+      uint accrued = (overallBalance * data.share) / poolTokenAmount - data.claimed;
+
+      participants[counter] = Participant(
+        mapper[i],
+        data.share,
+        data.claimed,
+        accrued,
+        data.description
+      );
+      counter++;
     }
 
     return participants;
@@ -169,8 +174,8 @@ contract PooledTemplate {
 
   function calculateTokenAmount(
     Participant[] memory _participants
-  ) private pure returns (uint256 sum) {
-    for (uint256 i; i < _participants.length; i++) {
+  ) private pure returns (uint sum) {
+    for (uint i; i < _participants.length; i++) {
       sum += _participants[i].share;
     }
   }
