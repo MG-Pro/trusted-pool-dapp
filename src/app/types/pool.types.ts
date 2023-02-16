@@ -33,7 +33,7 @@ export interface IPoolResponse {
   creator: string
   status: number
   tokenAmount: BigNumber
-  participants: IParticipantResponse[]
+  participantsCount: BigNumber
 }
 
 export interface IParticipantResponse {
@@ -44,9 +44,8 @@ export interface IParticipantResponse {
   accrued: BigNumber
 }
 
-export interface IPoolsLoadParams {
-  poolFirst: number
-  poolSize: number
-  participantFirst: number
-  participantSize: number
+export interface IParticipantLoadParams {
+  first: number
+  size: number
+  mergeMode?: boolean
 }

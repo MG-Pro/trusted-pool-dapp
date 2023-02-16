@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core'
-import abi from '@app/contracts/abi/contracts/TrustedPool.sol/TrustedPool.json'
+import abi from '@app/contracts/abi/contracts/PoolFactory.sol/PoolFactory.json'
 import { ContractAddresses } from '@app/contracts/addresses/addresses'
-import { TrustedPool } from '@app/contracts/typechain-types'
 import { allowedNetworks } from '@app/settings'
 import { IMetamask } from '@app/types'
 import detectEthereumProvider from '@metamask/detect-provider'
-import { ethers, Signer } from 'ethers'
+import { Contract, ethers, Signer } from 'ethers'
 import { BehaviorSubject } from 'rxjs'
 
 import { NotificationService, StatusClasses } from '../modules/notification'
@@ -19,7 +18,7 @@ export class ConnectionService {
   public loading$ = new BehaviorSubject(false)
 
   private provider: ethers.providers.Web3Provider
-  private trustedPoolContract: TrustedPool
+  private trustedPoolContract: Contract
   private allowedNetworks: number[] = allowedNetworks
   private wallet: IMetamask
 
@@ -109,8 +108,8 @@ export class ConnectionService {
     return this.allowedNetworks.includes(this.provider.network?.chainId)
   }
 
-  private async getContract(): Promise<TrustedPool> {
-    const address = ContractAddresses[this.provider.network.chainId].TrustedPool
+  private async getContract(): Promise<Contract> {
+    const address = ContractAddresses[this.provider.network.chainId].PoolFactory
     try {
       if ((await this.provider.getCode(address)) === '0x') {
         return null
@@ -118,7 +117,7 @@ export class ConnectionService {
     } catch (e) {
       return null
     }
-    const contract = new ethers.Contract(address, abi, this.provider.getSigner()) as TrustedPool
+    const contract = new Contract(address, abi, this.provider.getSigner())
 
     if (await contract.deployed()) {
       return contract

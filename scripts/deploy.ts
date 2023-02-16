@@ -4,15 +4,15 @@ async function main(): Promise<void> {
   const [deployer] = await ethers.getSigners()
   console.log('Deploying contracts with the account:', deployer.address)
 
-  const TrustedPool = await ethers.getContractFactory('TrustedPool')
-  const trustedPool = await TrustedPool.deploy()
+  const PoolFactory = await ethers.getContractFactory('PoolFactory')
+  const poolFactory = await PoolFactory.deploy()
 
-  await trustedPool.deployed()
+  await poolFactory.deployed()
 
-  console.log(`TrustedPool contract deployed to: ${trustedPool.address}`)
+  console.log(`PoolFactory contract deployed to: ${poolFactory.address}`)
 
   await addressExporter.save({
-    TrustedPool: trustedPool.address,
+    PoolFactory: poolFactory.address,
   })
 }
 

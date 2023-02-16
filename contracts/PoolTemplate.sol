@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract PooledTemplate {
+contract PoolTemplate {
   enum Statuses {
     Active,
     Finished
@@ -30,7 +30,7 @@ contract PooledTemplate {
   string private poolName;
   string private poolTokenName;
 
-  uint private participantsCount;
+  uint private poolParticipantsCount;
   uint private poolTokenAmount;
   Statuses private poolStatus;
 
@@ -38,7 +38,7 @@ contract PooledTemplate {
   mapping(uint => address) private mapper;
 
   modifier onlyCreator() {
-    require(msg.sender == poolCreator, "Only for creator1");
+    require(msg.sender == poolCreator, "Only for creator");
     _;
   }
 
@@ -87,15 +87,12 @@ contract PooledTemplate {
         item.accrued,
         item.description
       );
-      mapper[participantsCount] = item.account;
-      participantsCount++;
+      mapper[poolParticipantsCount] = item.account;
+      poolParticipantsCount++;
     }
   }
 
-  function getPoolData(
-    uint first,
-    uint size
-  )
+  function getPoolData()
     external
     view
     onlyParticipant
@@ -105,8 +102,8 @@ contract PooledTemplate {
       address tokenAddress,
       string memory tokenName,
       uint tokenAmount,
-      Statuses status,
-      Participant[] memory participants
+      uint participantsCount,
+      Statuses status
     )
   {
     return (
@@ -115,8 +112,8 @@ contract PooledTemplate {
       poolTokenAddress,
       poolTokenName,
       poolTokenAmount,
-      poolStatus,
-      getParticipants(first, size)
+      poolParticipantsCount,
+      poolStatus
     );
   }
 
@@ -141,14 +138,17 @@ contract PooledTemplate {
     require(success, "Claim error");
   }
 
-  function getParticipants(uint first, uint size) private view returns (Participant[] memory) {
-    if (participantsCount == 0) {
+  function getParticipants(
+    uint first,
+    uint size
+  ) external view onlyParticipant returns (Participant[] memory) {
+    if (poolParticipantsCount == 0) {
       return new Participant[](0);
     }
-    require(participantsCount > first, "Start index greater than count of participants");
+    require(poolParticipantsCount > first, "Start index greater than count of participants");
 
-    if (size > participantsCount - first) {
-      size = participantsCount - first;
+    if (size > poolParticipantsCount - first) {
+      size = poolParticipantsCount - first;
     }
     Participant[] memory participants = new Participant[](size);
 

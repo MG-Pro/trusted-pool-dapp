@@ -24,8 +24,10 @@ import { IParticipant, IPool } from '@app/types'
 export class PoolsComponent implements OnChanges {
   @Input() public pools: IPool[]
   @Input() public userAccount: string
+  @Input() public loading: boolean
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
+  @Output() public nextParticipantsLoad = new EventEmitter<IPool>()
 
   @HostBinding('class') private readonly classes = 'row'
 
@@ -96,5 +98,9 @@ export class PoolsComponent implements OnChanges {
 
   public claim(): void {
     this.claimTokens.emit(this.activePool)
+  }
+
+  public nextParticipants(): void {
+    this.nextParticipantsLoad.emit(this.activePool)
   }
 }

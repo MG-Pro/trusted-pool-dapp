@@ -110,6 +110,17 @@
               </div>
             </div>
           </div>
+          <div class="card text-bg-dark me-2 mb-2 w250">
+            <div class="card-body d-flex align-items-center">
+              <button
+                class="m-auto btn btn-warning btn-sm fs-3"
+                [disabled]="loading"
+                (click)="nextParticipants()"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

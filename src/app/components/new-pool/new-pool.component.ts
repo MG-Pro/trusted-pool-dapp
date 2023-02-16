@@ -24,6 +24,7 @@ import {
   MIN_SHARE_AMOUNT,
 } from '@app/settings'
 import { IPool } from '@app/types'
+import { ethers } from 'ethers'
 import { Subject, takeUntil } from 'rxjs'
 
 @Component({
@@ -69,7 +70,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       this.formData = val as Partial<IPool>
     })
     //
-    this.form.patchValue({ name: 'VC1', tokenName: 'MTG', tokenAmount: 10000 })
+    this.form.patchValue({ name: 'VC2', tokenName: 'MTG' })
     this.participantsForm.push(
       this.fb.group({
         account: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
@@ -77,13 +78,25 @@ export class NewPoolComponent implements OnInit, OnDestroy {
         description: 'test',
       }),
     )
-    this.participantsForm.push(
-      this.fb.group({
-        account: '0x6459B6FEBCA2f92122Cc741eC5d477ccEa1AA28c',
-        share: 5000,
-        description: 'test1',
-      }),
-    )
+
+    Array(29)
+      .fill(null)
+      .forEach((_, i) => {
+        this.participantsForm.push(
+          this.fb.group({
+            account: ethers.Wallet.createRandom().address,
+            share: 5000,
+            description: 'test' + i,
+          }),
+        )
+      })
+
+    const tokenAmount = this.participantsForm.controls.reduce((acc, form) => {
+      acc += parseInt(form.get('share').value || 0, 10)
+      return acc
+    }, 0)
+
+    this.form.patchValue({ tokenAmount })
   }
 
   public ngOnDestroy(): void {

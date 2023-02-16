@@ -7,7 +7,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": false,
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
+    "noPropertyAccessFromIndexSignature": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
@@ -28,7 +28,8 @@
       "@app/settings": ["src/app/settings"],
       "@app/services": ["src/app/services/index.ts"],
       "@app/components/*": ["src/app/components/*"],
-      "@app/modules/*": ["src/app/modules/*"]
+      "@app/modules/*": ["src/app/modules/*"],
+      "@app/typechain": ["typechain-types/index"]
     }
   },
   "angularCompilerOptions": {

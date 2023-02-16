@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core'
-import abi from '@app/contracts/abi/contracts/PooledTemplate.sol/PooledTemplate.json'
-import { PooledTemplate, TrustedPool } from '@app/contracts/typechain-types'
+import abi from '@app/contracts/abi/contracts/PoolTemplate.sol/PoolTemplate.json'
 import { NotificationService, StatusClasses } from '@app/modules/notification'
-import { IParticipant, IPool, IPoolResponse, IPoolsLoadParams, PoolStatuses } from '@app/types'
-import { ethers, Signer } from 'ethers'
+import { IParticipant, IParticipantResponse, IPool, IPoolResponse, PoolStatuses } from '@app/types'
+import { Contract, ethers, Signer } from 'ethers'
 
 import { ConnectionService } from './connection.service'
 import { GlobalStateService } from './global-state.service'
@@ -18,7 +17,7 @@ export class ContractService {
     private notificationService: NotificationService,
   ) {}
 
-  private get trustedPoolContract(): TrustedPool {
+  private get trustedPoolContract(): Contract {
     return this.stateService.state$.value?.trustedPoolContract
   }
 
@@ -75,60 +74,80 @@ export class ContractService {
 
   public async claimToken(): Promise<void> {}
 
-  public async dispatchPoolsData(params: IPoolsLoadParams): Promise<void> {
+  public async dispatchPoolsData(): Promise<void> {
     if (!this.checkContract()) {
       return
     }
     this.connectionService.setLoadingStatus()
 
-    const poolsAccounts: string[] =
-      await this.trustedPoolContract.getContractAddressesByParticipant(this.userAccount)
+    try {
+      const poolsAccounts: string[] = await this.loadPoolAddresses()
 
-    if (poolsAccounts.length) {
-      const reqPools = poolsAccounts
-        .slice(params.poolFirst, params.poolSize)
-        .map((address: string) => {
-          return this.getPooledTemplateInstance(address).getPoolData(
-            params.participantFirst,
-            params.participantSize,
-          )
+      if (poolsAccounts.length) {
+        const reqPools = poolsAccounts.map((poolAccount: string) => {
+          return this.loadPoolData(poolAccount)
         })
+        const userPools: IPool[] = await Promise.all(reqPools)
 
-      try {
-        const res: IPoolResponse[] = await Promise.all(reqPools)
         this.stateService.patchState({
-          userPools: this.poolMapper(res, poolsAccounts),
+          userPools,
         })
-      } catch (e) {
-        this.showError(e)
-      } finally {
-        this.connectionService.setLoadingStatus(false)
       }
-    } else {
+    } catch (e) {
+      this.showError(e)
+    } finally {
       this.connectionService.setLoadingStatus(false)
     }
   }
 
-  private poolMapper(response: IPoolResponse[], poolsAccounts: string[]): IPool[] {
-    return response.map((item, i) => {
-      const participants: IParticipant[] = item.participants.map((p) => ({
-        ...p,
-        account: p.account.toLowerCase(),
-        share: p.share.toNumber(),
-        claimed: p.claimed.toNumber(),
-        accrued: p.accrued.toNumber(),
-      }))
+  public async loadPoolData(poolAccount: string): Promise<IPool> {
+    try {
+      const res: IPoolResponse = await this.getPooledTemplateInstance(poolAccount).getPoolData()
+      return this.poolMapper(res, poolAccount)
+    } catch (e) {
+      this.showError(e)
+    }
+    return null
+  }
 
+  private async loadPoolAddresses(): Promise<string[]> {
+    return this.trustedPoolContract.getContractAddressesByParticipant(this.userAccount)
+  }
+
+  private poolMapper(item: IPoolResponse, poolAccount: string): IPool {
+    const tokenAddress =
+      item.tokenAddress !== ethers.constants.AddressZero ? item.tokenAddress?.toLowerCase() : null
+
+    return {
+      contractAddress: poolAccount?.toLowerCase(),
+      name: item.name,
+      tokenName: item.tokenName,
+      creatorAddress: item.creator?.toLowerCase(),
+      status: this.convertStatus(item.status),
+      filled: 0,
+      tokenAmount: item.tokenAmount.toNumber(),
+      tokenAddress,
+      participants: [],
+    }
+  }
+
+  private participantMapper(p: IParticipantResponse): IParticipant {
+    return {
+      ...p,
+      account: p.account.toLowerCase(),
+      share: p.share.toNumber(),
+      claimed: p.claimed.toNumber(),
+      accrued: p.accrued.toNumber(),
+    }
+  }
+
+  private mergePools(pools: IPool[]): IPool[] {
+    return this.stateService.state$.value.userPools.map((prevPool, i) => {
+      const nextPool = pools[i]
       return {
-        contractAddress: poolsAccounts[i]?.toLowerCase(),
-        name: item.name,
-        tokenName: item.tokenName,
-        tokenAddress: item.tokenAddress?.toLowerCase(),
-        creatorAddress: item.creator?.toLowerCase(),
-        status: this.convertStatus(item.status),
-        filled: this.getAmount(participants, 'claimed'),
-        tokenAmount: item.tokenAmount.toNumber(),
-        participants,
+        ...prevPool,
+        ...nextPool,
+        participants: [...prevPool.participants, ...nextPool.participants],
       }
     })
   }
@@ -163,7 +182,7 @@ export class ContractService {
     return true
   }
 
-  private getPooledTemplateInstance(address: string): PooledTemplate {
-    return new ethers.Contract(address, abi, this.signer) as PooledTemplate
+  private getPooledTemplateInstance(address: string): Contract {
+    return new Contract(address, abi, this.signer)
   }
 }

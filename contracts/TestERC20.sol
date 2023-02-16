@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TestERC20 is ERC20, Ownable {
-  constructor(uint256 _totalSupply) ERC20("TestERC20", "TKE1") {
+  constructor(uint256 _totalSupply) ERC20("TestERC20", "TKE") {
     _mint(msg.sender, _totalSupply);
   }
 

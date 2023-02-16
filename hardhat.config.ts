@@ -17,7 +17,7 @@ const config: HardhatUserConfig = {
     path: path.resolve('./src/app/contracts/abi'),
     runOnCompile: true,
     spacing: 2,
-    only: ['TrustedPool.sol', 'PooledTemplate.sol'],
+    only: ['PoolFactory.sol', 'PoolTemplate.sol'],
     pretty: false,
     clear: true,
   },
@@ -26,7 +26,7 @@ const config: HardhatUserConfig = {
     runPrettier: true,
   },
   typechain: {
-    outDir: path.resolve('./src/app/contracts/typechain-types'),
+    // outDir: path.resolve('./src/app/contracts/typechain-types'),
     target: 'ethers-v5',
   },
 }

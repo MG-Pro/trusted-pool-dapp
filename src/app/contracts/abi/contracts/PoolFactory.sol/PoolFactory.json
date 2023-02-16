@@ -49,12 +49,12 @@
             "type": "string"
           }
         ],
-        "internalType": "struct PooledTemplate.Participant[]",
+        "internalType": "struct PoolTemplate.Participant[]",
         "name": "_participants",
         "type": "tuple[]"
       }
     ],
-    "name": "createPooledContract",
+    "name": "createPoolContract",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

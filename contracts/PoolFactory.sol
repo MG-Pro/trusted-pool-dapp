@@ -2,12 +2,12 @@
 pragma solidity ^0.8.9;
 import "hardhat/console.sol";
 
-import "./PooledTemplate.sol";
+import "./PoolTemplate.sol";
 
-contract TrustedPool {
+contract PoolFactory {
   address public owner;
 
-  mapping(address => address[]) internal pooledContracts; //creator -> contract
+  mapping(address => address[]) internal poolContracts; //creator -> contract
   mapping(address => address[]) internal participants; //participant -> contract
 
   modifier onlyOwner() {
@@ -19,23 +19,23 @@ contract TrustedPool {
     owner = msg.sender;
   }
 
-  function createPooledContract(
+  function createPoolContract(
     string memory _name,
     address _tokenAddress,
     string memory _tokenName,
-    PooledTemplate.Participant[] memory _participants
+    PoolTemplate.Participant[] memory _participants
   ) external {
     require(_participants.length != 0, "Must have at least 1 participant");
     address contractAddress = address(
-      new PooledTemplate(msg.sender, _name, _tokenAddress, _tokenName, _participants)
+      new PoolTemplate(msg.sender, _name, _tokenAddress, _tokenName, _participants)
     );
 
-    pooledContracts[msg.sender].push(contractAddress);
+    poolContracts[msg.sender].push(contractAddress);
     saveParticipants(_participants, contractAddress);
   }
 
   function saveParticipants(
-    PooledTemplate.Participant[] memory _participants,
+    PoolTemplate.Participant[] memory _participants,
     address contractAddress
   ) private {
     for (uint256 i; i < _participants.length; i++) {
@@ -46,7 +46,7 @@ contract TrustedPool {
   function getContractAddressesByCreator(
     address _creator
   ) external view returns (address[] memory) {
-    return pooledContracts[_creator];
+    return poolContracts[_creator];
   }
 
   function getContractAddressesByParticipant(
