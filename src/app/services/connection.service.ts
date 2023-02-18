@@ -18,7 +18,7 @@ export class ConnectionService {
   public loading$ = new BehaviorSubject(false)
 
   private provider: ethers.providers.Web3Provider
-  private trustedPoolContract: Contract
+  private poolFactoryContract: Contract
   private allowedNetworks: number[] = allowedNetworks
   private wallet: IMetamask
 
@@ -50,12 +50,12 @@ export class ConnectionService {
       return this.wrongAccountMessage()
     }
 
-    this.trustedPoolContract = await this.getContract()
+    this.poolFactoryContract = await this.getContract()
 
     const signer: Signer = this.provider.getSigner()
     this.stateService.patchState({
       userConnected: true,
-      trustedPoolContract: this.trustedPoolContract,
+      poolFactoryContract: this.poolFactoryContract,
       userAccount: accounts[0]?.toLowerCase(),
       signer,
     })

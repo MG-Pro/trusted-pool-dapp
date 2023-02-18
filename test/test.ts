@@ -162,7 +162,7 @@ describe('PoolFactory', () => {
   })
 })
 
-describe('PooledTemplate', () => {
+describe('PoolTemplate', () => {
   describe('Getting pools', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
+import { LocalState } from '@app/components/dashboard/dashboard.types'
 import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
 import { IGlobalState, IParticipantLoadParams, IPool } from '@app/types'
 import { BehaviorSubject, Observable, tap } from 'rxjs'
@@ -18,9 +19,12 @@ export class DashboardComponent implements OnInit {
     }),
   )
 
-  public localState$ = new BehaviorSubject({ showCreatingForm: false })
+  public localState$ = new BehaviorSubject<LocalState>({
+    showCreatingForm: false,
+    activePool: null,
+  })
 
-  private loadParams: IParticipantLoadParams = {
+  private pLoadParams: IParticipantLoadParams = {
     first: 0,
     size: 25,
   }
@@ -66,11 +70,16 @@ export class DashboardComponent implements OnInit {
     await this.contractService.claimToken()
   }
 
+  public async onActivePoolChange(activePool: IPool): Promise<void> {
+    await this.contractService.loadParticipants(activePool, this.pLoadParams)
+    this.patchLocalState({ activePool })
+  }
+
   public nextParticipants(pool: IPool): void {
     console.log(pool)
   }
 
-  private patchLocalState(patch): void {
+  private patchLocalState(patch: Partial<LocalState>): void {
     this.localState$.next({ ...this.localState$.value, ...patch })
   }
 }

@@ -50,8 +50,8 @@ contract PoolFactory {
   }
 
   function getContractAddressesByParticipant(
-    address _participants
+    address _participant
   ) external view returns (address[] memory) {
-    return participants[_participants];
+    return participants[_participant];
   }
 }

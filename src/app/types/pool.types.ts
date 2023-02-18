@@ -22,7 +22,9 @@ export interface IPool {
   tokenAmount: number
   filled?: number
   creatorAddress: string
+  participantsCount: number
   participants: IParticipant[]
+  isLastParticipants: boolean
   status: PoolStatuses
 }
 

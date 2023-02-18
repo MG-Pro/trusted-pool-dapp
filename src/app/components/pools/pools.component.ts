@@ -24,14 +24,15 @@ import { IParticipant, IPool } from '@app/types'
 export class PoolsComponent implements OnChanges {
   @Input() public pools: IPool[]
   @Input() public userAccount: string
+  @Input() public activePool: IPool
   @Input() public loading: boolean
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
   @Output() public nextParticipantsLoad = new EventEmitter<IPool>()
+  @Output() public activePoolChange = new EventEmitter<IPool>()
 
   @HostBinding('class') private readonly classes = 'row'
 
-  public activePool: IPool
   public editTokenAddressControl = new FormControl('', [
     Validators.required,
     Validators.pattern(EVM_ADDRESS_REGEXP),
@@ -53,8 +54,8 @@ export class PoolsComponent implements OnChanges {
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
-    if (changes['pools']?.currentValue?.length) {
-      this.activePool = this.pools[0]
+    if (changes['pools']?.currentValue?.length && !this.activePool) {
+      this.activePoolChange.emit(this.pools[0])
     }
   }
 
@@ -93,7 +94,7 @@ export class PoolsComponent implements OnChanges {
   }
 
   public setActivePool(pool: IPool): void {
-    this.activePool = pool
+    this.activePoolChange.emit(pool)
   }
 
   public claim(): void {

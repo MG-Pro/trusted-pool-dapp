@@ -48,10 +48,12 @@
         <app-pools
           [pools]="params.connectionState.userPools"
           [userAccount]="params.connectionState.userAccount"
+          [activePool]="params.localState.activePool"
           [loading]="params.loading"
           (claimTokens)="onClaimTokens($event)"
           (tokenAddressChange)="onTokenAddressChange($event)"
           (nextParticipantsLoad)="nextParticipants($event)"
+          (activePoolChange)="onActivePoolChange($event)"
         ></app-pools>
       </ng-container>
     </div>

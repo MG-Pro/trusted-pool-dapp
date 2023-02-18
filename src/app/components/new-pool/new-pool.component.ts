@@ -79,7 +79,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       }),
     )
 
-    Array(29)
+    Array(2)
       .fill(null)
       .forEach((_, i) => {
         this.participantsForm.push(

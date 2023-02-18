@@ -82,7 +82,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_participants",
+        "name": "_participant",
         "type": "address"
       }
     ],
