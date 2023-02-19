@@ -5,9 +5,7 @@ import {
   EventEmitter,
   HostBinding,
   Input,
-  OnChanges,
   Output,
-  SimpleChanges,
 } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { EVM_ADDRESS_REGEXP } from '@app/settings'
@@ -21,11 +19,12 @@ import { IParticipant, IPool } from '@app/types'
   styleUrls: ['./pools.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PoolsComponent implements OnChanges {
+export class PoolsComponent {
   @Input() public pools: IPool[]
   @Input() public userAccount: string
   @Input() public activePool: IPool
   @Input() public loading: boolean
+
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
   @Output() public nextParticipantsLoad = new EventEmitter<IPool>()
@@ -43,6 +42,10 @@ export class PoolsComponent implements OnChanges {
     return this.activePool?.creatorAddress === this.userAccount
   }
 
+  public get isLastParticipants(): boolean {
+    return this.activePool?.participants.length >= this.activePool?.participantsCount
+  }
+
   public get isParticipant(): boolean {
     return this.activePool?.participants.some(({ account }) => {
       return account === this.userAccount
@@ -51,12 +54,6 @@ export class PoolsComponent implements OnChanges {
 
   public get disabledEditTokenAddress(): boolean {
     return !!this.activePool?.tokenAddress || this.isEditTokenAddress || !this.isParticipant
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    if (changes['pools']?.currentValue?.length && !this.activePool) {
-      this.activePoolChange.emit(this.pools[0])
-    }
   }
 
   public prepParticipants(participants: IParticipant[]): IParticipant[] {
@@ -69,12 +66,12 @@ export class PoolsComponent implements OnChanges {
     })
   }
 
-  public isOwnable(participant: IParticipant): boolean {
+  public isOwner(participant: IParticipant): boolean {
     return participant.account === this.userAccount
   }
 
   public canClaim(participant: IParticipant): boolean {
-    return this.isOwnable(participant)
+    return this.isOwner(participant) && !!participant.accrued
   }
 
   public onEditTokenAddress(): void {
@@ -87,6 +84,7 @@ export class PoolsComponent implements OnChanges {
 
   public saveTokenAddress(): void {
     this.tokenAddressChange.emit([this.editTokenAddressControl.value, this.activePool])
+    this.cancelEditTokenAddress()
   }
 
   public isTabActive(pool: IPool): boolean {

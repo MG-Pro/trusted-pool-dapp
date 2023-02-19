@@ -71,7 +71,10 @@ export class ContractService {
   public async setTokenContract(tokenAddress: string, pool: IPool): Promise<void> {
     this.connectionService.setLoadingStatus()
     try {
-      await this.getPoolTemplateInstance(pool.contractAddress).setTokenAddress(tokenAddress)
+      const tx = await this.getPoolTemplateInstance(pool.contractAddress).setTokenAddress(
+        tokenAddress,
+      )
+      await tx.wait()
     } catch (e) {
       this.showError(e)
     } finally {
@@ -79,7 +82,7 @@ export class ContractService {
     }
   }
 
-  public async claimToken(): Promise<void> {}
+  public async claimToken(pool: IPool): Promise<void> {}
 
   public async dispatchPoolsData(): Promise<void> {
     if (!this.checkContract()) {
@@ -107,36 +110,36 @@ export class ContractService {
     }
   }
 
-  public async loadPoolData(poolAccount: string): Promise<IPool> {
-    try {
-      const res: IPoolResponse = await this.getPoolTemplateInstance(poolAccount).getPoolData()
-      return this.poolMapper(res, poolAccount)
-    } catch (e) {
-      this.showError(e)
-    }
-    return null
-  }
-
-  public async loadParticipants(
+  public async dispatchParticipants(
     { contractAddress }: IPool,
     params: IParticipantLoadParams,
   ): Promise<void> {
-    const participants: IParticipantResponse[] = await this.getPoolTemplateInstance(
-      contractAddress,
-    ).getParticipants(params.first, params.size)
-    console.log(participants)
+    this.connectionService.setLoadingStatus(true)
+    try {
+      const participants: IParticipantResponse[] = await this.getPoolTemplateInstance(
+        contractAddress,
+      ).getParticipants(params.first, params.size)
 
-    this.stateService.patchState({
-      userPools: this.stateService.state$.value.userPools.map((poolItem: IPool) => {
-        if (poolItem.contractAddress === contractAddress) {
-          const ps: IParticipant[] = participants.map((p) => this.participantMapper(p))
+      this.stateService.patchState({
+        userPools: this.stateService.state$.value.userPools.map((poolItem: IPool) => {
+          if (poolItem.contractAddress === contractAddress) {
+            const ps: IParticipant[] = participants.map((p) => this.participantMapper(p))
 
-          poolItem.participants = params.mergeMode ? [...poolItem.participants, ...ps] : ps
-        }
-        poolItem.isLastParticipants = params.size < participants.length
-        return poolItem
-      }),
-    })
+            poolItem.participants = params.mergeMode ? [...poolItem.participants, ...ps] : ps
+          }
+          return poolItem
+        }),
+      })
+    } catch (e) {
+      this.showError(e)
+    } finally {
+      this.connectionService.setLoadingStatus(false)
+    }
+  }
+
+  private async loadPoolData(poolAccount: string): Promise<IPool> {
+    const res: IPoolResponse = await this.getPoolTemplateInstance(poolAccount).getPoolData()
+    return this.poolMapper(res, poolAccount)
   }
 
   private async loadPoolAddresses(): Promise<string[]> {
@@ -154,10 +157,8 @@ export class ContractService {
       tokenName: item.tokenName,
       creatorAddress: item.creator?.toLowerCase(),
       status: this.convertStatus(item.status),
-      filled: 0,
       tokenAmount: item.tokenAmount.toNumber(),
       participantsCount: item.participantsCount.toNumber(),
-      isLastParticipants: false,
       participants: [],
     }
   }
@@ -181,12 +182,6 @@ export class ContractService {
       default:
         return PoolStatuses.Unknown
     }
-  }
-
-  private getAmount(participants: IParticipant[], field: 'claimed' | 'share'): number {
-    return participants.reduce((acc, p) => {
-      return acc + p[field]
-    }, 0)
   }
 
   private showError(e): void {

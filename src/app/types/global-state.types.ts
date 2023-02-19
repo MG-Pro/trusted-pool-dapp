@@ -4,8 +4,7 @@ import { IPool } from './pool.types'
 
 export interface IGlobalState {
   networkConnected: boolean
-  userPools?: IPool[]
-  activePool?: IPool
+  userPools: IPool[]
   isLastPools?: boolean
   userConnected?: boolean
   userAccount?: string

@@ -1,12 +1,13 @@
 <ng-container
   *ngIf="{
-    connectionState: connectionState$ | async,
+    state: state$ | async,
     localState: localState$ | async,
+    userPools: userPools$ | async,
     loading: connectionService.loading$ | async
   } as params"
 >
   <app-header
-    [connected]="params.connectionState.userConnected"
+    [connected]="params.state.userConnected"
     [loading]="params.loading"
     (connectWallet)="onConnectWallet()"
     class="mb-auto"
@@ -14,18 +15,12 @@
   <main class="pt-3 pb-3">
     <app-notification id="main"></app-notification>
     <div class="container">
-      <div class="dashboard fs-5 mb-3" *ngIf="params.connectionState.userConnected">
+      <div class="dashboard fs-5 mb-3" *ngIf="params.state.userConnected">
         <div class="row mb-5">
-          <p
-            *ngIf="params.connectionState.userPools?.length"
-            class="col m-0 d-flex align-items-center"
-          >
-            You participated in {{ params.connectionState.userPools?.length }} pools
+          <p *ngIf="params.userPools?.length" class="col m-0 d-flex align-items-center">
+            You participated in {{ params.userPools?.length }} pools
           </p>
-          <p
-            *ngIf="!params.connectionState.userPools?.length"
-            class="col m-0 d-flex align-items-center"
-          >
+          <p *ngIf="!params.userPools?.length" class="col m-0 d-flex align-items-center">
             You have not participated in pools, yet
           </p>
           <div
@@ -39,21 +34,19 @@
       </div>
       <app-new-pool
         *ngIf="params.localState.showCreatingForm"
-        (closeForm)="onCloseNewForm()"
-        (saveForm)="onSaveNewForm($event)"
+        (closeForm)="closeNewForm()"
+        (saveForm)="saveNewForm($event)"
       ></app-new-pool>
-      <ng-container
-        *ngIf="params.connectionState.userConnected && !params.localState.showCreatingForm"
-      >
+      <ng-container *ngIf="params.state.userConnected && !params.localState.showCreatingForm">
         <app-pools
-          [pools]="params.connectionState.userPools"
-          [userAccount]="params.connectionState.userAccount"
+          [pools]="params.userPools"
+          [userAccount]="params.state.userAccount"
           [activePool]="params.localState.activePool"
           [loading]="params.loading"
-          (claimTokens)="onClaimTokens($event)"
-          (tokenAddressChange)="onTokenAddressChange($event)"
+          (claimTokens)="claimTokens($event)"
+          (tokenAddressChange)="tokenAddressChange($event)"
           (nextParticipantsLoad)="nextParticipants($event)"
-          (activePoolChange)="onActivePoolChange($event)"
+          (activePoolChange)="activePoolChange($event)"
         ></app-pools>
       </ng-container>
     </div>

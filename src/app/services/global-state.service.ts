@@ -10,6 +10,11 @@ export class GlobalStateService {
     networkConnected: false,
     userPools: [],
   })
+
+  public get value(): IGlobalState {
+    return this.state$.value
+  }
+
   public patchState(state: Partial<IGlobalState>): void {
     this.state$.next({ ...this.state$.value, ...state })
   }

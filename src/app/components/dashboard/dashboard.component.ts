@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angula
 import { LocalState } from '@app/components/dashboard/dashboard.types'
 import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
 import { IGlobalState, IParticipantLoadParams, IPool } from '@app/types'
-import { BehaviorSubject, Observable, tap } from 'rxjs'
+import { BehaviorSubject, filter, map, Observable, tap } from 'rxjs'
 
 @Component({
   selector: 'app-dashboard',
@@ -13,9 +13,24 @@ import { BehaviorSubject, Observable, tap } from 'rxjs'
 export class DashboardComponent implements OnInit {
   @HostBinding('class') private readonly classes = 'main-layout flex-shrink-0 flex-grow-1'
 
-  public connectionState$: Observable<IGlobalState> = this.stateService.state$.pipe(
-    tap((s) => {
-      console.log('state', s)
+  public state$: Observable<IGlobalState> = this.stateService.state$.pipe(
+    tap((state: IGlobalState) => {
+      // console.log('state', state)
+    }),
+  )
+
+  public userPools$: Observable<IPool[]> = this.state$.pipe(
+    map((s) => s.userPools),
+    filter((userPools) => !!userPools?.length),
+    tap((userPools: IPool[]) => {
+      console.log('userPools', userPools)
+      const activePool = userPools.find(
+        ({ contractAddress }) =>
+          this.localState$.value.activePool?.contractAddress === contractAddress,
+      )
+      if (activePool) {
+        this.patchLocalState({ activePool })
+      }
     }),
   )
 
@@ -24,10 +39,13 @@ export class DashboardComponent implements OnInit {
     activePool: null,
   })
 
-  private pLoadParams: IParticipantLoadParams = {
+  private readonly defaultPLoadParams: IParticipantLoadParams = {
     first: 0,
-    size: 25,
+    size: 9,
+    mergeMode: false,
   }
+
+  private pLoadParams: IParticipantLoadParams = { ...this.defaultPLoadParams }
 
   constructor(
     public connectionService: ConnectionService,
@@ -38,7 +56,7 @@ export class DashboardComponent implements OnInit {
   public async ngOnInit(): Promise<void> {
     await this.connectionService.initConnection()
     if (this.connectionService.userConnected) {
-      await this.contractService.dispatchPoolsData()
+      await this.loadData()
     }
   }
 
@@ -50,36 +68,50 @@ export class DashboardComponent implements OnInit {
     this.patchLocalState({ showCreatingForm: true })
   }
 
-  public onCloseNewForm(): void {
+  public closeNewForm(): void {
     this.patchLocalState({ showCreatingForm: false })
   }
 
-  public async onSaveNewForm(poolData: Partial<IPool>): Promise<void> {
+  public async saveNewForm(poolData: Partial<IPool>): Promise<void> {
     await this.contractService.createNewPool(poolData)
-    await this.contractService.dispatchPoolsData()
-    this.onCloseNewForm()
+    await this.loadData()
+    this.closeNewForm()
   }
 
-  public async onTokenAddressChange(eventData: [string, IPool]): Promise<void> {
-    await this.contractService.setTokenContract(eventData[0], eventData[1]).then(() => {
-      this.contractService.dispatchPoolsData()
-    })
+  public async tokenAddressChange(eventData: [string, IPool]): Promise<void> {
+    await this.contractService.setTokenContract(eventData[0], eventData[1])
+    await this.loadData()
   }
 
-  public async onClaimTokens(pool: IPool): Promise<void> {
-    await this.contractService.claimToken()
+  public async claimTokens(pool: IPool): Promise<void> {
+    await this.contractService.claimToken(pool)
+    await this.loadData()
   }
 
-  public async onActivePoolChange(activePool: IPool): Promise<void> {
-    await this.contractService.loadParticipants(activePool, this.pLoadParams)
+  public activePoolChange(activePool: IPool): void {
     this.patchLocalState({ activePool })
+    this.pLoadParams = { ...this.defaultPLoadParams }
+    this.contractService.dispatchParticipants(activePool, this.pLoadParams)
   }
 
-  public nextParticipants(pool: IPool): void {
-    console.log(pool)
+  public async nextParticipants(pool: IPool): Promise<void> {
+    this.pLoadParams = {
+      ...this.pLoadParams,
+      first: this.pLoadParams.first + this.pLoadParams.size,
+      mergeMode: true,
+    }
+    await this.contractService.dispatchParticipants(pool, this.pLoadParams)
   }
 
   private patchLocalState(patch: Partial<LocalState>): void {
     this.localState$.next({ ...this.localState$.value, ...patch })
+  }
+
+  private async loadData(): Promise<void> {
+    await this.contractService.dispatchPoolsData()
+
+    if (this.stateService.value.userPools.length) {
+      this.activePoolChange(this.stateService.value.userPools[0])
+    }
   }
 }

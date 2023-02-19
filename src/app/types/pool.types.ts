@@ -20,11 +20,9 @@ export interface IPool {
   tokenAddress?: string
   tokenName: string
   tokenAmount: number
-  filled?: number
   creatorAddress: string
   participantsCount: number
   participants: IParticipant[]
-  isLastParticipants: boolean
   status: PoolStatuses
 }
 

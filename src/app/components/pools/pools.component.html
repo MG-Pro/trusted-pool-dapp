@@ -29,8 +29,8 @@
             <p class="card-text">{{ activePool?.tokenName }}</p>
           </div>
           <div class="col">
-            <h6 class="card-title">Token amount/claimed:</h6>
-            <p class="card-text">{{ activePool?.tokenAmount }}/{{ activePool?.filled }}</p>
+            <h6 class="card-title">Token amount:</h6>
+            <p class="card-text">{{ activePool?.tokenAmount | number }}</p>
           </div>
         </div>
         <div class="row mb-3">
@@ -84,7 +84,7 @@
           <div
             class="card text-bg-dark me-2 mb-2 w250"
             *ngFor="let participant of prepParticipants(activePool?.participants)"
-            [class.border-warning]="isOwnable(participant)"
+            [class.border-warning]="isOwner(participant)"
           >
             <h6 class="card-header">
               {{ participant.account }}
@@ -101,7 +101,8 @@
               <p class="card-text m-0">Description: {{ participant.description }}</p>
               <div class="d-flex">
                 <button
-                  *ngIf="canClaim(participant)"
+                  *ngIf="isOwner(participant)"
+                  [disabled]="!canClaim(participant)"
                   class="ms-auto btn btn-success btn-sm"
                   (click)="claim()"
                 >
@@ -110,7 +111,10 @@
               </div>
             </div>
           </div>
-          <div class="card text-bg-dark me-2 mb-2 w250" *ngIf="!activePool.isLastParticipants">
+          <div
+            class="card text-bg-dark me-2 mb-2 w250"
+            *ngIf="!isLastParticipants && activePool?.participants.length"
+          >
             <div class="card-body d-flex align-items-center">
               <button
                 class="m-auto btn btn-warning btn-sm fs-3"
