@@ -7,8 +7,8 @@ import "./PoolTemplate.sol";
 contract PoolFactory {
   address public owner;
 
-  mapping(address => address[]) internal poolContracts; //creator -> contract
-  mapping(address => address[]) internal participants; //participant -> contract
+  mapping(address => address[]) internal poolContracts; //creator -> contracts
+  mapping(address => address[]) internal participants; //participant -> contracts
 
   modifier onlyOwner() {
     require(msg.sender == owner, "Only for owner");
