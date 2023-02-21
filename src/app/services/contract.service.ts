@@ -9,6 +9,7 @@ import {
   IPoolResponse,
   PoolStatuses,
 } from '@app/types'
+import { TransactionResponse } from '@ethersproject/abstract-provider/src.ts'
 import { Contract, ethers, Signer } from 'ethers'
 
 import { ConnectionService } from './connection.service'
@@ -54,7 +55,7 @@ export class ContractService {
     }))
 
     try {
-      const tr = await this.poolFactoryContract.createPoolContract(
+      const tr: TransactionResponse = await this.poolFactoryContract.createPoolContract(
         poolData.name,
         tokenAddress,
         poolData.tokenName,
@@ -71,10 +72,10 @@ export class ContractService {
   public async setTokenContract(tokenAddress: string, pool: IPool): Promise<void> {
     this.connectionService.setLoadingStatus()
     try {
-      const tx = await this.getPoolTemplateInstance(pool.contractAddress).setTokenAddress(
-        tokenAddress,
-      )
-      await tx.wait()
+      const tr: TransactionResponse = await this.getPoolTemplateInstance(
+        pool.contractAddress,
+      ).setTokenAddress(tokenAddress)
+      await tr.wait()
     } catch (e) {
       this.showError(e)
     } finally {
@@ -82,7 +83,19 @@ export class ContractService {
     }
   }
 
-  public async claimToken(pool: IPool): Promise<void> {}
+  public async claimToken(pool: IPool): Promise<void> {
+    this.connectionService.setLoadingStatus()
+    try {
+      const tr: TransactionResponse = await this.getPoolTemplateInstance(
+        pool.contractAddress,
+      ).claimTokens()
+      await tr.wait()
+    } catch (e) {
+      this.showError(e)
+    } finally {
+      this.connectionService.setLoadingStatus(false)
+    }
+  }
 
   public async dispatchPoolsData(): Promise<void> {
     if (!this.checkContract()) {

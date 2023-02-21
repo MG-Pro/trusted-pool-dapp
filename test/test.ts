@@ -5,13 +5,19 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { ICreatePool, ICreatePoolTemplateContract, IDeploy } from './test.types'
+import {
+  ICreatePool,
+  ICreatePoolTemplateContract,
+  ICreateTestERC20Contract,
+  IDeployPoolFactory,
+  IDeployTestERC20,
+} from './test.types'
 
 const totalSupply = 1_000_000
 const participantFirst = 0
 const participantSize = 25
 
-async function deploy(): Promise<IDeploy> {
+async function deployPoolFactory(): Promise<IDeployPoolFactory> {
   const [deployer1, deployer2, user1, user2, user3, user4, user5] =
     (await ethers.getSigners()) as unknown as SignerWithAddress[]
 
@@ -28,6 +34,26 @@ async function deploy(): Promise<IDeploy> {
     poolFactoryContract,
     testERC20CContract,
     deployer1,
+    user1,
+    user2,
+    user3,
+    user4,
+    user5,
+  }
+}
+
+async function deployTestERC20(): Promise<IDeployTestERC20> {
+  const [deployer1, deployer2, user1, user2, user3, user4, user5] =
+    (await ethers.getSigners()) as unknown as SignerWithAddress[]
+
+  const TestERC20C = await ethers.getContractFactory('TestERC20', deployer2)
+
+  const testERC20CContract: TestERC20 = await TestERC20C.deploy(totalSupply)
+
+  await testERC20CContract.deployed()
+
+  return {
+    testERC20CContract,
     deployer2,
     user1,
     user2,
@@ -70,7 +96,7 @@ async function poolData(
 async function createPoolTemplateContract(
   participantsCount: number,
 ): Promise<ICreatePoolTemplateContract> {
-  const { poolFactoryContract, deployer1 } = await deploy()
+  const { poolFactoryContract, deployer1 } = await deployPoolFactory()
   const { name, tokenName, participants, tokenAddress, tokenAmount } = await poolData(
     undefined,
     participantsCount,
@@ -89,7 +115,7 @@ async function createPoolTemplateContract(
     poolAccounts[0],
   )
 
-  return { poolTemplateContract, tokenAmount, participants }
+  return { poolTemplateContract, tokenAmount, participants, deployer1 }
 }
 
 async function createPool(participantsCount: number): Promise<ICreatePool> {
@@ -101,6 +127,20 @@ async function createPool(participantsCount: number): Promise<ICreatePool> {
     participantSize,
   )
   return { poolResponse, participantResponse, tokenAmount }
+}
+
+async function createTestERC20(
+  poolAccount: string,
+  mintAmount?: number,
+): Promise<ICreateTestERC20Contract> {
+  const { testERC20CContract, deployer2 } = await deployTestERC20()
+
+  if (mintAmount) {
+    const tr = await testERC20CContract.connect(deployer2).mint(poolAccount, mintAmount)
+    await tr.wait()
+  }
+
+  return { testERC20CContract, deployer2, mintAmount }
 }
 
 describe('PoolFactory', () => {
@@ -147,7 +187,9 @@ describe('PoolFactory', () => {
 
     it('Should revert if 0 participants', async () => {
       const participantsCount = 0
-      const { poolFactoryContract, deployer1 } = await loadFixture<IDeploy>(deploy)
+      const { poolFactoryContract, deployer1 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
       const { name, tokenName, participants, tokenAddress } = await poolData(
         undefined,
         participantsCount,
@@ -211,7 +253,9 @@ describe('PoolTemplate', () => {
     })
 
     it('Should revert if is not participant', async () => {
-      const { poolFactoryContract, deployer1, user5 } = await loadFixture<IDeploy>(deploy)
+      const { poolFactoryContract, deployer1, user5 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
       const { name, tokenName, participants, tokenAddress } = await poolData()
 
       await poolFactoryContract
@@ -246,53 +290,36 @@ describe('PoolTemplate', () => {
 
   describe('Tokens distribution', () => {
     it('Should receive tokens', async () => {
-      const mintAmount = 70_000
-      const { poolFactoryContract, testERC20CContract, deployer2, deployer1 } =
-        await loadFixture<IDeploy>(deploy)
+      const mintAmount = 100_000
+      const participantsCount = 5
 
-      const { name, tokenName, participants, tokenAddress } = await poolData(
-        testERC20CContract.address,
+      const { poolTemplateContract, deployer1 } = await loadFixture<ICreatePoolTemplateContract>(
+        createPoolTemplateContract.bind(this, participantsCount),
       )
 
-      await poolFactoryContract
-        .connect(deployer1)
-        .createPoolContract(name, tokenAddress, tokenName, participants)
+      const { testERC20CContract } = await loadFixture<ICreateTestERC20Contract>(
+        createTestERC20.bind(this, poolTemplateContract.address, mintAmount),
+      )
 
-      const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-        participants[0].account,
-      )
-      await (testERC20CContract as TestERC20).connect(deployer2).mint(poolAccounts[0], mintAmount)
-      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
-        'PoolTemplate',
-        poolAccounts[0],
-      )
+      await poolTemplateContract.connect(deployer1).setTokenAddress(testERC20CContract.address)
 
       expect(await poolTemplateContract.tokenBalance()).to.equal(mintAmount)
     })
 
     it('Should distribute tokens', async () => {
       const mintAmount = 25_000
-      const { poolFactoryContract, testERC20CContract, deployer2, deployer1 } =
-        await loadFixture<IDeploy>(deploy)
+      const participantsCount = 5
 
-      const { name, tokenName, participants, tokenAddress, tokenAmount } = await poolData(
-        testERC20CContract.address,
+      const { poolTemplateContract, deployer1, tokenAmount, participants } =
+        await loadFixture<ICreatePoolTemplateContract>(
+          createPoolTemplateContract.bind(this, participantsCount),
+        )
+
+      const { testERC20CContract } = await loadFixture<ICreateTestERC20Contract>(
+        createTestERC20.bind(this, poolTemplateContract.address, mintAmount),
       )
 
-      await poolFactoryContract
-        .connect(deployer1)
-        .createPoolContract(name, tokenAddress, tokenName, participants)
-
-      const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-        participants[0].account,
-      )
-
-      await (testERC20CContract as TestERC20).connect(deployer2).mint(poolAccounts[0], mintAmount)
-
-      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
-        'PoolTemplate',
-        poolAccounts[0],
-      )
+      await poolTemplateContract.connect(deployer1).setTokenAddress(testERC20CContract.address)
 
       const res: IParticipantResponse[] = await poolTemplateContract.getParticipants(
         participantFirst,
@@ -306,29 +333,50 @@ describe('PoolTemplate', () => {
       })
     })
 
+    it('Should claim tokens', async () => {
+      const mintAmount = 25_000
+      const participantsCount = 5
+      let minted = 0
+
+      const { poolTemplateContract, deployer1, tokenAmount, participants } =
+        await loadFixture<ICreatePoolTemplateContract>(
+          createPoolTemplateContract.bind(this, participantsCount),
+        )
+      const { testERC20CContract, deployer2 } = await loadFixture<ICreateTestERC20Contract>(
+        createTestERC20.bind(this, poolTemplateContract.address, mintAmount),
+      )
+      minted += mintAmount
+      await poolTemplateContract.connect(deployer1).setTokenAddress(testERC20CContract.address)
+
+      const participant = participants.find(
+        ({ account }) => account.toLowerCase() === deployer1.address.toLowerCase(),
+      )
+
+      await poolTemplateContract.connect(deployer1).claimTokens()
+      const accrued1 = Math.floor((minted * participant.share) / tokenAmount)
+      expect(await testERC20CContract.balanceOf(deployer1.address)).to.equal(accrued1)
+
+      await testERC20CContract.connect(deployer2).mint(poolTemplateContract.address, mintAmount)
+      minted += mintAmount
+
+      await poolTemplateContract.connect(deployer1).claimTokens()
+      const accrued2 = Math.floor((minted * participant.share) / tokenAmount)
+      expect(await testERC20CContract.balanceOf(deployer1.address)).to.equal(accrued2)
+    })
+
     it('Should add token address', async () => {
       const mintAmount = 25_000
-      const { poolFactoryContract, testERC20CContract, deployer2, deployer1 } =
-        await loadFixture<IDeploy>(deploy)
+      const participantsCount = 5
 
-      const { name, tokenName, participants, tokenAddress } = await poolData()
-
-      await poolFactoryContract
-        .connect(deployer1)
-        .createPoolContract(name, tokenAddress, tokenName, participants)
-
-      const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-        participants[0].account,
+      const { poolTemplateContract, deployer1 } = await loadFixture<ICreatePoolTemplateContract>(
+        createPoolTemplateContract.bind(this, participantsCount),
       )
 
-      await (testERC20CContract as TestERC20).connect(deployer2).mint(poolAccounts[0], mintAmount)
-
-      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
-        'PoolTemplate',
-        poolAccounts[0],
+      const { testERC20CContract } = await loadFixture<ICreateTestERC20Contract>(
+        createTestERC20.bind(this, poolTemplateContract.address, mintAmount),
       )
 
-      await poolTemplateContract.setTokenAddress(testERC20CContract.address)
+      await poolTemplateContract.connect(deployer1).setTokenAddress(testERC20CContract.address)
       const pool: IPoolResponse = await poolTemplateContract.getPoolData()
 
       expect(pool.tokenAddress).to.equal(testERC20CContract.address)

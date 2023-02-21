@@ -9,6 +9,9 @@ import './tasks'
 
 const config: HardhatUserConfig = {
   solidity: '0.8.17',
+  gasReporter: {
+    enabled: false,
+  },
   networks: {
     hardhat: {
       chainId: 1337,
@@ -27,7 +30,6 @@ const config: HardhatUserConfig = {
     runPrettier: true,
   },
   typechain: {
-    // outDir: path.resolve('./src/app/contracts/typechain-types'),
     target: 'ethers-v5',
   },
 }

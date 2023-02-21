@@ -20,7 +20,6 @@ contract PoolTemplate {
   struct ParticipantData {
     uint share;
     uint claimed;
-    uint accrued;
     string description;
   }
 
@@ -32,6 +31,7 @@ contract PoolTemplate {
 
   uint private poolParticipantsCount;
   uint private poolTokenAmount;
+  uint private poolOverallClaimed;
   Statuses private poolStatus;
 
   mapping(address => ParticipantData) private participantsData;
@@ -81,12 +81,7 @@ contract PoolTemplate {
   function addParticipants(Participant[] memory _participants) private {
     for (uint i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
-      participantsData[item.account] = ParticipantData(
-        item.share,
-        item.claimed,
-        item.accrued,
-        item.description
-      );
+      participantsData[item.account] = ParticipantData(item.share, item.claimed, item.description);
       mapper[poolParticipantsCount] = item.account;
       poolParticipantsCount++;
     }
@@ -129,12 +124,12 @@ contract PoolTemplate {
   }
 
   function claimTokens() external hasTokenAddress {
-    require(participantsData[msg.sender].accrued > 0, "There are not tokens for claim");
-    uint accrued = participantsData[msg.sender].accrued;
+    ParticipantData memory data = participantsData[msg.sender];
+    uint accrued = calculateAccrued(data);
+    require(accrued > 0, "There are not tokens for claim");
     participantsData[msg.sender].claimed += accrued;
-    participantsData[msg.sender].accrued = 0;
-
-    bool success = IERC20(poolTokenAddress).transfer(address(this), accrued);
+    poolOverallClaimed += accrued;
+    bool success = IERC20(poolTokenAddress).transfer(msg.sender, accrued);
     require(success, "Claim error");
   }
 
@@ -152,24 +147,27 @@ contract PoolTemplate {
     }
     Participant[] memory participants = new Participant[](size);
 
-    uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
     uint counter;
 
     for (uint i = first; i < first + size; i++) {
       ParticipantData memory data = participantsData[mapper[i]];
-      uint accrued = (overallBalance * data.share) / poolTokenAmount - data.claimed;
 
       participants[counter] = Participant(
         mapper[i],
         data.share,
         data.claimed,
-        accrued,
+        calculateAccrued(data),
         data.description
       );
       counter++;
     }
 
     return participants;
+  }
+
+  function calculateAccrued(ParticipantData memory data) private view returns (uint) {
+    uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
+    return ((overallBalance + poolOverallClaimed) * data.share) / poolTokenAmount - data.claimed;
   }
 
   function calculateTokenAmount(

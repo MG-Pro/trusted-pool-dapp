@@ -9,7 +9,7 @@ dotenv.config()
 const { API_URL, PRIVATE_KEY, API_KEY, TOKEN_CONTRACT } = process.env
 
 // example:
-// npx hardhat mintTestToken --pool-account 0xa16e02e87b7454126e5e10d957a927a7f5b5d2be
+// npx hardhat mintTestToken --pool-account 0xa16e02e87b7454126e5e10d957a927a7f5b5d2be --mint-amount 10000
 
 task('mintTestToken', 'Mint token to pool contract')
   .addParam('poolAccount', 'Pool Account', null, types.string)
