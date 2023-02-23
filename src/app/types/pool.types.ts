@@ -2,8 +2,7 @@ import { BigNumber } from 'ethers'
 
 export enum PoolStatuses {
   Active = 'Active',
-  Finished = 'Finished',
-  Unknown = 'Unknown',
+  Filled = 'Filled',
 }
 
 export interface IParticipant {
@@ -20,6 +19,7 @@ export interface IPool {
   tokenAddress?: string
   tokenName: string
   tokenAmount: number
+  filledAmount: number
   creatorAddress: string
   participantsCount: number
   participants: IParticipant[]
@@ -31,8 +31,8 @@ export interface IPoolResponse {
   tokenAddress: string
   tokenName: string
   creator: string
-  status: number
   tokenAmount: BigNumber
+  filledAmount: BigNumber
   participantsCount: BigNumber
 }
 

@@ -17,7 +17,11 @@
     <div class="card text-bg-dark shadow-lg bg-opacity-75">
       <div class="card-header d-flex">
         <h5 class="m-0"># {{ activePool?.name }} ({{ activePool?.tokenName }})</h5>
-        <div class="ms-auto text-success">
+        <div
+          class="ms-auto"
+          [class.text-warning]="activePool?.status === 'Active'"
+          [class.text-success]="activePool?.status === 'Filled'"
+        >
           <span class="">Status: </span>
           <span class="">{{ activePool?.status }}</span>
         </div>
@@ -29,8 +33,10 @@
             <p class="card-text">{{ activePool?.tokenName }}</p>
           </div>
           <div class="col">
-            <h6 class="card-title">Token amount:</h6>
-            <p class="card-text">{{ activePool?.tokenAmount | number }}</p>
+            <h6 class="card-title">Token amount/filled:</h6>
+            <p class="card-text">
+              {{ activePool?.tokenAmount | number }}/{{ activePool?.filledAmount | number }}
+            </p>
           </div>
         </div>
         <div class="row mb-3">

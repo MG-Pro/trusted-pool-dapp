@@ -146,6 +146,11 @@
       },
       {
         "internalType": "uint256",
+        "name": "filledAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "participantsCount",
         "type": "uint256"
       },

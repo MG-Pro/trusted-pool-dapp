@@ -169,8 +169,9 @@ export class ContractService {
       name: item.name,
       tokenName: item.tokenName,
       creatorAddress: item.creator?.toLowerCase(),
-      status: this.convertStatus(item.status),
+      status: this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber()),
       tokenAmount: item.tokenAmount.toNumber(),
+      filledAmount: item.filledAmount.toNumber(),
       participantsCount: item.participantsCount.toNumber(),
       participants: [],
     }
@@ -186,15 +187,8 @@ export class ContractService {
     }
   }
 
-  private convertStatus(status: number): PoolStatuses {
-    switch (status) {
-      case 0:
-        return PoolStatuses.Active
-      case 1:
-        return PoolStatuses.Finished
-      default:
-        return PoolStatuses.Unknown
-    }
+  private convertStatus(filledAmount: number, tokenAmount: number): PoolStatuses {
+    return tokenAmount > filledAmount ? PoolStatuses.Active : PoolStatuses.Filled
   }
 
   private showError(e): void {

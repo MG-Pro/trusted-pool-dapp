@@ -53,7 +53,7 @@ export class PoolsComponent {
   }
 
   public get disabledEditTokenAddress(): boolean {
-    return !!this.activePool?.tokenAddress || this.isEditTokenAddress || !this.isParticipant
+    return !!this.activePool?.tokenAddress || this.isEditTokenAddress || !this.isCreator
   }
 
   public prepParticipants(participants: IParticipant[]): IParticipant[] {

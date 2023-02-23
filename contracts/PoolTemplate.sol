@@ -4,11 +4,6 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract PoolTemplate {
-  enum Statuses {
-    Active,
-    Finished
-  }
-
   struct Participant {
     address account;
     uint share;
@@ -32,7 +27,6 @@ contract PoolTemplate {
   uint private poolParticipantsCount;
   uint private poolTokenAmount;
   uint private poolOverallClaimed;
-  Statuses private poolStatus;
 
   mapping(address => ParticipantData) private participantsData;
   mapping(uint => address) private mapper;
@@ -52,13 +46,8 @@ contract PoolTemplate {
     _;
   }
 
-  modifier atStatus(Statuses _status) {
-    require(poolStatus == _status, "Wrong status");
-    _;
-  }
-
   modifier isContract(address _address) {
-    require(_address.code.length != 0, "Argument is not contract address");
+    require(_address.code.length != 0, "Address is not contract address");
     _;
   }
 
@@ -71,11 +60,14 @@ contract PoolTemplate {
   ) {
     poolCreator = _creator;
     poolName = _name;
-    poolTokenAddress = _tokenAddress;
     poolTokenName = _tokenName;
     poolStatus = Statuses.Active;
-    poolTokenAmount = calculateTokenAmount(_participants);
+    poolTokenAmount = _calculateTokenAmount(_participants);
     addParticipants(_participants);
+
+    if (_tokenAddress != address(0)) {
+      _setTokenAddress(_tokenAddress);
+    }
   }
 
   function addParticipants(Participant[] memory _participants) private {
@@ -97,26 +89,24 @@ contract PoolTemplate {
       address tokenAddress,
       string memory tokenName,
       uint tokenAmount,
-      uint participantsCount,
-      Statuses status
+      uint filledAmount,
+      uint participantsCount
     )
   {
+    uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
     return (
       poolCreator,
       poolName,
       poolTokenAddress,
       poolTokenName,
       poolTokenAmount,
-      poolParticipantsCount,
-      poolStatus
+      overallBalance + poolOverallClaimed,
+      poolParticipantsCount
     );
   }
 
-  function setTokenAddress(
-    address _tokenAddress
-  ) external onlyParticipant isContract(_tokenAddress) {
-    require(poolTokenAddress == address(0), "Token address already set");
-    poolTokenAddress = _tokenAddress;
+  function setTokenAddress(address _tokenAddress) external onlyCreator {
+    _setTokenAddress(_tokenAddress);
   }
 
   function tokenBalance() public view hasTokenAddress onlyParticipant returns (uint) {
@@ -125,7 +115,7 @@ contract PoolTemplate {
 
   function claimTokens() external hasTokenAddress {
     ParticipantData memory data = participantsData[msg.sender];
-    uint accrued = calculateAccrued(data);
+    uint accrued = _calculateAccrued(data);
     require(accrued > 0, "There are not tokens for claim");
     participantsData[msg.sender].claimed += accrued;
     poolOverallClaimed += accrued;
@@ -156,7 +146,7 @@ contract PoolTemplate {
         mapper[i],
         data.share,
         data.claimed,
-        calculateAccrued(data),
+        _calculateAccrued(data),
         data.description
       );
       counter++;
@@ -165,12 +155,17 @@ contract PoolTemplate {
     return participants;
   }
 
-  function calculateAccrued(ParticipantData memory data) private view returns (uint) {
+  function _setTokenAddress(address _tokenAddress) private isContract(_tokenAddress) {
+    require(poolTokenAddress == address(0), "Token address already set");
+    poolTokenAddress = _tokenAddress;
+  }
+
+  function _calculateAccrued(ParticipantData memory data) private view returns (uint) {
     uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
     return ((overallBalance + poolOverallClaimed) * data.share) / poolTokenAmount - data.claimed;
   }
 
-  function calculateTokenAmount(
+  function _calculateTokenAmount(
     Participant[] memory _participants
   ) private pure returns (uint sum) {
     for (uint i; i < _participants.length; i++) {

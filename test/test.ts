@@ -152,7 +152,6 @@ describe('PoolFactory', () => {
       )
       expect(poolResponse.tokenAmount).to.equal(tokenAmount)
       expect(participantResponse.length).to.equal(participantSize)
-      expect(poolResponse.status).to.equal(0)
     })
 
     it('Should create pool with 10 participants', async () => {
@@ -162,7 +161,6 @@ describe('PoolFactory', () => {
       )
       expect(poolResponse.tokenAmount).to.equal(tokenAmount)
       expect(participantResponse.length).to.equal(participantsCount)
-      expect(poolResponse.status).to.equal(0)
     })
 
     it('Should create pool with 5 participants', async () => {
@@ -172,7 +170,6 @@ describe('PoolFactory', () => {
       )
       expect(poolResponse.tokenAmount).to.equal(tokenAmount)
       expect(participantResponse.length).to.equal(participantsCount)
-      expect(poolResponse.status).to.equal(0)
     })
 
     it('Should create pool with 3 participants', async () => {
@@ -182,7 +179,6 @@ describe('PoolFactory', () => {
       )
       expect(poolResponse.tokenAmount).to.equal(tokenAmount)
       expect(participantResponse.length).to.equal(participantsCount)
-      expect(poolResponse.status).to.equal(0)
     })
 
     it('Should revert if 0 participants', async () => {
@@ -304,6 +300,7 @@ describe('PoolTemplate', () => {
       await poolTemplateContract.connect(deployer1).setTokenAddress(testERC20CContract.address)
 
       expect(await poolTemplateContract.tokenBalance()).to.equal(mintAmount)
+      expect((await poolTemplateContract.getPoolData()).filledAmount).to.equal(mintAmount)
     })
 
     it('Should distribute tokens', async () => {
@@ -355,6 +352,7 @@ describe('PoolTemplate', () => {
       await poolTemplateContract.connect(deployer1).claimTokens()
       const accrued1 = Math.floor((minted * participant.share) / tokenAmount)
       expect(await testERC20CContract.balanceOf(deployer1.address)).to.equal(accrued1)
+      expect((await poolTemplateContract.getPoolData()).filledAmount).to.equal(minted)
 
       await testERC20CContract.connect(deployer2).mint(poolTemplateContract.address, mintAmount)
       minted += mintAmount
@@ -362,6 +360,7 @@ describe('PoolTemplate', () => {
       await poolTemplateContract.connect(deployer1).claimTokens()
       const accrued2 = Math.floor((minted * participant.share) / tokenAmount)
       expect(await testERC20CContract.balanceOf(deployer1.address)).to.equal(accrued2)
+      expect((await poolTemplateContract.getPoolData()).filledAmount).to.equal(minted)
     })
 
     it('Should add token address', async () => {
