@@ -9,11 +9,13 @@ async function main(): Promise<void> {
 
   const TestERC20 = await ethers.getContractFactory('TestERC20')
   const testERC20 = await TestERC20.connect(deployer).deploy(1_000_000)
-
+  const usdt = await TestERC20.connect(deployer).deploy(1_000_000)
   await testERC20.deployed()
+  await usdt.deployed()
 
   console.log(`PoolFactory contract deployed to: ${poolFactory.address}`)
   console.log(`TestERC20 contract deployed to: ${testERC20.address}`)
+  console.log(`TestUSDT contract deployed to: ${usdt.address}`)
 
   await addressExporter.save({
     PoolFactory: poolFactory.address,

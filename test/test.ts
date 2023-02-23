@@ -1,147 +1,25 @@
-import { PoolTemplate, PoolFactory, TestERC20 } from '@app/typechain'
-import { IParticipant, IParticipantResponse, IPool, IPoolResponse } from '@app/types'
+import { IParticipant, IParticipantResponse, IPoolResponse } from '@app/types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
 
+import {
+  createPool,
+  createPoolTemplateContract,
+  createTestERC20,
+  deployPoolFactory,
+  deployUSDT,
+  participantFirst,
+  participantSize,
+  poolData,
+  valueFee,
+} from './test.helpers'
 import {
   ICreatePool,
   ICreatePoolTemplateContract,
   ICreateTestERC20Contract,
   IDeployPoolFactory,
-  IDeployTestERC20,
+  IDeployUSDT,
 } from './test.types'
-
-const totalSupply = 1_000_000
-const participantFirst = 0
-const participantSize = 25
-
-async function deployPoolFactory(): Promise<IDeployPoolFactory> {
-  const [deployer1, deployer2, user1, user2, user3, user4, user5] =
-    (await ethers.getSigners()) as unknown as SignerWithAddress[]
-
-  const PoolFactoryC = await ethers.getContractFactory('PoolFactory', deployer1)
-  const TestERC20C = await ethers.getContractFactory('TestERC20', deployer2)
-
-  const poolFactoryContract: PoolFactory = await PoolFactoryC.deploy()
-  const testERC20CContract: TestERC20 = await TestERC20C.deploy(totalSupply)
-
-  await testERC20CContract.deployed()
-  await poolFactoryContract.deployed()
-
-  return {
-    poolFactoryContract,
-    testERC20CContract,
-    deployer1,
-    user1,
-    user2,
-    user3,
-    user4,
-    user5,
-  }
-}
-
-async function deployTestERC20(): Promise<IDeployTestERC20> {
-  const [deployer1, deployer2, user1, user2, user3, user4, user5] =
-    (await ethers.getSigners()) as unknown as SignerWithAddress[]
-
-  const TestERC20C = await ethers.getContractFactory('TestERC20', deployer2)
-
-  const testERC20CContract: TestERC20 = await TestERC20C.deploy(totalSupply)
-
-  await testERC20CContract.deployed()
-
-  return {
-    testERC20CContract,
-    deployer2,
-    user1,
-    user2,
-    user3,
-    user4,
-    user5,
-  }
-}
-
-async function poolData(
-  tokenAddress = ethers.constants.AddressZero,
-  participantsCount = 5,
-  nonce: string = '',
-): Promise<Partial<IPool>> {
-  const accounts = await ethers.getSigners()
-
-  const participants: IParticipant[] = Array(participantsCount)
-    .fill(null)
-    .map((_, i) => {
-      const account = i > 2 ? ethers.Wallet.createRandom().address : accounts[i].address
-
-      return {
-        account,
-        share: 50_000 + i * 5_000,
-        claimed: 0,
-        accrued: 0,
-        description: 'p' + i + nonce,
-      }
-    })
-
-  return {
-    name: 'VC' + nonce,
-    tokenName: 'BTC' + nonce,
-    tokenAddress,
-    participants,
-    tokenAmount: participants.reduce((acc, p) => acc + p.share, 0),
-  }
-}
-
-async function createPoolTemplateContract(
-  participantsCount: number,
-): Promise<ICreatePoolTemplateContract> {
-  const { poolFactoryContract, deployer1 } = await deployPoolFactory()
-  const { name, tokenName, participants, tokenAddress, tokenAmount } = await poolData(
-    undefined,
-    participantsCount,
-  )
-
-  await poolFactoryContract
-    .connect(deployer1)
-    .createPoolContract(name, tokenAddress, tokenName, participants)
-
-  const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-    participants[0].account,
-  )
-
-  const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
-    'PoolTemplate',
-    poolAccounts[0],
-  )
-
-  return { poolTemplateContract, tokenAmount, participants, deployer1 }
-}
-
-async function createPool(participantsCount: number): Promise<ICreatePool> {
-  const { poolTemplateContract, tokenAmount } = await createPoolTemplateContract(participantsCount)
-
-  const poolResponse: IPoolResponse = await poolTemplateContract.getPoolData()
-  const participantResponse: IParticipantResponse[] = await poolTemplateContract.getParticipants(
-    participantFirst,
-    participantSize,
-  )
-  return { poolResponse, participantResponse, tokenAmount }
-}
-
-async function createTestERC20(
-  poolAccount: string,
-  mintAmount?: number,
-): Promise<ICreateTestERC20Contract> {
-  const { testERC20CContract, deployer2 } = await deployTestERC20()
-
-  if (mintAmount) {
-    const tr = await testERC20CContract.connect(deployer2).mint(poolAccount, mintAmount)
-    await tr.wait()
-  }
-
-  return { testERC20CContract, deployer2, mintAmount }
-}
 
 describe('PoolFactory', () => {
   describe('Creating pools', () => {
@@ -156,15 +34,6 @@ describe('PoolFactory', () => {
 
     it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
-      const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
-        createPool.bind(this, participantsCount),
-      )
-      expect(poolResponse.tokenAmount).to.equal(tokenAmount)
-      expect(participantResponse.length).to.equal(participantsCount)
-    })
-
-    it('Should create pool with 5 participants', async () => {
-      const participantsCount = 5
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
         createPool.bind(this, participantsCount),
       )
@@ -198,6 +67,102 @@ describe('PoolFactory', () => {
       await expect(creatingReq).to.revertedWith('Must have at least 1 participant')
     })
   })
+
+  describe('Creating pools with platform fee', () => {
+    it('Should revert if do not send fee', async () => {
+      const participantsCount = 3
+      const { poolFactoryContract, deployer1 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { USDTContract } = await loadFixture<IDeployUSDT>(deployUSDT)
+      await poolFactoryContract.connect(deployer1).setStableContract(USDTContract.address)
+      await poolFactoryContract.connect(deployer1).setFeeValue(valueFee)
+
+      const { name, tokenName, participants, tokenAddress } = await poolData(
+        undefined,
+        participantsCount,
+      )
+
+      const trReq = poolFactoryContract
+        .connect(deployer1)
+        .createPoolContract(name, tokenAddress, tokenName, participants)
+
+      await expect(trReq).to.revertedWith('Not enough fee value')
+    })
+
+    it('Should revert if not approved fee value', async () => {
+      const participantsCount = 3
+      const { poolFactoryContract, deployer1 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { USDTContract, deployer3 } = await loadFixture<IDeployUSDT>(deployUSDT)
+
+      await USDTContract.connect(deployer3).transfer(deployer1.address, 100)
+      await poolFactoryContract.connect(deployer1).setStableContract(USDTContract.address)
+      await poolFactoryContract.connect(deployer1).setFeeValue(valueFee)
+
+      const { name, tokenName, participants, tokenAddress } = await poolData(
+        undefined,
+        participantsCount,
+      )
+
+      const trReq = poolFactoryContract
+        .connect(deployer1)
+        .createPoolContract(name, tokenAddress, tokenName, participants)
+
+      await expect(trReq).to.revertedWith('Not allowed amount to spend')
+    })
+
+    it('Should create pool with fee', async () => {
+      const participantsCount = 3
+      const { poolFactoryContract, deployer1 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { USDTContract, deployer3 } = await loadFixture<IDeployUSDT>(deployUSDT)
+
+      await USDTContract.connect(deployer3).transfer(deployer1.address, 100)
+      await USDTContract.connect(deployer1).approve(poolFactoryContract.address, 1000)
+      await poolFactoryContract.connect(deployer1).setStableContract(USDTContract.address)
+      await poolFactoryContract.connect(deployer1).setFeeValue(valueFee)
+
+      const { name, tokenName, participants, tokenAddress } = await poolData(
+        undefined,
+        participantsCount,
+      )
+
+      await poolFactoryContract
+        .connect(deployer1)
+        .createPoolContract(name, tokenAddress, tokenName, participants)
+
+      expect(await USDTContract.balanceOf(poolFactoryContract.address)).to.equal(valueFee)
+    })
+
+    it('Should withdraw fee to owner', async () => {
+      const participantsCount = 3
+      const { poolFactoryContract, deployer1, user5 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { USDTContract, deployer3 } = await loadFixture<IDeployUSDT>(deployUSDT)
+
+      await USDTContract.connect(deployer3).transfer(user5.address, 100)
+      await USDTContract.connect(user5).approve(poolFactoryContract.address, 1000)
+      await poolFactoryContract.connect(deployer1).setStableContract(USDTContract.address)
+      await poolFactoryContract.connect(deployer1).setFeeValue(valueFee)
+
+      const { name, tokenName, participants, tokenAddress } = await poolData(
+        undefined,
+        participantsCount,
+      )
+
+      await poolFactoryContract
+        .connect(user5)
+        .createPoolContract(name, tokenAddress, tokenName, participants)
+
+      await poolFactoryContract.connect(deployer1).withdraw()
+
+      expect(await USDTContract.balanceOf(deployer1.address)).to.equal(valueFee)
+    })
+  })
 })
 
 describe('PoolTemplate', () => {
@@ -206,8 +171,8 @@ describe('PoolTemplate', () => {
       const participantsCount = 100
       const first25 = 25
       const first99 = 99
-
       const size50 = 50
+
       const { poolTemplateContract, participants } = await loadFixture<ICreatePoolTemplateContract>(
         createPoolTemplateContract.bind(this, participantsCount),
       )
@@ -249,25 +214,12 @@ describe('PoolTemplate', () => {
     })
 
     it('Should revert if is not participant', async () => {
-      const { poolFactoryContract, deployer1, user5 } = await loadFixture<IDeployPoolFactory>(
-        deployPoolFactory,
-      )
-      const { name, tokenName, participants, tokenAddress } = await poolData()
-
-      await poolFactoryContract
-        .connect(deployer1)
-        .createPoolContract(name, tokenAddress, tokenName, participants)
-
-      const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-        participants[0].account,
+      const participantsCount = 5
+      const { poolTemplateContract, notUser } = await loadFixture<ICreatePoolTemplateContract>(
+        createPoolTemplateContract.bind(this, participantsCount),
       )
 
-      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
-        'PoolTemplate',
-        poolAccounts[0],
-      )
-      const poolReq = poolTemplateContract.connect(user5 as SignerWithAddress).getPoolData()
-
+      const poolReq = poolTemplateContract.connect(notUser).getPoolData()
       await expect(poolReq).to.revertedWith('Only for participant')
     })
 
@@ -279,7 +231,6 @@ describe('PoolTemplate', () => {
       )
 
       const pReq = poolTemplateContract.getParticipants(11, participantSize)
-
       await expect(pReq).to.revertedWith('Start index greater than count of participants')
     })
   })

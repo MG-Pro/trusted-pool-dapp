@@ -12,6 +12,7 @@ export interface ICreatePoolTemplateContract {
   poolTemplateContract: PoolTemplate
   participants: IParticipant[]
   deployer1: SignerWithAddress
+  notUser: SignerWithAddress
   tokenAmount: number
 }
 
@@ -22,13 +23,19 @@ export interface ICreateTestERC20Contract {
 }
 
 export interface IDeployPoolFactory {
-  readonly [index: string]: SignerWithAddress | PoolFactory | TestERC20
   deployer1: SignerWithAddress
+  user5: SignerWithAddress
   poolFactoryContract: PoolFactory
 }
 
 export interface IDeployTestERC20 {
-  readonly [index: string]: SignerWithAddress | PoolFactory | TestERC20
   deployer2: SignerWithAddress
+  user5: SignerWithAddress
   testERC20CContract: TestERC20
+}
+
+export interface IDeployUSDT {
+  deployer3: SignerWithAddress
+  user5: SignerWithAddress
+  USDTContract: TestERC20
 }

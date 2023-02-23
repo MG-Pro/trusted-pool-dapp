@@ -61,7 +61,6 @@ contract PoolTemplate {
     poolCreator = _creator;
     poolName = _name;
     poolTokenName = _tokenName;
-    poolStatus = Statuses.Active;
     poolTokenAmount = _calculateTokenAmount(_participants);
     addParticipants(_participants);
 

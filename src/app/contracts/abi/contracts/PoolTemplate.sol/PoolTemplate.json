@@ -153,11 +153,6 @@
         "internalType": "uint256",
         "name": "participantsCount",
         "type": "uint256"
-      },
-      {
-        "internalType": "enum PoolTemplate.Statuses",
-        "name": "status",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",

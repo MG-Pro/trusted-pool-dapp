@@ -31,13 +31,12 @@ contract PoolFactory {
     string memory _name,
     address _tokenAddress,
     string memory _tokenName,
-    PoolTemplate.Participant[] memory _participants,
-    uint256 _stableFeeValue
+    PoolTemplate.Participant[] memory _participants
   ) external {
     require(_participants.length != 0, "Must have at least 1 participant");
 
     if (stableFeeValue > 0) {
-      _spendFee(_stableFeeValue);
+      _spendFee();
     }
 
     address contractAddress = address(
@@ -77,21 +76,19 @@ contract PoolFactory {
     return participants[_participant];
   }
 
-  function _spendFee(uint256 _stableFeeValue) private hasStableContract {
-    require(_stableFeeValue >= stableFeeValue, "Not enough fee value");
-    _spend(msg.sender, address(this), _stableFeeValue);
+  function _spendFee() private hasStableContract {
+    uint256 balance = IERC20(stableContract).balanceOf(msg.sender);
+    require(balance >= stableFeeValue, "Not enough fee value");
+    uint256 result = IERC20(stableContract).allowance(msg.sender, address(this));
+    require(result >= stableFeeValue, "Not allowed amount to spend");
+    bool success = IERC20(stableContract).transferFrom(msg.sender, address(this), stableFeeValue);
+    require(success, "Spending failed");
   }
 
-  function withdraw() external onlyOwner {
+  function withdraw() external onlyOwner hasStableContract {
     uint256 balance = IERC20(stableContract).balanceOf(address(this));
     require(balance > 0, "Nothing to withdraw");
-    _spend(address(this), owner, balance);
-  }
-
-  function _spend(address from, address to, uint256 amount) private {
-    uint256 result = IERC20(stableContract).allowance(from, to);
-    require(result >= amount, "Not allowed amount to spend");
-    bool success = IERC20(stableContract).transferFrom(from, to, amount);
+    bool success = IERC20(stableContract).transfer(owner, balance);
     require(success, "Spending failed");
   }
 }
