@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -18,7 +18,9 @@ contract PoolTemplate {
     string description;
   }
 
-  address private poolOrganizer;
+  bool private poolApproved = true;
+  bool private poolPrivatable;
+  address private poolApprover;
   address private poolCreator;
   address private poolTokenAddress;
   string private poolName;
@@ -36,6 +38,11 @@ contract PoolTemplate {
     _;
   }
 
+  modifier onlyApproved() {
+    require(poolApprover != address(0) && msg.sender == poolApprover, "Only for approver");
+    _;
+  }
+
   modifier onlyParticipant() {
     require(participantsData[msg.sender].share > 0, "Only for participant");
     _;
@@ -47,7 +54,7 @@ contract PoolTemplate {
   }
 
   modifier isContract(address _address) {
-    require(_address.code.length != 0, "Address is not contract address");
+    require(_address.code.length != 0, "Address is not contract");
     _;
   }
 
@@ -56,16 +63,24 @@ contract PoolTemplate {
     string memory _name,
     address _tokenAddress,
     string memory _tokenName,
-    Participant[] memory _participants
+    Participant[] memory _participants,
+    address _approver,
+    bool _privatable
   ) {
     poolCreator = _creator;
     poolName = _name;
     poolTokenName = _tokenName;
+    poolPrivatable = _privatable;
     poolTokenAmount = _calculateTokenAmount(_participants);
     addParticipants(_participants);
 
     if (_tokenAddress != address(0)) {
       _setTokenAddress(_tokenAddress);
+    }
+
+    if (_approver != address(0)) {
+      poolApprover == _approver;
+      poolApproved = false;
     }
   }
 
@@ -89,7 +104,9 @@ contract PoolTemplate {
       string memory tokenName,
       uint tokenAmount,
       uint filledAmount,
-      uint participantsCount
+      uint participantsCount,
+      bool approved,
+      bool privatable
     )
   {
     uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
@@ -100,11 +117,22 @@ contract PoolTemplate {
       poolTokenName,
       poolTokenAmount,
       overallBalance + poolOverallClaimed,
-      poolParticipantsCount
+      poolParticipantsCount,
+      poolApproved,
+      poolPrivatable
     );
   }
 
-  function setTokenAddress(address _tokenAddress) external onlyCreator {
+  function approvalData() external view returns (bool approved, address approver) {
+    return (poolApproved, poolApprover);
+  }
+
+  function approvePool() external {
+    require(poolApprover != address(0) && msg.sender == poolApprover, "Only for approver");
+    poolApproved = true;
+  }
+
+  function setTokenAddress(address _tokenAddress) external onlyCreator onlyApproved {
     _setTokenAddress(_tokenAddress);
   }
 
@@ -112,7 +140,7 @@ contract PoolTemplate {
     return IERC20(poolTokenAddress).balanceOf(address(this));
   }
 
-  function claimTokens() external hasTokenAddress {
+  function claimTokens() external hasTokenAddress onlyApproved {
     ParticipantData memory data = participantsData[msg.sender];
     uint accrued = _calculateAccrued(data);
     require(accrued > 0, "There are not tokens for claim");
@@ -122,6 +150,12 @@ contract PoolTemplate {
     require(success, "Claim error");
   }
 
+  function getParticipant() external view onlyParticipant returns (Participant memory) {
+    ParticipantData memory data = participantsData[msg.sender];
+    return
+      Participant(msg.sender, data.share, data.claimed, _calculateAccrued(data), data.description);
+  }
+
   function getParticipants(
     uint first,
     uint size
@@ -129,6 +163,7 @@ contract PoolTemplate {
     if (poolParticipantsCount == 0) {
       return new Participant[](0);
     }
+    require(!poolPrivatable, "Forbidden fo private pool");
     require(poolParticipantsCount > first, "Start index greater than count of participants");
 
     if (size > poolParticipantsCount - first) {
