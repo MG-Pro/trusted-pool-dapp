@@ -16,6 +16,7 @@ export const totalSupply = 1_000_000
 export const participantFirst = 0
 export const participantSize = 25
 export const valueFee = 10
+export const approverValueFee = 5
 
 export async function deployPoolFactory(): Promise<IDeployPoolFactory> {
   const [deployer1, deployer2, deployer3, user2, user3, user4, user5] =
@@ -29,6 +30,8 @@ export async function deployPoolFactory(): Promise<IDeployPoolFactory> {
     poolFactoryContract,
     deployer1,
     user5,
+    approver: user4,
+    participant2: deployer2,
   }
 }
 
@@ -66,6 +69,8 @@ export async function poolData(
   tokenAddress = ethers.constants.AddressZero,
   participantsCount = 5,
   nonce: string = '',
+  approverAddress: string = ethers.constants.AddressZero,
+  privatable: boolean = false,
 ): Promise<Partial<IPool>> {
   const accounts = await ethers.getSigners()
 
@@ -88,22 +93,32 @@ export async function poolData(
     tokenName: 'BTC' + nonce,
     tokenAddress,
     participants,
+    approver: approverAddress,
+    privatable,
     tokenAmount: participants.reduce((acc, p) => acc + p.share, 0),
   }
 }
 
 export async function createPoolTemplateContract(
   participantsCount: number,
+  privatableArg: boolean = false,
+  approvable: boolean = false,
 ): Promise<ICreatePoolTemplateContract> {
-  const { poolFactoryContract, deployer1, user5 } = await deployPoolFactory()
-  const { name, tokenName, participants, tokenAddress, tokenAmount } = await poolData(
+  const { poolFactoryContract, deployer1, user5, participant2, approver } =
+    await deployPoolFactory()
+  const { name, tokenName, participants, tokenAddress, tokenAmount, privatable } = await poolData(
     undefined,
     participantsCount,
+    '',
+    approver.address,
+    privatableArg,
   )
+
+  const approverAddress = approvable ? approver.address : ethers.constants.AddressZero
 
   await poolFactoryContract
     .connect(deployer1)
-    .createPoolContract(name, tokenAddress, tokenName, participants)
+    .createPoolContract(name, tokenAddress, tokenName, participants, approverAddress, privatable)
 
   const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
     participants[0].account,
@@ -116,25 +131,34 @@ export async function createPoolTemplateContract(
 
   return {
     poolTemplateContract,
+    poolFactoryContract,
     tokenAmount,
     participants,
     deployer1,
+    approver,
+    privatable,
     notUser: user5 as SignerWithAddress,
+    participant2,
   }
 }
 
-export async function createPool(participantsCount: number): Promise<ICreatePool> {
-  const { poolTemplateContract, tokenAmount } = await createPoolTemplateContract(participantsCount)
+export async function createPool(
+  participantsCount: number,
+  privatableArg: boolean = false,
+  approvable: boolean = false,
+): Promise<ICreatePool> {
+  const { poolTemplateContract, tokenAmount, approver, privatable } =
+    await createPoolTemplateContract(participantsCount, privatableArg, approvable)
 
   const poolResponse: IPoolResponse = await poolTemplateContract.getPoolData()
   const participantResponse: IParticipantResponse[] = await poolTemplateContract.getParticipants(
     participantFirst,
     participantSize,
   )
-  return { poolResponse, participantResponse, tokenAmount }
+  return { poolResponse, participantResponse, tokenAmount, approver, privatable }
 }
 
-export async function createTestERC20(
+export async function createAndMintTestERC20(
   poolAccount: string,
   mintAmount?: number,
 ): Promise<ICreateTestERC20Contract> {

@@ -39,7 +39,7 @@ contract PoolTemplate {
   }
 
   modifier onlyApproved() {
-    require(poolApprover != address(0) && msg.sender == poolApprover, "Only for approver");
+    require(poolApproved, "Pool is not approved");
     _;
   }
 
@@ -79,7 +79,7 @@ contract PoolTemplate {
     }
 
     if (_approver != address(0)) {
-      poolApprover == _approver;
+      poolApprover = _approver;
       poolApproved = false;
     }
   }
@@ -87,6 +87,7 @@ contract PoolTemplate {
   function addParticipants(Participant[] memory _participants) private {
     for (uint i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
+      require(item.share > 0, "Share value must be greater 0");
       participantsData[item.account] = ParticipantData(item.share, item.claimed, item.description);
       mapper[poolParticipantsCount] = item.account;
       poolParticipantsCount++;
@@ -105,6 +106,7 @@ contract PoolTemplate {
       uint tokenAmount,
       uint filledAmount,
       uint participantsCount,
+      address approver,
       bool approved,
       bool privatable
     )
@@ -118,6 +120,7 @@ contract PoolTemplate {
       poolTokenAmount,
       overallBalance + poolOverallClaimed,
       poolParticipantsCount,
+      poolApprover,
       poolApproved,
       poolPrivatable
     );
@@ -132,7 +135,7 @@ contract PoolTemplate {
     poolApproved = true;
   }
 
-  function setTokenAddress(address _tokenAddress) external onlyCreator onlyApproved {
+  function setTokenAddress(address _tokenAddress) external onlyCreator {
     _setTokenAddress(_tokenAddress);
   }
 
@@ -140,7 +143,7 @@ contract PoolTemplate {
     return IERC20(poolTokenAddress).balanceOf(address(this));
   }
 
-  function claimTokens() external hasTokenAddress onlyApproved {
+  function claimTokens() external hasTokenAddress {
     ParticipantData memory data = participantsData[msg.sender];
     uint accrued = _calculateAccrued(data);
     require(accrued > 0, "There are not tokens for claim");
@@ -163,7 +166,7 @@ contract PoolTemplate {
     if (poolParticipantsCount == 0) {
       return new Participant[](0);
     }
-    require(!poolPrivatable, "Forbidden fo private pool");
+    require(!poolPrivatable, "Forbidden for private pool");
     require(poolParticipantsCount > first, "Start index greater than count of participants");
 
     if (size > poolParticipantsCount - first) {
@@ -189,7 +192,7 @@ contract PoolTemplate {
     return participants;
   }
 
-  function _setTokenAddress(address _tokenAddress) private isContract(_tokenAddress) {
+  function _setTokenAddress(address _tokenAddress) private isContract(_tokenAddress) onlyApproved {
     require(poolTokenAddress == address(0), "Token address already set");
     poolTokenAddress = _tokenAddress;
   }

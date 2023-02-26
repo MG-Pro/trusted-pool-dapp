@@ -39,7 +39,6 @@ contract PoolFactory {
     bool _privatable
   ) external {
     require(_participants.length != 0, "Must have at least 1 participant");
-
     uint poolFee = stableFeeValue;
     if (_approver != address(0)) {
       poolFee += stableApproverFeeValue;

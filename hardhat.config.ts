@@ -32,6 +32,7 @@ const config: HardhatUserConfig = {
   typechain: {
     target: 'ethers-v5',
   },
+  mocha: {},
 }
 
 export default config

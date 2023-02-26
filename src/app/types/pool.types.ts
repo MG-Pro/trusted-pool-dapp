@@ -23,6 +23,9 @@ export interface IPool {
   creatorAddress: string
   participantsCount: number
   participants: IParticipant[]
+  approver: string
+  privatable: boolean
+  approved: boolean
   status: PoolStatuses
 }
 
@@ -33,6 +36,9 @@ export interface IPoolResponse {
   creator: string
   tokenAmount: BigNumber
   filledAmount: BigNumber
+  approver: string
+  privatable: boolean
+  approved: boolean
   participantsCount: BigNumber
 }
 

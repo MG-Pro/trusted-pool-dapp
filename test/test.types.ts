@@ -6,13 +6,19 @@ export interface ICreatePool {
   poolResponse: IPoolResponse
   participantResponse: IParticipantResponse[]
   tokenAmount: number
+  approver: SignerWithAddress
+  privatable: boolean
 }
 
 export interface ICreatePoolTemplateContract {
   poolTemplateContract: PoolTemplate
+  poolFactoryContract: PoolFactory
   participants: IParticipant[]
   deployer1: SignerWithAddress
   notUser: SignerWithAddress
+  participant2: SignerWithAddress
+  approver: SignerWithAddress
+  privatable: boolean
   tokenAmount: number
 }
 
@@ -25,6 +31,8 @@ export interface ICreateTestERC20Contract {
 export interface IDeployPoolFactory {
   deployer1: SignerWithAddress
   user5: SignerWithAddress
+  approver: SignerWithAddress
+  participant2: SignerWithAddress
   poolFactoryContract: PoolFactory
 }
 
