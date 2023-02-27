@@ -2,48 +2,51 @@ import { PoolFactory, PoolTemplate, TestERC20 } from '@app/typechain'
 import { IParticipant, IParticipantResponse, IPoolResponse } from '@app/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
 
-export interface ICreatePool {
+export interface ICreatePool extends ITestSigners {
   poolResponse: IPoolResponse
   participantResponse: IParticipantResponse[]
   tokenAmount: number
-  approver: SignerWithAddress
   privatable: boolean
 }
 
-export interface ICreatePoolTemplateContract {
+export interface ICreatePoolTemplateContract extends ITestSigners {
   poolTemplateContract: PoolTemplate
   poolFactoryContract: PoolFactory
   participants: IParticipant[]
-  deployer1: SignerWithAddress
-  notUser: SignerWithAddress
-  participant2: SignerWithAddress
-  approver: SignerWithAddress
   privatable: boolean
   tokenAmount: number
 }
 
-export interface ICreateTestERC20Contract {
+export interface ICreateTestERC20Contract extends ITestSigners {
   testERC20CContract: TestERC20
-  deployer2: SignerWithAddress
   mintAmount?: number
 }
 
-export interface IDeployPoolFactory {
-  deployer1: SignerWithAddress
-  user5: SignerWithAddress
-  approver: SignerWithAddress
-  participant2: SignerWithAddress
+export interface IDeployPoolFactory extends ITestSigners {
   poolFactoryContract: PoolFactory
 }
 
-export interface IDeployTestERC20 {
-  deployer2: SignerWithAddress
-  user5: SignerWithAddress
+export interface IDeployTestERC20 extends ITestSigners {
   testERC20CContract: TestERC20
 }
 
-export interface IDeployUSDT {
-  deployer3: SignerWithAddress
-  user5: SignerWithAddress
+export interface IDeployUSDT extends ITestSigners {
   USDTContract: TestERC20
+}
+
+export interface ITestSigners<T = SignerWithAddress> {
+  poolFactoryDeployer?: T
+  testERC20Deployer?: T
+  USDTDeployer?: T
+  deployer4?: T
+  approver1?: T
+  approver2?: T
+  creatorAndParticipant1?: T
+  creator2?: T
+  creator3?: T
+  participant1?: T
+  participant2?: T
+  participant3?: T
+  stranger1?: T
+  stranger2?: T
 }

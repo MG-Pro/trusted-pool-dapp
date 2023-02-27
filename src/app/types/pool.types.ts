@@ -23,7 +23,7 @@ export interface IPool {
   creatorAddress: string
   participantsCount: number
   participants: IParticipant[]
-  approver: string
+  approverAddress: string
   privatable: boolean
   approved: boolean
   status: PoolStatuses
