@@ -236,7 +236,7 @@ describe('PoolFactory', () => {
       expect(pool.approved).to.equal(false)
     })
 
-    it('Should take into account approver fee', async () => {
+    it('Should approved pool and take into account approver fee', async () => {
       const participantsCount = 5
       const privatable = false
       const approvable = true
@@ -269,19 +269,27 @@ describe('PoolFactory', () => {
         (await poolTemplateContract.connect(creatorAndParticipant1).approvalData()).approver,
       ).to.equal(approver1.address)
       expect(
-        await poolFactoryContract.connect(poolFactoryDeployer).getWithdrawableBalance(),
+        await USDTContract.connect(poolFactoryDeployer).balanceOf(poolFactoryContract.address),
       ).to.equal(valueFee + approverValueFee)
 
-      await poolTemplateContract.connect(approver1).approvePool()
+      await poolFactoryContract.connect(approver1).approvePool(poolTemplateContract.address)
 
-      // second call
-      // expect(
-      //   await poolFactoryContract.connect(poolFactoryDeployer).getWithdrawableBalance(),
-      // ).to.equal(valueFee)
+      // second call after approve and pay to approver fee
+      expect(
+        await USDTContract.connect(poolFactoryDeployer).balanceOf(poolFactoryContract.address),
+      ).to.equal(valueFee)
+
+      expect(await USDTContract.connect(poolFactoryDeployer).balanceOf(approver1.address)).to.equal(
+        approverValueFee,
+      )
 
       expect(
         (await poolTemplateContract.connect(creatorAndParticipant1).approvalData()).approved,
       ).to.equal(true)
+
+      expect(
+        await poolFactoryContract.connect(poolFactoryDeployer).getWithdrawableBalance(),
+      ).to.equal(valueFee)
     })
   })
 })

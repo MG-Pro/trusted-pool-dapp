@@ -9,12 +9,14 @@ contract PoolFactory {
   address public owner;
   uint public stableFeeValue;
   uint public stableApproverFeeValue;
+  uint public contractCount;
 
   address private stableContract;
   uint private withdrawableBalance;
 
-  mapping(address => address[]) internal poolContracts; //creator -> contracts
-  mapping(address => address[]) internal participants; //participant -> contracts
+  mapping(uint => address) internal contracts; //id -> contract
+  mapping(address => uint[]) internal creators; //creator -> ids
+  mapping(address => uint[]) internal participants; //participant -> ids
 
   modifier onlyOwner() {
     require(msg.sender == owner, "Only for owner");
@@ -23,6 +25,18 @@ contract PoolFactory {
 
   modifier hasStableContract() {
     require(stableContract != address(0), "Stable contract not set");
+    _;
+  }
+
+  modifier existContract(address _contract) {
+    bool exist;
+    for (uint i; i <= contractCount; i++) {
+      if (_contract == contracts[i]) {
+        exist = true;
+        break;
+      }
+    }
+    require(exist, "Contract do not exist");
     _;
   }
 
@@ -40,6 +54,8 @@ contract PoolFactory {
   ) external {
     require(_participants.length != 0, "Must have at least 1 participant");
     uint poolFee = stableFeeValue;
+    withdrawableBalance += poolFee;
+
     if (_approver != address(0)) {
       poolFee += stableApproverFeeValue;
     }
@@ -47,7 +63,7 @@ contract PoolFactory {
     if (poolFee > 0) {
       _spendFee(poolFee);
     }
-    withdrawableBalance += poolFee;
+
     address contractAddress = address(
       new PoolTemplate(
         msg.sender,
@@ -60,35 +76,35 @@ contract PoolFactory {
       )
     );
 
-    poolContracts[msg.sender].push(contractAddress);
-    saveParticipants(_participants, contractAddress);
+    contractCount++;
+    contracts[contractCount] = contractAddress;
+    creators[msg.sender].push(contractCount);
+    saveParticipants(_participants);
   }
 
-  function saveParticipants(
-    PoolTemplate.Participant[] memory _participants,
-    address contractAddress
-  ) private {
-    for (uint256 i; i < _participants.length; i++) {
-      participants[_participants[i].account].push(contractAddress);
+  function saveParticipants(PoolTemplate.Participant[] memory _participants) private {
+    for (uint i; i < _participants.length; i++) {
+      participants[_participants[i].account].push(contractCount);
     }
   }
 
-  function approvePool(address _poolAddress) external {
+  function approvePool(address _poolAddress) external existContract(_poolAddress) {
     (bool approved, address approver) = PoolTemplate(_poolAddress).approvalData();
     require(!approved, "Pool already approved");
     require(msg.sender == approver, "Only for approver");
-    uint256 balance = IERC20(stableContract).balanceOf(address(this));
+    uint balance = IERC20(stableContract).balanceOf(address(this));
     require(balance >= stableApproverFeeValue, "Insufficient funds");
-
     bool success = IERC20(stableContract).transfer(msg.sender, stableApproverFeeValue);
     require(success, "Transfer failed");
+    success = PoolTemplate(_poolAddress).approvePool();
+    require(success, "Approve failed");
   }
 
-  function setFeeValue(uint256 _fee) external onlyOwner {
+  function setFeeValue(uint _fee) external onlyOwner {
     stableFeeValue = _fee;
   }
 
-  function setApproverFeeValue(uint256 _fee) external onlyOwner {
+  function setApproverFeeValue(uint _fee) external onlyOwner {
     stableApproverFeeValue = _fee;
   }
 
@@ -101,21 +117,29 @@ contract PoolFactory {
   }
 
   function getContractAddressesByCreator(
-    address _creator
+    address _address
   ) external view returns (address[] memory) {
-    return poolContracts[_creator];
+    return _getContracts(creators[_address]);
   }
 
   function getContractAddressesByParticipant(
-    address _participant
+    address _address
   ) external view returns (address[] memory) {
-    return participants[_participant];
+    return _getContracts(participants[_address]);
+  }
+
+  function _getContracts(uint[] memory _ids) private view returns (address[] memory) {
+    address[] memory cs = new address[](_ids.length);
+    for (uint i; i < _ids.length; i++) {
+      cs[i] = contracts[_ids[i]];
+    }
+    return cs;
   }
 
   function _spendFee(uint _fee) private hasStableContract {
-    uint256 balance = IERC20(stableContract).balanceOf(msg.sender);
+    uint balance = IERC20(stableContract).balanceOf(msg.sender);
     require(balance >= _fee, "Not enough fee value");
-    uint256 result = IERC20(stableContract).allowance(msg.sender, address(this));
+    uint result = IERC20(stableContract).allowance(msg.sender, address(this));
     require(result >= _fee, "Not allowed amount to spend");
     bool success = IERC20(stableContract).transferFrom(msg.sender, address(this), _fee);
     require(success, "Spending failed");
@@ -124,6 +148,6 @@ contract PoolFactory {
   function withdraw() external onlyOwner hasStableContract {
     require(withdrawableBalance > 0, "Nothing to withdraw");
     bool success = IERC20(stableContract).transfer(owner, withdrawableBalance);
-    require(success, "Transfer failed");
+    require(success, "Withdraw failed");
   }
 }

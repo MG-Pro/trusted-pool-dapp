@@ -23,6 +23,7 @@ contract PoolTemplate {
   address private poolApprover;
   address private poolCreator;
   address private poolTokenAddress;
+  address private poolFactory;
   string private poolName;
   string private poolTokenName;
 
@@ -67,6 +68,7 @@ contract PoolTemplate {
     address _approver,
     bool _privatable
   ) {
+    poolFactory = msg.sender;
     poolCreator = _creator;
     poolName = _name;
     poolTokenName = _tokenName;
@@ -130,9 +132,10 @@ contract PoolTemplate {
     return (poolApproved, poolApprover);
   }
 
-  function approvePool() external {
-    require(poolApprover != address(0) && msg.sender == poolApprover, "Only for approver");
+  function approvePool() external returns (bool) {
+    require(poolFactory == msg.sender, "Only fo factory contract");
     poolApproved = true;
+    return true;
   }
 
   function setTokenAddress(address _tokenAddress) external onlyCreator {
