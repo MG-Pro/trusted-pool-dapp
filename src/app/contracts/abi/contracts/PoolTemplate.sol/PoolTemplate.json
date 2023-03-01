@@ -99,6 +99,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "changeAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "claimTokens",
     "outputs": [],
@@ -202,7 +215,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "creator",
+        "name": "admin",
         "type": "address"
       },
       {

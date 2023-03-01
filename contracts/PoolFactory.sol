@@ -3,25 +3,22 @@ pragma solidity ^0.8.17;
 import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./PoolTemplate.sol";
 
-contract PoolFactory {
-  address public owner;
-  uint public stableFeeValue;
-  uint public stableApproverFeeValue;
+contract PoolFactory is Ownable {
+  event PoolCreated(address indexed contractAddress, uint indexed id);
+
+  uint private stableFeeValue;
+  uint private stableApproverFeeValue;
   uint public contractCount;
 
   address private stableContract;
   uint private withdrawableBalance;
 
   mapping(uint => address) internal contracts; //id -> contract
-  mapping(address => uint[]) internal creators; //creator -> ids
-  mapping(address => uint[]) internal participants; //participant -> ids
-
-  modifier onlyOwner() {
-    require(msg.sender == owner, "Only for owner");
-    _;
-  }
+  mapping(address => uint[]) internal creators; //creator -> contractIds
+  mapping(address => uint[]) internal participants; //participant -> contractIds
 
   modifier hasStableContract() {
     require(stableContract != address(0), "Stable contract not set");
@@ -40,9 +37,7 @@ contract PoolFactory {
     _;
   }
 
-  constructor() {
-    owner = msg.sender;
-  }
+  constructor() {}
 
   function createPoolContract(
     string memory _name,
@@ -80,6 +75,8 @@ contract PoolFactory {
     contracts[contractCount] = contractAddress;
     creators[msg.sender].push(contractCount);
     saveParticipants(_participants);
+
+    emit PoolCreated(contractAddress, contractCount);
   }
 
   function saveParticipants(PoolTemplate.Participant[] memory _participants) private {
@@ -128,6 +125,12 @@ contract PoolFactory {
     return _getContracts(participants[_address]);
   }
 
+  function withdraw() external onlyOwner hasStableContract {
+    require(withdrawableBalance > 0, "Nothing to withdraw");
+    bool success = IERC20(stableContract).transfer(owner(), withdrawableBalance);
+    require(success, "Withdraw failed");
+  }
+
   function _getContracts(uint[] memory _ids) private view returns (address[] memory) {
     address[] memory cs = new address[](_ids.length);
     for (uint i; i < _ids.length; i++) {
@@ -143,11 +146,5 @@ contract PoolFactory {
     require(result >= _fee, "Not allowed amount to spend");
     bool success = IERC20(stableContract).transferFrom(msg.sender, address(this), _fee);
     require(success, "Spending failed");
-  }
-
-  function withdraw() external onlyOwner hasStableContract {
-    require(withdrawableBalance > 0, "Nothing to withdraw");
-    bool success = IERC20(stableContract).transfer(owner, withdrawableBalance);
-    require(success, "Withdraw failed");
   }
 }

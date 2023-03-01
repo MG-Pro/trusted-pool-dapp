@@ -20,7 +20,7 @@ export interface IPool {
   tokenName: string
   tokenAmount: number
   filledAmount: number
-  creatorAddress: string
+  adminAddress: string
   participantsCount: number
   participants: IParticipant[]
   approverAddress: string
@@ -33,7 +33,7 @@ export interface IPoolResponse {
   name: string
   tokenAddress: string
   tokenName: string
-  creator: string
+  admin: string
   tokenAmount: BigNumber
   filledAmount: BigNumber
   approver: string

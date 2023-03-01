@@ -21,7 +21,7 @@ contract PoolTemplate {
   bool private poolApproved = true;
   bool private poolPrivatable;
   address private poolApprover;
-  address private poolCreator;
+  address private poolAdmin;
   address private poolTokenAddress;
   address private poolFactory;
   string private poolName;
@@ -34,8 +34,8 @@ contract PoolTemplate {
   mapping(address => ParticipantData) private participantsData;
   mapping(uint => address) private mapper;
 
-  modifier onlyCreator() {
-    require(msg.sender == poolCreator, "Only for creator");
+  modifier onlyAdmin() {
+    require(msg.sender == poolAdmin, "Only for admin");
     _;
   }
 
@@ -50,7 +50,7 @@ contract PoolTemplate {
   }
 
   modifier hasTokenAddress() {
-    require(poolTokenAddress != address(0), "Token contract address no set");
+    require(!_isZeroAddress(poolTokenAddress), "Token contract address no set");
     _;
   }
 
@@ -69,21 +69,26 @@ contract PoolTemplate {
     bool _privatable
   ) {
     poolFactory = msg.sender;
-    poolCreator = _creator;
+    poolAdmin = _creator;
     poolName = _name;
     poolTokenName = _tokenName;
     poolPrivatable = _privatable;
     poolTokenAmount = _calculateTokenAmount(_participants);
     addParticipants(_participants);
 
-    if (_tokenAddress != address(0)) {
+    if (!_isZeroAddress(_tokenAddress)) {
       _setTokenAddress(_tokenAddress);
     }
 
-    if (_approver != address(0)) {
+    if (!_isZeroAddress(_approver)) {
       poolApprover = _approver;
       poolApproved = false;
     }
+  }
+
+  function changeAdmin(address _newAdmin) external onlyAdmin {
+    require(!_isZeroAddress(_newAdmin), "Zero address do not allowed");
+    poolAdmin = _newAdmin;
   }
 
   function addParticipants(Participant[] memory _participants) private {
@@ -101,7 +106,7 @@ contract PoolTemplate {
     view
     onlyParticipant
     returns (
-      address creator,
+      address admin,
       string memory name,
       address tokenAddress,
       string memory tokenName,
@@ -113,9 +118,9 @@ contract PoolTemplate {
       bool privatable
     )
   {
-    uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
+    uint overallBalance = !_isZeroAddress(poolTokenAddress) ? tokenBalance() : 0;
     return (
-      poolCreator,
+      poolAdmin,
       poolName,
       poolTokenAddress,
       poolTokenName,
@@ -133,12 +138,13 @@ contract PoolTemplate {
   }
 
   function approvePool() external returns (bool) {
-    require(poolFactory == msg.sender, "Only fo factory contract");
+    require(!poolApproved, "Pool already approved");
+    require(poolFactory == msg.sender, "Only for factory contract");
     poolApproved = true;
     return true;
   }
 
-  function setTokenAddress(address _tokenAddress) external onlyCreator {
+  function setTokenAddress(address _tokenAddress) external onlyAdmin {
     _setTokenAddress(_tokenAddress);
   }
 
@@ -196,12 +202,12 @@ contract PoolTemplate {
   }
 
   function _setTokenAddress(address _tokenAddress) private isContract(_tokenAddress) onlyApproved {
-    require(poolTokenAddress == address(0), "Token address already set");
+    require(_isZeroAddress(poolTokenAddress), "Token address already set");
     poolTokenAddress = _tokenAddress;
   }
 
   function _calculateAccrued(ParticipantData memory data) private view returns (uint) {
-    uint overallBalance = poolTokenAddress != address(0) ? tokenBalance() : 0;
+    uint overallBalance = !_isZeroAddress(poolTokenAddress) ? tokenBalance() : 0;
     return ((overallBalance + poolOverallClaimed) * data.share) / poolTokenAmount - data.claimed;
   }
 
@@ -211,5 +217,9 @@ contract PoolTemplate {
     for (uint i; i < _participants.length; i++) {
       sum += _participants[i].share;
     }
+  }
+
+  function _isZeroAddress(address _address) private pure returns (bool) {
+    return _address == address(0);
   }
 }

@@ -291,11 +291,42 @@ describe('PoolFactory', () => {
         await poolFactoryContract.connect(poolFactoryDeployer).getWithdrawableBalance(),
       ).to.equal(valueFee)
     })
+
+    it('Should revert if pool already approved', async () => {
+      const participantsCount = 5
+      const privatable = false
+      const approvable = true
+
+      const { USDTContract, USDTDeployer } = await loadFixture<IDeployUSDT>(deployUSDT)
+
+      const { poolTemplateContract, poolFactoryContract, approver1 } =
+        await loadFixture<ICreatePoolTemplateContract>(
+          createPoolContract.bind(
+            this,
+            participantsCount,
+            privatable,
+            approvable,
+            async (pfc: PoolFactory, pfcDeployer, creator) => {
+              await pfc.connect(pfcDeployer).setStableContract(USDTContract.address)
+              await pfc.connect(pfcDeployer).setFeeValue(valueFee)
+              await pfc.connect(pfcDeployer).setApproverFeeValue(approverValueFee)
+              await USDTContract.connect(USDTDeployer).transfer(creator.address, 100)
+              await USDTContract.connect(creator).approve(pfc.address, 100)
+            },
+          ),
+        )
+
+      await poolFactoryContract.connect(approver1).approvePool(poolTemplateContract.address)
+
+      await expect(
+        poolFactoryContract.connect(approver1).approvePool(poolTemplateContract.address),
+      ).to.revertedWith('Pool already approved')
+    })
   })
 })
 
 describe('PoolTemplate', () => {
-  describe('Getting pools', () => {
+  describe('Getting pools data', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100
       const first25 = 25
@@ -518,6 +549,43 @@ describe('PoolTemplate', () => {
           .connect(creatorAndParticipant1)
           .setTokenAddress(testERC20CContract.address),
       ).to.revertedWith('Pool is not approved')
+    })
+  })
+
+  describe('Approval', () => {
+    it('Should revert if call approve directly', async () => {
+      const participantsCount = 5
+      const privatable = false
+      const approvable = true
+
+      const { USDTContract, USDTDeployer } = await loadFixture<IDeployUSDT>(deployUSDT)
+
+      const { poolTemplateContract, poolFactoryContract, approver1 } =
+        await loadFixture<ICreatePoolTemplateContract>(
+          createPoolContract.bind(
+            this,
+            participantsCount,
+            privatable,
+            approvable,
+            async (pfc: PoolFactory, pfcDeployer, creator) => {
+              await pfc.connect(pfcDeployer).setStableContract(USDTContract.address)
+              await pfc.connect(pfcDeployer).setFeeValue(valueFee)
+              await pfc.connect(pfcDeployer).setApproverFeeValue(approverValueFee)
+              await USDTContract.connect(USDTDeployer).transfer(creator.address, 100)
+              await USDTContract.connect(creator).approve(pfc.address, 100)
+            },
+          ),
+        )
+
+      await expect(poolTemplateContract.connect(approver1).approvePool()).to.revertedWith(
+        'Only for factory contract',
+      )
+
+      await poolFactoryContract.connect(approver1).approvePool(poolTemplateContract.address)
+
+      await expect(poolTemplateContract.connect(approver1).approvePool()).to.revertedWith(
+        'Pool already approved',
+      )
     })
   })
 })
