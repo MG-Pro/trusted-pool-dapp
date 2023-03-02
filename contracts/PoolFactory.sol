@@ -9,8 +9,8 @@ import "./PoolTemplate.sol";
 contract PoolFactory is Ownable {
   event PoolCreated(address indexed contractAddress, uint indexed id);
 
-  uint private stableFeeValue;
-  uint private stableApproverFeeValue;
+  uint public stableFeeValue;
+  uint public stableApproverFeeValue;
   uint public contractCount;
 
   address private stableContract;

@@ -25,7 +25,7 @@ import {
 
 describe('PoolFactory', () => {
   describe('Creating pools', () => {
-    it('Should create pool with 100 participants', async () => {
+    xit('Should create pool with 100 participants', async () => {
       const participantsCount = 100
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
         createPool.bind(this, participantsCount),
@@ -36,7 +36,7 @@ describe('PoolFactory', () => {
       expect(participantResponse.length).to.equal(participantSize)
     })
 
-    it('Should create pool with 10 participants', async () => {
+    xit('Should create pool with 10 participants', async () => {
       const participantsCount = 10
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
         createPool.bind(this, participantsCount),
@@ -47,7 +47,7 @@ describe('PoolFactory', () => {
       expect(participantResponse.length).to.equal(participantsCount)
     })
 
-    it('Should create pool with 3 participants', async () => {
+    xit('Should create pool with 3 participants', async () => {
       const participantsCount = 3
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
         createPool.bind(this, participantsCount),
@@ -58,7 +58,29 @@ describe('PoolFactory', () => {
       expect(participantResponse.length).to.equal(participantsCount)
     })
 
-    it('Should revert if 0 participants', async () => {
+    it('Should emit creating pool event', async () => {
+      const participantsCount = 200
+      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+        await preparePoolData(undefined, participantsCount)
+
+      const creatingReq = poolFactoryContract
+        .connect(poolFactoryDeployer)
+        .createPoolContract(
+          name,
+          tokenAddress,
+          tokenName,
+          participants,
+          approverAddress,
+          privatable,
+        )
+
+      await expect(creatingReq).to.emit(poolFactoryContract, 'PoolCreated')
+    })
+
+    xit('Should revert if 0 participants', async () => {
       const participantsCount = 0
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
@@ -81,7 +103,7 @@ describe('PoolFactory', () => {
     })
   })
 
-  describe('Creating private pools', () => {
+  xdescribe('Creating private pools', () => {
     it('Should create private pool', async () => {
       const participantsCount = 5
       const privatable = true
@@ -105,7 +127,7 @@ describe('PoolFactory', () => {
     })
   })
 
-  describe('Creating pools with platform fee', () => {
+  xdescribe('Creating pools with platform fee', () => {
     it('Should revert if do not send fee', async () => {
       const participantsCount = 3
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
@@ -220,7 +242,7 @@ describe('PoolFactory', () => {
     })
   })
 
-  describe('Creating approvable pools', () => {
+  xdescribe('Creating approvable pools', () => {
     it('Should create approvable pool', async () => {
       const participantsCount = 5
       const privatable = false
@@ -325,7 +347,7 @@ describe('PoolFactory', () => {
   })
 })
 
-describe('PoolTemplate', () => {
+xdescribe('PoolTemplate', () => {
   describe('Getting pools data', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100

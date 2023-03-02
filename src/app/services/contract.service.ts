@@ -164,11 +164,14 @@ export class ContractService {
       item.tokenAddress !== ethers.constants.AddressZero ? item.tokenAddress?.toLowerCase() : null
 
     return {
+      approved: item.approved,
+      approverAddress: item.approver,
+      privatable: item.privatable,
       tokenAddress,
       contractAddress: poolAccount?.toLowerCase(),
       name: item.name,
       tokenName: item.tokenName,
-      creatorAddress: item.creator?.toLowerCase(),
+      adminAddress: item.admin?.toLowerCase(),
       status: this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber()),
       tokenAmount: item.tokenAmount.toNumber(),
       filledAmount: item.filledAmount.toNumber(),

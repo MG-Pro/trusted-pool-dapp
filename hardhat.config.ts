@@ -10,7 +10,8 @@ import './tasks'
 const config: HardhatUserConfig = {
   solidity: '0.8.17',
   gasReporter: {
-    enabled: false,
+    enabled: true,
+    excludeContracts: ['TestERC20.sol'],
   },
   networks: {
     hardhat: {
