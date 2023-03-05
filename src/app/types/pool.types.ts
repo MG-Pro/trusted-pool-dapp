@@ -10,7 +10,6 @@ export interface IParticipant {
   claimed: number
   accrued: number
   account: string
-  description: string
 }
 
 export interface IPool {
@@ -44,7 +43,6 @@ export interface IPoolResponse {
 
 export interface IParticipantResponse {
   account: string
-  description: string
   share: BigNumber
   claimed: BigNumber
   accrued: BigNumber

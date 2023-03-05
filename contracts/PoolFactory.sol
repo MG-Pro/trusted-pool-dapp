@@ -17,8 +17,6 @@ contract PoolFactory is Ownable {
   uint private withdrawableBalance;
 
   mapping(uint => address) internal contracts; //id -> contract
-  mapping(address => uint[]) internal creators; //creator -> contractIds
-  mapping(address => uint[]) internal participants; //participant -> contractIds
 
   modifier hasStableContract() {
     require(stableContract != address(0), "Stable contract not set");
@@ -36,8 +34,6 @@ contract PoolFactory is Ownable {
     require(exist, "Contract do not exist");
     _;
   }
-
-  constructor() {}
 
   function createPoolContract(
     string memory _name,
@@ -70,19 +66,10 @@ contract PoolFactory is Ownable {
         _privatable
       )
     );
-
-    contractCount++;
     contracts[contractCount] = contractAddress;
-    creators[msg.sender].push(contractCount);
-    saveParticipants(_participants);
 
     emit PoolCreated(contractAddress, contractCount);
-  }
-
-  function saveParticipants(PoolTemplate.Participant[] memory _participants) private {
-    for (uint i; i < _participants.length; i++) {
-      participants[_participants[i].account].push(contractCount);
-    }
+    contractCount++;
   }
 
   function approvePool(address _poolAddress) external existContract(_poolAddress) {
@@ -113,30 +100,30 @@ contract PoolFactory is Ownable {
     return withdrawableBalance;
   }
 
-  function getContractAddressesByCreator(
-    address _address
-  ) external view returns (address[] memory) {
-    return _getContracts(creators[_address]);
-  }
-
   function getContractAddressesByParticipant(
     address _address
   ) external view returns (address[] memory) {
-    return _getContracts(participants[_address]);
+    uint counter;
+    for (uint i; i < contractCount; i++) {
+      if (PoolTemplate(contracts[i]).hasParticipant(_address)) {
+        counter++;
+      }
+    }
+    address[] memory list = new address[](counter);
+    counter = 0;
+    for (uint i; i < contractCount; i++) {
+      if (PoolTemplate(contracts[i]).hasParticipant(_address)) {
+        list[counter] = contracts[i];
+        counter++;
+      }
+    }
+    return list;
   }
 
   function withdraw() external onlyOwner hasStableContract {
     require(withdrawableBalance > 0, "Nothing to withdraw");
     bool success = IERC20(stableContract).transfer(owner(), withdrawableBalance);
     require(success, "Withdraw failed");
-  }
-
-  function _getContracts(uint[] memory _ids) private view returns (address[] memory) {
-    address[] memory cs = new address[](_ids.length);
-    for (uint i; i < _ids.length; i++) {
-      cs[i] = contracts[_ids[i]];
-    }
-    return cs;
   }
 
   function _spendFee(uint _fee) private hasStableContract {

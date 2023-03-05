@@ -9,13 +9,11 @@ contract PoolTemplate {
     uint share;
     uint claimed;
     uint accrued;
-    string description;
   }
 
   struct ParticipantData {
     uint share;
     uint claimed;
-    string description;
   }
 
   bool private poolApproved = true;
@@ -30,6 +28,9 @@ contract PoolTemplate {
   uint private poolParticipantsCount;
   uint private poolTokenAmount;
   uint private poolOverallClaimed;
+
+  // mapping(address => uint) private ps; // Participant -> share
+  //mapping(address => uint) private psClaim; // Participant -> claimed
 
   mapping(address => ParticipantData) private participantsData;
   mapping(uint => address) private mapper;
@@ -46,6 +47,11 @@ contract PoolTemplate {
 
   modifier onlyParticipant() {
     require(participantsData[msg.sender].share > 0, "Only for participant");
+    _;
+  }
+
+  modifier onlyFactory() {
+    require(poolFactory == msg.sender, "Only for factory contract");
     _;
   }
 
@@ -95,7 +101,7 @@ contract PoolTemplate {
     for (uint i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
       require(item.share > 0, "Share value must be greater 0");
-      participantsData[item.account] = ParticipantData(item.share, item.claimed, item.description);
+      participantsData[item.account] = ParticipantData(item.share, item.claimed);
       mapper[poolParticipantsCount] = item.account;
       poolParticipantsCount++;
     }
@@ -137,9 +143,8 @@ contract PoolTemplate {
     return (poolApproved, poolApprover);
   }
 
-  function approvePool() external returns (bool) {
+  function approvePool() external onlyFactory returns (bool) {
     require(!poolApproved, "Pool already approved");
-    require(poolFactory == msg.sender, "Only for factory contract");
     poolApproved = true;
     return true;
   }
@@ -164,8 +169,20 @@ contract PoolTemplate {
 
   function getParticipant() external view onlyParticipant returns (Participant memory) {
     ParticipantData memory data = participantsData[msg.sender];
-    return
-      Participant(msg.sender, data.share, data.claimed, _calculateAccrued(data), data.description);
+    return Participant(msg.sender, data.share, data.claimed, _calculateAccrued(data));
+  }
+
+  function hasParticipant(address _address) external view onlyFactory returns (bool) {
+    require(!_isZeroAddress(_address), "Zero address do not allowed");
+    ParticipantData memory data = participantsData[_address];
+    return data.share > 0;
+  }
+
+  function getParticipantByAddress(
+    address _address
+  ) external view onlyFactory returns (Participant memory) {
+    ParticipantData memory data = participantsData[_address];
+    return Participant(msg.sender, data.share, data.claimed, _calculateAccrued(data));
   }
 
   function getParticipants(
@@ -192,8 +209,7 @@ contract PoolTemplate {
         mapper[i],
         data.share,
         data.claimed,
-        _calculateAccrued(data),
-        data.description
+        _calculateAccrued(data)
       );
       counter++;
     }

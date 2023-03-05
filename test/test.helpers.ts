@@ -96,7 +96,6 @@ export async function preparePoolData(
         share: 50_000 + i * 5_000,
         claimed: 0,
         accrued: 0,
-        description: 'p' + i + nonce,
       }
     })
 
