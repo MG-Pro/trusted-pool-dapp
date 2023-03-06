@@ -8,7 +8,21 @@ import 'hardhat-address-exporter'
 import './tasks'
 
 const config: HardhatUserConfig = {
-  solidity: '0.8.17',
+  solidity: {
+    version: '0.8.18',
+    settings: {
+      viaIR: true,
+      optimizer: {
+        enabled: true,
+        runs: 200,
+        // details: {
+        //   yulDetails: {
+        //     optimizerSteps: 'u',
+        //   },
+        // },
+      },
+    },
+  },
   gasReporter: {
     enabled: true,
     excludeContracts: ['TestERC20.sol'],

@@ -59,7 +59,7 @@ describe('PoolFactory', () => {
     })
 
     it('Should emit creating pool event', async () => {
-      const participantsCount = 200
+      const participantsCount = 300
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
