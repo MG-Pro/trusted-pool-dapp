@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -9,11 +9,6 @@ contract PoolTemplate {
     uint share;
     uint claimed;
     uint accrued;
-  }
-
-  struct ParticipantData {
-    uint share;
-    uint claimed;
   }
 
   bool private poolApproved = true;
@@ -29,11 +24,9 @@ contract PoolTemplate {
   uint private poolTokenAmount;
   uint private poolOverallClaimed;
 
-  // mapping(address => uint) private ps; // Participant -> share
-  //mapping(address => uint) private psClaim; // Participant -> claimed
-
-  mapping(address => ParticipantData) private participantsData;
-  mapping(uint => address) private mapper;
+  mapping(address => uint) private participants; // Participant -> share
+  mapping(address => uint) private participantsClaims; // Participant -> claimed
+  mapping(uint => address) private participantsMapper;
 
   modifier onlyAdmin() {
     require(msg.sender == poolAdmin, "Only for admin");
@@ -46,7 +39,7 @@ contract PoolTemplate {
   }
 
   modifier onlyParticipant() {
-    require(participantsData[msg.sender].share > 0, "Only for participant");
+    require(participants[msg.sender] > 0, "Only for participant");
     _;
   }
 
@@ -101,8 +94,8 @@ contract PoolTemplate {
     for (uint i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
       require(item.share > 0, "Share value must be greater 0");
-      participantsData[item.account] = ParticipantData(item.share, item.claimed);
-      mapper[poolParticipantsCount] = item.account;
+      participants[item.account] = item.share;
+      participantsMapper[poolParticipantsCount] = item.account;
       poolParticipantsCount++;
     }
   }
@@ -158,31 +151,39 @@ contract PoolTemplate {
   }
 
   function claimTokens() external hasTokenAddress {
-    ParticipantData memory data = participantsData[msg.sender];
-    uint accrued = _calculateAccrued(data);
+    uint accrued = _calculateAccrued(msg.sender);
     require(accrued > 0, "There are not tokens for claim");
-    participantsData[msg.sender].claimed += accrued;
+    participantsClaims[msg.sender] += accrued;
     poolOverallClaimed += accrued;
     bool success = IERC20(poolTokenAddress).transfer(msg.sender, accrued);
     require(success, "Claim error");
   }
 
   function getParticipant() external view onlyParticipant returns (Participant memory) {
-    ParticipantData memory data = participantsData[msg.sender];
-    return Participant(msg.sender, data.share, data.claimed, _calculateAccrued(data));
+    return
+      Participant(
+        msg.sender,
+        participants[msg.sender],
+        participantsClaims[msg.sender],
+        _calculateAccrued(msg.sender)
+      );
   }
 
   function hasParticipant(address _address) external view onlyFactory returns (bool) {
     require(!_isZeroAddress(_address), "Zero address do not allowed");
-    ParticipantData memory data = participantsData[_address];
-    return data.share > 0;
+    return participants[_address] > 0;
   }
 
   function getParticipantByAddress(
     address _address
   ) external view onlyFactory returns (Participant memory) {
-    ParticipantData memory data = participantsData[_address];
-    return Participant(msg.sender, data.share, data.claimed, _calculateAccrued(data));
+    return
+      Participant(
+        _address,
+        participants[_address],
+        participantsClaims[_address],
+        _calculateAccrued(_address)
+      );
   }
 
   function getParticipants(
@@ -198,23 +199,21 @@ contract PoolTemplate {
     if (size > poolParticipantsCount - first) {
       size = poolParticipantsCount - first;
     }
-    Participant[] memory participants = new Participant[](size);
+    Participant[] memory pList = new Participant[](size);
 
     uint counter;
 
     for (uint i = first; i < first + size; i++) {
-      ParticipantData memory data = participantsData[mapper[i]];
-
-      participants[counter] = Participant(
-        mapper[i],
-        data.share,
-        data.claimed,
-        _calculateAccrued(data)
+      pList[counter] = Participant(
+        participantsMapper[i],
+        participants[participantsMapper[i]],
+        participantsClaims[participantsMapper[i]],
+        _calculateAccrued(participantsMapper[i])
       );
       counter++;
     }
 
-    return participants;
+    return pList;
   }
 
   function _setTokenAddress(address _tokenAddress) private isContract(_tokenAddress) onlyApproved {
@@ -222,9 +221,12 @@ contract PoolTemplate {
     poolTokenAddress = _tokenAddress;
   }
 
-  function _calculateAccrued(ParticipantData memory data) private view returns (uint) {
+  function _calculateAccrued(address _address) private view returns (uint) {
     uint overallBalance = !_isZeroAddress(poolTokenAddress) ? tokenBalance() : 0;
-    return ((overallBalance + poolOverallClaimed) * data.share) / poolTokenAmount - data.claimed;
+    return
+      ((overallBalance + poolOverallClaimed) * participants[_address]) /
+      poolTokenAmount -
+      participantsClaims[_address];
   }
 
   function _calculateTokenAmount(

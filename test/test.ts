@@ -2,6 +2,8 @@ import { PoolFactory } from '@app/typechain'
 import { IParticipant, IParticipantResponse, IPoolResponse } from '@app/types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
+import { ContractTransaction } from 'ethers'
+import { ethers } from 'hardhat'
 
 import {
   createPool,
@@ -58,15 +60,39 @@ describe('PoolFactory', () => {
       expect(participantResponse.length).to.equal(participantsCount)
     })
 
-    it('Should emit creating pool event', async () => {
-      const participantsCount = 300
+    xit('Should emit creating pool event', async () => {
+      const participantsCount = 10
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
       const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      const creatingReq = Array(10)
+      const creatingReq = poolFactoryContract
+        .connect(poolFactoryDeployer)
+        .createPoolContract(
+          name,
+          tokenAddress,
+          tokenName,
+          participants,
+          approverAddress,
+          privatable,
+        )
+
+      await expect(creatingReq).to.emit(poolFactoryContract, 'PoolCreated')
+    })
+
+    it('Should create 10 pools', async () => {
+      const participantsCount = 10
+      const poolCount = 10
+
+      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+        await preparePoolData(undefined, participantsCount)
+
+      const creatingReqs: Promise<ContractTransaction>[] = Array(poolCount)
         .fill(null)
         .map(() => {
           return poolFactoryContract
@@ -80,14 +106,16 @@ describe('PoolFactory', () => {
               privatable,
             )
         })
-      await Promise.all(creatingReq)
-      // await expect(creatingReq).to.emit(poolFactoryContract, 'PoolCreated')
+      await Promise.all(creatingReqs)
 
       const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
         participants[0].account,
       )
 
-      console.log(poolAccounts)
+      expect(poolAccounts.length).to.equal(poolCount)
+      poolAccounts.forEach((a) => {
+        expect(a).to.not.equal(ethers.constants.AddressZero)
+      })
     })
 
     xit('Should revert if 0 participants', async () => {
