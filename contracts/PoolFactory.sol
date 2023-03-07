@@ -36,10 +36,10 @@ contract PoolFactory is Ownable {
   }
 
   function createPoolContract(
-    string memory _name,
+    string calldata _name,
     address _tokenAddress,
-    string memory _tokenName,
-    PoolTemplate.Participant[] memory _participants,
+    string calldata _tokenName,
+    PoolTemplate.Participant[] calldata _participants,
     address _approver,
     bool _privatable
   ) external {
@@ -56,16 +56,10 @@ contract PoolFactory is Ownable {
     }
 
     address contractAddress = address(
-      new PoolTemplate(
-        msg.sender,
-        _name,
-        _tokenAddress,
-        _tokenName,
-        _participants,
-        _approver,
-        _privatable
-      )
+      new PoolTemplate(msg.sender, _name, _tokenAddress, _tokenName, _approver, _privatable)
     );
+
+    PoolTemplate(contractAddress).addParticipants(_participants);
     contracts[contractCount] = contractAddress;
 
     emit PoolCreated(contractAddress, contractCount);
@@ -103,20 +97,8 @@ contract PoolFactory is Ownable {
   function getContractAddressesByParticipant(
     address _address
   ) external view returns (address[] memory) {
-    uint counter;
-    for (uint i; i < contractCount; i++) {
-      if (PoolTemplate(contracts[i]).hasParticipant(_address)) {
-        counter++;
-      }
-    }
-    address[] memory list = new address[](counter);
-    counter = 0;
-    for (uint i; i < contractCount; i++) {
-      if (PoolTemplate(contracts[i]).hasParticipant(_address)) {
-        list[counter] = contracts[i];
-        counter++;
-      }
-    }
+    (, uint count) = _requestContracts(_address, contractCount);
+    (address[] memory list, ) = _requestContracts(_address, count);
     return list;
   }
 
@@ -124,6 +106,29 @@ contract PoolFactory is Ownable {
     require(withdrawableBalance > 0, "Nothing to withdraw");
     bool success = IERC20(stableContract).transfer(owner(), withdrawableBalance);
     require(success, "Withdraw failed");
+  }
+
+  function _requestContracts(
+    address _address,
+    uint len
+  ) private view returns (address[] memory, uint count) {
+    uint counter;
+    address[] memory list = new address[](len);
+    for (uint i; i < contractCount; i++) {
+      bool exist;
+      try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
+        exist = res;
+      } catch {
+        exist = false;
+      }
+
+      if (exist) {
+        list[counter] = contracts[i];
+        counter++;
+      }
+    }
+
+    return (list, counter);
   }
 
   function _spendFee(uint _fee) private hasStableContract {

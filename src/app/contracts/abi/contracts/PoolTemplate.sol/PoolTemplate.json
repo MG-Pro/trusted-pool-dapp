@@ -22,6 +22,22 @@
         "type": "string"
       },
       {
+        "internalType": "address",
+        "name": "_approver",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_privatable",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "address",
@@ -47,20 +63,12 @@
         "internalType": "struct PoolTemplate.Participant[]",
         "name": "_participants",
         "type": "tuple[]"
-      },
-      {
-        "internalType": "address",
-        "name": "_approver",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_privatable",
-        "type": "bool"
       }
     ],
+    "name": "addParticipants",
+    "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "constructor"
+    "type": "function"
   },
   {
     "inputs": [],
@@ -116,47 +124,6 @@
   {
     "inputs": [],
     "name": "getParticipant",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "account",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "share",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "claimed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accrued",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct PoolTemplate.Participant",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_address",
-        "type": "address"
-      }
-    ],
-    "name": "getParticipantByAddress",
     "outputs": [
       {
         "components": [

@@ -83,7 +83,7 @@ describe('PoolFactory', () => {
     })
 
     it('Should create 10 pools', async () => {
-      const participantsCount = 10
+      const participantsCount = 300
       const poolCount = 10
 
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
@@ -91,12 +91,14 @@ describe('PoolFactory', () => {
       )
       const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
+      const accs = await ethers.getSigners()
 
       const creatingReqs: Promise<ContractTransaction>[] = Array(poolCount)
         .fill(null)
-        .map(() => {
+        .map((_, i) => {
+          const creator = accs[i] ? accs[i] : accs[0]
           return poolFactoryContract
-            .connect(poolFactoryDeployer)
+            .connect(creator)
             .createPoolContract(
               name,
               tokenAddress,

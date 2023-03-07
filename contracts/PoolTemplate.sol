@@ -12,11 +12,11 @@ contract PoolTemplate {
   }
 
   bool private poolApproved = true;
-  bool private poolPrivatable;
+  bool private immutable poolPrivatable;
   address private poolApprover;
   address private poolAdmin;
   address private poolTokenAddress;
-  address private poolFactory;
+  address private immutable poolFactory;
   string private poolName;
   string private poolTokenName;
 
@@ -63,7 +63,6 @@ contract PoolTemplate {
     string memory _name,
     address _tokenAddress,
     string memory _tokenName,
-    Participant[] memory _participants,
     address _approver,
     bool _privatable
   ) {
@@ -72,8 +71,6 @@ contract PoolTemplate {
     poolName = _name;
     poolTokenName = _tokenName;
     poolPrivatable = _privatable;
-    poolTokenAmount = _calculateTokenAmount(_participants);
-    addParticipants(_participants);
 
     if (!_isZeroAddress(_tokenAddress)) {
       _setTokenAddress(_tokenAddress);
@@ -90,14 +87,17 @@ contract PoolTemplate {
     poolAdmin = _newAdmin;
   }
 
-  function addParticipants(Participant[] memory _participants) private {
+  function addParticipants(Participant[] calldata _participants) external onlyFactory {
+    uint sum;
     for (uint i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
       require(item.share > 0, "Share value must be greater 0");
       participants[item.account] = item.share;
       participantsMapper[poolParticipantsCount] = item.account;
       poolParticipantsCount++;
+      sum += _participants[i].share;
     }
+    poolTokenAmount = sum;
   }
 
   function getPoolData()
@@ -174,18 +174,6 @@ contract PoolTemplate {
     return participants[_address] > 0;
   }
 
-  function getParticipantByAddress(
-    address _address
-  ) external view onlyFactory returns (Participant memory) {
-    return
-      Participant(
-        _address,
-        participants[_address],
-        participantsClaims[_address],
-        _calculateAccrued(_address)
-      );
-  }
-
   function getParticipants(
     uint first,
     uint size
@@ -227,14 +215,6 @@ contract PoolTemplate {
       ((overallBalance + poolOverallClaimed) * participants[_address]) /
       poolTokenAmount -
       participantsClaims[_address];
-  }
-
-  function _calculateTokenAmount(
-    Participant[] memory _participants
-  ) private pure returns (uint sum) {
-    for (uint i; i < _participants.length; i++) {
-      sum += _participants[i].share;
-    }
   }
 
   function _isZeroAddress(address _address) private pure returns (bool) {
