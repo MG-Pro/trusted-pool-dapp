@@ -2,21 +2,23 @@
 pragma solidity ^0.8.18;
 import "hardhat/console.sol";
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./PoolTemplate.sol";
 
 contract PoolFactory is Ownable {
-  event PoolCreated(address indexed contractAddress, uint indexed id);
+  event PoolCreated(address indexed contractAddress, uint256 indexed id);
 
-  uint public stableFeeValue;
-  uint public stableApproverFeeValue;
-  uint public contractCount;
-
+  uint256 public stableFeeValue;
+  uint256 public stableApproverFeeValue;
+  uint256 public contractCount;
+  address private immutable templateImplementation;
   address private stableContract;
-  uint private withdrawableBalance;
+  uint256 private withdrawableBalance;
 
-  mapping(uint => address) internal contracts; //id -> contract
+  mapping(uint256 => address) internal contracts; //id -> contract
 
   modifier hasStableContract() {
     require(stableContract != address(0), "Stable contract not set");
@@ -25,7 +27,7 @@ contract PoolFactory is Ownable {
 
   modifier existContract(address _contract) {
     bool exist;
-    for (uint i; i <= contractCount; i++) {
+    for (uint256 i; i <= contractCount; i++) {
       if (_contract == contracts[i]) {
         exist = true;
         break;
@@ -33,6 +35,10 @@ contract PoolFactory is Ownable {
     }
     require(exist, "Contract do not exist");
     _;
+  }
+
+  constructor() {
+    templateImplementation = address(new PoolTemplate());
   }
 
   function createPoolContract(
@@ -44,7 +50,7 @@ contract PoolFactory is Ownable {
     bool _privatable
   ) external {
     require(_participants.length != 0, "Must have at least 1 participant");
-    uint poolFee = stableFeeValue;
+    uint256 poolFee = stableFeeValue;
     withdrawableBalance += poolFee;
 
     if (_approver != address(0)) {
@@ -55,11 +61,12 @@ contract PoolFactory is Ownable {
       _spendFee(poolFee);
     }
 
-    address contractAddress = address(
-      new PoolTemplate(msg.sender, _name, _tokenAddress, _tokenName, _approver, _privatable)
-    );
+    address contractAddress = Clones.clone(templateImplementation);
+    PoolTemplate poolTemplate = PoolTemplate(contractAddress);
 
-    PoolTemplate(contractAddress).addParticipants(_participants);
+    poolTemplate.init(msg.sender, _name, _tokenAddress, _tokenName, _approver, _privatable);
+
+    poolTemplate.addParticipants(_participants);
     contracts[contractCount] = contractAddress;
 
     emit PoolCreated(contractAddress, contractCount);
@@ -70,7 +77,7 @@ contract PoolFactory is Ownable {
     (bool approved, address approver) = PoolTemplate(_poolAddress).approvalData();
     require(!approved, "Pool already approved");
     require(msg.sender == approver, "Only for approver");
-    uint balance = IERC20(stableContract).balanceOf(address(this));
+    uint256 balance = IERC20(stableContract).balanceOf(address(this));
     require(balance >= stableApproverFeeValue, "Insufficient funds");
     bool success = IERC20(stableContract).transfer(msg.sender, stableApproverFeeValue);
     require(success, "Transfer failed");
@@ -78,11 +85,11 @@ contract PoolFactory is Ownable {
     require(success, "Approve failed");
   }
 
-  function setFeeValue(uint _fee) external onlyOwner {
+  function setFeeValue(uint256 _fee) external onlyOwner {
     stableFeeValue = _fee;
   }
 
-  function setApproverFeeValue(uint _fee) external onlyOwner {
+  function setApproverFeeValue(uint256 _fee) external onlyOwner {
     stableApproverFeeValue = _fee;
   }
 
@@ -90,14 +97,14 @@ contract PoolFactory is Ownable {
     stableContract = _stableAddress;
   }
 
-  function getWithdrawableBalance() external view onlyOwner returns (uint) {
+  function getWithdrawableBalance() external view onlyOwner returns (uint256) {
     return withdrawableBalance;
   }
 
   function getContractAddressesByParticipant(
     address _address
   ) external view returns (address[] memory) {
-    (, uint count) = _requestContracts(_address, contractCount);
+    (, uint256 count) = _requestContracts(_address, contractCount);
     (address[] memory list, ) = _requestContracts(_address, count);
     return list;
   }
@@ -110,11 +117,11 @@ contract PoolFactory is Ownable {
 
   function _requestContracts(
     address _address,
-    uint len
-  ) private view returns (address[] memory, uint count) {
-    uint counter;
+    uint256 len
+  ) private view returns (address[] memory, uint256 count) {
+    uint256 counter;
     address[] memory list = new address[](len);
-    for (uint i; i < contractCount; i++) {
+    for (uint256 i; i < contractCount; i++) {
       bool exist;
       try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
         exist = res;
@@ -131,10 +138,10 @@ contract PoolFactory is Ownable {
     return (list, counter);
   }
 
-  function _spendFee(uint _fee) private hasStableContract {
-    uint balance = IERC20(stableContract).balanceOf(msg.sender);
+  function _spendFee(uint256 _fee) private hasStableContract {
+    uint256 balance = IERC20(stableContract).balanceOf(msg.sender);
     require(balance >= _fee, "Not enough fee value");
-    uint result = IERC20(stableContract).allowance(msg.sender, address(this));
+    uint256 result = IERC20(stableContract).allowance(msg.sender, address(this));
     require(result >= _fee, "Not allowed amount to spend");
     bool success = IERC20(stableContract).transferFrom(msg.sender, address(this), _fee);
     require(success, "Spending failed");
