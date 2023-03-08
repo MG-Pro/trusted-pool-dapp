@@ -12,14 +12,18 @@ contract PoolTemplate is Initializable {
     uint256 accrued;
   }
 
+  error OnlyAdmin();
+  error OnlyParticipant();
+  error OnlyFactory();
+
   bool private poolApproved = true;
   bool private poolPrivatable;
   address private poolApprover;
   address private poolAdmin;
   address private poolTokenAddress;
   address private poolFactory;
-  string private poolName; // TODO convert to bytes
-  string private poolTokenName;
+  bytes32 private poolName;
+  bytes32 private poolTokenName;
 
   uint256 private poolParticipantsCount;
   uint256 private poolTokenAmount;
@@ -30,40 +34,25 @@ contract PoolTemplate is Initializable {
   mapping(uint256 => address) private participantsMapper;
 
   modifier onlyAdmin() {
-    require(msg.sender == poolAdmin, "Only for admin");
-    _;
-  }
-
-  modifier onlyApproved() {
-    require(poolApproved, "Pool is not approved");
+    _onlyAdmin();
     _;
   }
 
   modifier onlyParticipant() {
-    require(participants[msg.sender] > 0, "Only for participant");
+    _onlyParticipant();
     _;
   }
 
   modifier onlyFactory() {
-    require(poolFactory == msg.sender, "Only for factory contract");
-    _;
-  }
-
-  modifier hasTokenAddress() {
-    require(!_isZeroAddress(poolTokenAddress), "Token contract address no set");
-    _;
-  }
-
-  modifier isContract(address _address) {
-    require(_address.code.length != 0, "Address is not contract");
+    _onlyFactory();
     _;
   }
 
   function init(
     address _creator,
-    string memory _name,
+    bytes32 _name,
     address _tokenAddress,
-    string memory _tokenName,
+    bytes32 _tokenName,
     address _approver,
     bool _privatable
   ) external initializer {
@@ -95,8 +84,11 @@ contract PoolTemplate is Initializable {
       require(item.share > 0, "Share value must be greater 0");
       participants[item.account] = item.share;
       participantsMapper[poolParticipantsCount] = item.account;
-      poolParticipantsCount++;
-      sum += _participants[i].share;
+
+      unchecked {
+        poolParticipantsCount++;
+        sum += _participants[i].share;
+      }
     }
     poolTokenAmount = sum;
   }
@@ -107,9 +99,9 @@ contract PoolTemplate is Initializable {
     onlyParticipant
     returns (
       address admin,
-      string memory name,
+      bytes32 name,
       address tokenAddress,
-      string memory tokenName,
+      bytes32 tokenName,
       uint256 tokenAmount,
       uint256 filledAmount,
       uint256 participantsCount,
@@ -152,7 +144,8 @@ contract PoolTemplate is Initializable {
       !_isZeroAddress(poolTokenAddress) ? IERC20(poolTokenAddress).balanceOf(address(this)) : 0;
   }
 
-  function claimTokens() external hasTokenAddress {
+  function claimTokens() external {
+    require(!_isZeroAddress(poolTokenAddress), "Token contract address no set");
     uint256 accrued = _calculateAccrued(msg.sender);
     require(accrued > 0, "There are not tokens for claim");
     participantsClaims[msg.sender] += accrued;
@@ -172,7 +165,6 @@ contract PoolTemplate is Initializable {
   }
 
   function hasParticipant(address _address) external view onlyFactory returns (bool) {
-    require(!_isZeroAddress(_address), "Zero address do not allowed");
     return participants[_address] > 0;
   }
 
@@ -192,7 +184,6 @@ contract PoolTemplate is Initializable {
     Participant[] memory pList = new Participant[](size);
 
     uint256 counter;
-
     for (uint256 i = first; i < first + size; i++) {
       pList[counter] = Participant(
         participantsMapper[i],
@@ -200,14 +191,18 @@ contract PoolTemplate is Initializable {
         participantsClaims[participantsMapper[i]],
         _calculateAccrued(participantsMapper[i])
       );
-      counter++;
+      unchecked {
+        counter++;
+      }
     }
 
     return pList;
   }
 
-  function _setTokenAddress(address _tokenAddress) private isContract(_tokenAddress) onlyApproved {
+  function _setTokenAddress(address _tokenAddress) private {
+    require(poolApproved, "Pool is not approved");
     require(_isZeroAddress(poolTokenAddress), "Token address already set");
+    require(_tokenAddress.code.length != 0, "Address is not contract");
     poolTokenAddress = _tokenAddress;
   }
 
@@ -221,5 +216,23 @@ contract PoolTemplate is Initializable {
 
   function _isZeroAddress(address _address) private pure returns (bool) {
     return _address == address(0);
+  }
+
+  function _onlyAdmin() private view {
+    if (msg.sender != poolAdmin) {
+      revert OnlyAdmin();
+    }
+  }
+
+  function _onlyParticipant() private view {
+    if (participants[msg.sender] == 0) {
+      revert OnlyParticipant();
+    }
+  }
+
+  function _onlyFactory() private view {
+    if (poolFactory != msg.sender) {
+      revert OnlyFactory();
+    }
   }
 }

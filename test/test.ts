@@ -1,4 +1,4 @@
-import { PoolFactory } from '@app/typechain'
+import { PoolFactory, PoolTemplate } from '@app/typechain'
 import { IParticipant, IParticipantResponse, IPoolResponse } from '@app/types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
@@ -6,7 +6,7 @@ import { ContractTransaction } from 'ethers'
 import { ethers } from 'hardhat'
 
 import {
-  createPool,
+  createPoolAndReqData,
   createPoolContract,
   createAndMintTestERC20,
   deployPoolFactory,
@@ -30,7 +30,7 @@ describe('PoolFactory', () => {
     xit('Should create pool with 100 participants', async () => {
       const participantsCount = 100
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
-        createPool.bind(this, participantsCount),
+        createPoolAndReqData.bind(this, participantsCount),
       )
       expect(poolResponse.tokenAmount).to.equal(tokenAmount)
       expect(poolResponse.approved).to.equal(true)
@@ -41,7 +41,7 @@ describe('PoolFactory', () => {
     xit('Should create pool with 10 participants', async () => {
       const participantsCount = 10
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
-        createPool.bind(this, participantsCount),
+        createPoolAndReqData.bind(this, participantsCount),
       )
       expect(poolResponse.tokenAmount).to.equal(tokenAmount)
       expect(poolResponse.approved).to.equal(true)
@@ -52,7 +52,7 @@ describe('PoolFactory', () => {
     xit('Should create pool with 3 participants', async () => {
       const participantsCount = 3
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
-        createPool.bind(this, participantsCount),
+        createPoolAndReqData.bind(this, participantsCount),
       )
       expect(poolResponse.tokenAmount).to.equal(tokenAmount)
       expect(poolResponse.approved).to.equal(true)
@@ -86,9 +86,8 @@ describe('PoolFactory', () => {
       const participantsCount = 300
       const poolCount = 10
 
-      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
-        deployPoolFactory,
-      )
+      const { poolFactoryContract, poolFactoryDeployer, participant1 } =
+        await loadFixture<IDeployPoolFactory>(deployPoolFactory)
       const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
       const accs = await ethers.getSigners()
@@ -114,6 +113,16 @@ describe('PoolFactory', () => {
         participants[0].account,
       )
 
+      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
+        'PoolTemplate',
+        poolAccounts[0],
+      )
+
+      const poolResponse: IPoolResponse = await poolTemplateContract
+        .connect(participant1)
+        .getPoolData()
+      console.log(ethers.utils.parseBytes32String(poolResponse.name))
+      console.log(ethers.utils.parseBytes32String(poolResponse.tokenName))
       expect(poolAccounts.length).to.equal(poolCount)
       poolAccounts.forEach((a) => {
         expect(a).to.not.equal(ethers.constants.AddressZero)

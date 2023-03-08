@@ -1,5 +1,20 @@
 [
   {
+    "inputs": [],
+    "name": "OnlyAdmin",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyFactory",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyParticipant",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -189,9 +204,9 @@
         "type": "address"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "name",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "internalType": "address",
@@ -199,9 +214,9 @@
         "type": "address"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "tokenName",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -264,9 +279,9 @@
         "type": "address"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "_name",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "internalType": "address",
@@ -274,9 +289,9 @@
         "type": "address"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "_tokenName",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "internalType": "address",

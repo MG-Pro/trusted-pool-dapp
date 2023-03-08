@@ -21,19 +21,7 @@ contract PoolFactory is Ownable {
   mapping(uint256 => address) internal contracts; //id -> contract
 
   modifier hasStableContract() {
-    require(stableContract != address(0), "Stable contract not set");
-    _;
-  }
-
-  modifier existContract(address _contract) {
-    bool exist;
-    for (uint256 i; i <= contractCount; i++) {
-      if (_contract == contracts[i]) {
-        exist = true;
-        break;
-      }
-    }
-    require(exist, "Contract do not exist");
+    _hasStableContract();
     _;
   }
 
@@ -42,9 +30,9 @@ contract PoolFactory is Ownable {
   }
 
   function createPoolContract(
-    string calldata _name,
+    bytes32 _name,
     address _tokenAddress,
-    string calldata _tokenName,
+    bytes32 _tokenName,
     PoolTemplate.Participant[] calldata _participants,
     address _approver,
     bool _privatable
@@ -62,18 +50,19 @@ contract PoolFactory is Ownable {
     }
 
     address contractAddress = Clones.clone(templateImplementation);
-    PoolTemplate poolTemplate = PoolTemplate(contractAddress);
-
-    poolTemplate.init(msg.sender, _name, _tokenAddress, _tokenName, _approver, _privatable);
-
-    poolTemplate.addParticipants(_participants);
+    PoolTemplate pool = PoolTemplate(contractAddress);
+    pool.init(msg.sender, _name, _tokenAddress, _tokenName, _approver, _privatable);
+    pool.addParticipants(_participants);
     contracts[contractCount] = contractAddress;
 
     emit PoolCreated(contractAddress, contractCount);
-    contractCount++;
+    unchecked {
+      contractCount++;
+    }
   }
 
-  function approvePool(address _poolAddress) external existContract(_poolAddress) {
+  function approvePool(address _poolAddress) external {
+    require(_existContract(_poolAddress), "Contract do not exist");
     (bool approved, address approver) = PoolTemplate(_poolAddress).approvalData();
     require(!approved, "Pool already approved");
     require(msg.sender == approver, "Only for approver");
@@ -145,5 +134,18 @@ contract PoolFactory is Ownable {
     require(result >= _fee, "Not allowed amount to spend");
     bool success = IERC20(stableContract).transferFrom(msg.sender, address(this), _fee);
     require(success, "Spending failed");
+  }
+
+  function _existContract(address _contract) private view returns (bool exist) {
+    for (uint256 i; i <= contractCount; i++) {
+      if (_contract == contracts[i]) {
+        exist = true;
+        break;
+      }
+    }
+  }
+
+  function _hasStableContract() private view {
+    require(stableContract != address(0), "Stable contract not set");
   }
 }

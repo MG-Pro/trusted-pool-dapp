@@ -1,3 +1,4 @@
+import { BytesLike } from '@ethersproject/bytes'
 import { BigNumber } from 'ethers'
 
 export enum PoolStatuses {
@@ -29,9 +30,9 @@ export interface IPool {
 }
 
 export interface IPoolResponse {
-  name: string
+  name: BytesLike
   tokenAddress: string
-  tokenName: string
+  tokenName: BytesLike
   admin: string
   tokenAmount: BigNumber
   filledAmount: BigNumber

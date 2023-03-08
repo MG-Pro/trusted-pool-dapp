@@ -100,8 +100,8 @@ export async function preparePoolData(
     })
 
   return {
-    name: 'VC' + nonce,
-    tokenName: 'BTC' + nonce,
+    name: ethers.utils.formatBytes32String('VC' + nonce),
+    tokenName: ethers.utils.formatBytes32String('BTC' + nonce),
     tokenAddress,
     participants,
     approverAddress,
@@ -165,7 +165,7 @@ export async function createPoolContract(
   }
 }
 
-export async function createPool(
+export async function createPoolAndReqData(
   participantsCount: number,
   privatableArg: boolean = false,
   approvable: boolean = false,
