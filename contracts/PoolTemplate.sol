@@ -16,7 +16,7 @@ contract PoolTemplate is Initializable {
   error OnlyParticipant();
   error OnlyFactory();
 
-  bool private poolApproved = true;
+  bool private poolApproved;
   bool private poolPrivatable;
   address private poolApprover;
   address private poolAdmin;
@@ -68,7 +68,8 @@ contract PoolTemplate is Initializable {
 
     if (!_isZeroAddress(_approver)) {
       poolApprover = _approver;
-      poolApproved = false;
+    } else {
+      poolApproved = true;
     }
   }
 

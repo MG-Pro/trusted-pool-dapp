@@ -25,20 +25,9 @@ import {
   IDeployUSDT,
 } from './test.types'
 
-describe('PoolFactory', () => {
+xdescribe('PoolFactory', () => {
   describe('Creating pools', () => {
-    xit('Should create pool with 100 participants', async () => {
-      const participantsCount = 100
-      const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
-        createPoolAndReqData.bind(this, participantsCount),
-      )
-      expect(poolResponse.tokenAmount).to.equal(tokenAmount)
-      expect(poolResponse.approved).to.equal(true)
-      expect(poolResponse.privatable).to.equal(false)
-      expect(participantResponse.length).to.equal(participantSize)
-    })
-
-    xit('Should create pool with 10 participants', async () => {
+    it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
         createPoolAndReqData.bind(this, participantsCount),
@@ -49,7 +38,7 @@ describe('PoolFactory', () => {
       expect(participantResponse.length).to.equal(participantsCount)
     })
 
-    xit('Should create pool with 3 participants', async () => {
+    it('Should create pool with 3 participants', async () => {
       const participantsCount = 3
       const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
         createPoolAndReqData.bind(this, participantsCount),
@@ -60,7 +49,7 @@ describe('PoolFactory', () => {
       expect(participantResponse.length).to.equal(participantsCount)
     })
 
-    xit('Should emit creating pool event', async () => {
+    it('Should emit creating pool event', async () => {
       const participantsCount = 10
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
@@ -82,54 +71,7 @@ describe('PoolFactory', () => {
       await expect(creatingReq).to.emit(poolFactoryContract, 'PoolCreated')
     })
 
-    it('Should create 10 pools', async () => {
-      const participantsCount = 300
-      const poolCount = 10
-
-      const { poolFactoryContract, poolFactoryDeployer, participant1 } =
-        await loadFixture<IDeployPoolFactory>(deployPoolFactory)
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
-        await preparePoolData(undefined, participantsCount)
-      const accs = await ethers.getSigners()
-
-      const creatingReqs: Promise<ContractTransaction>[] = Array(poolCount)
-        .fill(null)
-        .map((_, i) => {
-          const creator = accs[i] ? accs[i] : accs[0]
-          return poolFactoryContract
-            .connect(creator)
-            .createPoolContract(
-              name,
-              tokenAddress,
-              tokenName,
-              participants,
-              approverAddress,
-              privatable,
-            )
-        })
-      await Promise.all(creatingReqs)
-
-      const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-        participants[0].account,
-      )
-
-      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
-        'PoolTemplate',
-        poolAccounts[0],
-      )
-
-      const poolResponse: IPoolResponse = await poolTemplateContract
-        .connect(participant1)
-        .getPoolData()
-      console.log(ethers.utils.parseBytes32String(poolResponse.name))
-      console.log(ethers.utils.parseBytes32String(poolResponse.tokenName))
-      expect(poolAccounts.length).to.equal(poolCount)
-      poolAccounts.forEach((a) => {
-        expect(a).to.not.equal(ethers.constants.AddressZero)
-      })
-    })
-
-    xit('Should revert if 0 participants', async () => {
+    it('Should revert if 0 participants', async () => {
       const participantsCount = 0
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
@@ -152,7 +94,7 @@ describe('PoolFactory', () => {
     })
   })
 
-  xdescribe('Creating private pools', () => {
+  describe('Creating private pools', () => {
     it('Should create private pool', async () => {
       const participantsCount = 5
       const privatable = true
@@ -173,7 +115,7 @@ describe('PoolFactory', () => {
     })
   })
 
-  xdescribe('Creating pools with platform fee', () => {
+  describe('Creating pools with platform fee', () => {
     it('Should revert if do not send fee', async () => {
       const participantsCount = 3
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
@@ -288,7 +230,7 @@ describe('PoolFactory', () => {
     })
   })
 
-  xdescribe('Creating approvable pools', () => {
+  describe('Creating approvable pools', () => {
     it('Should create approvable pool', async () => {
       const participantsCount = 5
       const privatable = false
@@ -446,7 +388,7 @@ xdescribe('PoolTemplate', () => {
       )
 
       const poolReq = poolTemplateContract.connect(stranger1).getPoolData()
-      await expect(poolReq).to.revertedWith('Only for participant')
+      await expect(poolReq).to.revertedWithCustomError(poolTemplateContract, 'OnlyParticipant')
     })
 
     it('Should revert if start pagination index was wrong', async () => {
@@ -470,9 +412,9 @@ xdescribe('PoolTemplate', () => {
         createPoolContract.bind(this, participantsCount, privatable),
       )
 
-      await expect(poolTemplateContract.connect(stranger1).getParticipant()).to.revertedWith(
-        'Only for participant',
-      )
+      await expect(
+        poolTemplateContract.connect(stranger1).getParticipant(),
+      ).to.revertedWithCustomError(poolTemplateContract, 'OnlyParticipant')
     })
   })
 
@@ -645,15 +587,83 @@ xdescribe('PoolTemplate', () => {
           ),
         )
 
-      await expect(poolTemplateContract.connect(approver1).approvePool()).to.revertedWith(
-        'Only for factory contract',
-      )
+      await expect(
+        poolTemplateContract.connect(approver1).approvePool(),
+      ).to.revertedWithCustomError(poolTemplateContract, 'OnlyFactory')
 
       await poolFactoryContract.connect(approver1).approvePool(poolTemplateContract.address)
 
-      await expect(poolTemplateContract.connect(approver1).approvePool()).to.revertedWith(
-        'Pool already approved',
-      )
+      await expect(
+        poolTemplateContract.connect(approver1).approvePool(),
+      ).to.revertedWithCustomError(poolTemplateContract, 'OnlyFactory')
     })
+  })
+})
+
+describe('Performance', () => {
+  xit('Should create pool with 100 participants', async () => {
+    const participantsCount = 100
+    const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
+      createPoolAndReqData.bind(this, participantsCount),
+    )
+    expect(poolResponse.tokenAmount).to.equal(tokenAmount)
+    expect(poolResponse.approved).to.equal(true)
+    expect(poolResponse.privatable).to.equal(false)
+    expect(participantResponse.length).to.equal(participantSize)
+  })
+
+  it('Should create 10 pools with 300 participants', async () => {
+    const participantsCount = 300
+    const poolCount = 10
+
+    const { poolFactoryContract, participant1 } = await loadFixture<IDeployPoolFactory>(
+      deployPoolFactory,
+    )
+    const {
+      name,
+      tokenName,
+      participants,
+      tokenAddress,
+      approverAddress,
+      privatable,
+      tokenAmount,
+    } = await preparePoolData(undefined, participantsCount)
+    const accs = await ethers.getSigners()
+
+    const creatingReqs: Promise<ContractTransaction>[] = Array(poolCount)
+      .fill(null)
+      .map((_, i) => {
+        const creator = accs[i] ? accs[i] : accs[0]
+        return poolFactoryContract
+          .connect(creator)
+          .createPoolContract(
+            name,
+            tokenAddress,
+            tokenName,
+            participants,
+            approverAddress,
+            privatable,
+          )
+      })
+    await Promise.all(creatingReqs)
+
+    const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
+      participants[0].account,
+    )
+
+    const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
+      'PoolTemplate',
+      poolAccounts[0],
+    )
+
+    const poolResponse: IPoolResponse = await poolTemplateContract
+      .connect(participant1)
+      .getPoolData()
+
+    expect(poolAccounts.length).to.equal(poolCount)
+    poolAccounts.forEach((a) => {
+      expect(a).to.not.equal(ethers.constants.AddressZero)
+    })
+    expect(poolResponse.tokenAmount).to.equal(tokenAmount)
   })
 })
