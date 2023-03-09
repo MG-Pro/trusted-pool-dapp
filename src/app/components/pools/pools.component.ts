@@ -39,7 +39,7 @@ export class PoolsComponent {
   public isEditTokenAddress = false
 
   public get isCreator(): boolean {
-    return this.activePool?.creatorAddress === this.userAccount
+    return this.activePool?.adminAddress === this.userAccount
   }
 
   public get isLastParticipants(): boolean {

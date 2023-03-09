@@ -18,7 +18,6 @@ import {
 } from '@angular/forms'
 import {
   EVM_ADDRESS_REGEXP,
-  MAX_PARTICIPANT_DESCRIPTION,
   MAX_POOL_PARTICIPANTS,
   MIN_POOL_AMOUNT,
   MIN_SHARE_AMOUNT,
@@ -75,18 +74,16 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       this.fb.group({
         account: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
         share: 5000,
-        description: 'test',
       }),
     )
 
     Array(29)
       .fill(null)
-      .forEach((_, i) => {
+      .forEach(() => {
         this.participantsForm.push(
           this.fb.group({
             account: ethers.Wallet.createRandom().address,
             share: 5000,
-            description: 'test' + i,
           }),
         )
       })
@@ -134,7 +131,6 @@ export class NewPoolComponent implements OnInit, OnDestroy {
           ],
         ],
         share: [null, [Validators.required, Validators.min(MIN_SHARE_AMOUNT)]],
-        description: ['', [Validators.maxLength(MAX_PARTICIPANT_DESCRIPTION)]],
       }),
     )
   }

@@ -49,7 +49,6 @@ export class ContractService {
 
     const participants: IParticipant[] = poolData.participants.map((p) => ({
       ...p,
-      description: p.description || '1',
       claimed: 0,
       accrued: 0,
     }))
@@ -169,8 +168,8 @@ export class ContractService {
       privatable: item.privatable,
       tokenAddress,
       contractAddress: poolAccount?.toLowerCase(),
-      name: item.name,
-      tokenName: item.tokenName,
+      name: ethers.utils.parseBytes32String(item.name),
+      tokenName: ethers.utils.parseBytes32String(item.tokenName),
       adminAddress: item.admin?.toLowerCase(),
       status: this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber()),
       tokenAmount: item.tokenAmount.toNumber(),

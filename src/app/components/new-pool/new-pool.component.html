@@ -86,19 +86,6 @@
                 {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
               </p>
             </div>
-
-            <div class="mb-3">
-              <label class="form-label"> Participant description </label>
-              <input
-                class="form-control bg-dark text-light"
-                formControlName="description"
-                [class.is-invalid]="hasFormArrayError('description', i)"
-              />
-              <p class="invalid-feedback">
-                Description max length
-                {{ participantsForm.at(i).getError('maxlength', 'description')?.requiredLength }}
-              </p>
-            </div>
           </div>
         </div>
       </ng-container>
