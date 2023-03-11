@@ -15,6 +15,7 @@ export interface ICreatePoolTemplateContract extends ITestSigners {
   participants: IParticipant[]
   privatable: boolean
   tokenAmount: number
+  poolAccounts: string[]
 }
 
 export interface ICreateTestERC20Contract extends ITestSigners {

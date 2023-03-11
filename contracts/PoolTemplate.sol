@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract PoolTemplate is Initializable {
   struct Participant {

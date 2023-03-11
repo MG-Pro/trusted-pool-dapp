@@ -16,6 +16,7 @@ import {
   preparePoolData,
   valueFee,
   approverValueFee,
+  upgradePoolFactory,
 } from './test.helpers'
 import {
   ICreatePool,
@@ -25,7 +26,7 @@ import {
   IDeployUSDT,
 } from './test.types'
 
-xdescribe('PoolFactory', () => {
+describe('PoolFactory', () => {
   describe('Creating pools', () => {
     it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
@@ -333,9 +334,35 @@ xdescribe('PoolFactory', () => {
       ).to.revertedWith('Pool already approved')
     })
   })
+
+  describe('Upgradeable', () => {
+    it('Should create pool with 3 participants and upgraded', async () => {
+      const participantsCount = 10
+      const { poolFactoryContract, poolAccounts, creatorAndParticipant1, poolFactoryDeployer } =
+        await loadFixture<ICreatePoolTemplateContract>(
+          createPoolContract.bind(this, participantsCount),
+        )
+      const poolAccount = poolAccounts[0]
+
+      const { upgradedContract } = await upgradePoolFactory(
+        poolFactoryContract.address,
+        'TestPoolFactoryV2',
+      )
+
+      const poolAccountsAfterUp = await upgradedContract
+        .connect(creatorAndParticipant1)
+        .getContractAddressesByParticipant(creatorAndParticipant1.address)
+
+      const req = upgradedContract.connect(poolFactoryDeployer).getTestDataV2()
+
+      expect(poolFactoryContract.address).to.equal(upgradedContract.address)
+      expect(poolAccountsAfterUp[0]).to.equal(poolAccount)
+      expect(await req).to.equal(poolFactoryDeployer.address)
+    })
+  })
 })
 
-xdescribe('PoolTemplate', () => {
+describe('PoolTemplate', () => {
   describe('Getting pools data', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100

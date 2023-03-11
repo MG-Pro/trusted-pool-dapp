@@ -3,13 +3,15 @@ pragma solidity ^0.8.18;
 import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./PoolTemplate.sol";
 
-contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
 
   uint256 public stableFeeValue;
@@ -91,6 +93,10 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
   function getWithdrawableBalance() external view onlyOwner returns (uint256) {
     return withdrawableBalance;
+  }
+
+  function getTestDataV2() external view onlyOwner returns (address) {
+    return owner();
   }
 
   function getContractAddressesByParticipant(

@@ -1,7 +1,8 @@
 import { PoolFactory, PoolTemplate, TestERC20 } from '@app/typechain'
 import { IParticipant, IParticipantResponse, IPool, IPoolResponse } from '@app/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
-import { ethers } from 'hardhat'
+import { Contract } from 'ethers'
+import { ethers, upgrades } from 'hardhat'
 
 import {
   ICreatePool,
@@ -39,10 +40,26 @@ export async function getTestSigners(): Promise<ITestSigners> {
   }
 }
 
+export async function upgradePoolFactory(
+  prevAddress: string,
+  name: string,
+): Promise<{ upgradedContract: Contract } & ITestSigners> {
+  const signers: ITestSigners = await getTestSigners()
+  const PoolFactoryC = await ethers.getContractFactory(name, signers.poolFactoryDeployer)
+  const upgradedContract = await upgrades.upgradeProxy(prevAddress, PoolFactoryC)
+  await upgradedContract.deployed()
+
+  return {
+    ...signers,
+    upgradedContract,
+  }
+}
+
 export async function deployPoolFactory(): Promise<IDeployPoolFactory> {
   const signers: ITestSigners = await getTestSigners()
   const PoolFactoryC = await ethers.getContractFactory('PoolFactory', signers.poolFactoryDeployer)
-  const poolFactoryContract: PoolFactory = await PoolFactoryC.deploy()
+  const poolFactoryContract = (await upgrades.deployProxy(PoolFactoryC, [])) as PoolFactory
+
   await poolFactoryContract.deployed()
 
   return {
@@ -162,6 +179,7 @@ export async function createPoolContract(
     stranger1,
     privatable,
     creatorAndParticipant1,
+    poolAccounts,
   }
 }
 

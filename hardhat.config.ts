@@ -3,6 +3,7 @@ import * as path from 'path'
 import { HardhatUserConfig } from 'hardhat/config'
 
 import '@nomicfoundation/hardhat-toolbox'
+import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
 import 'hardhat-address-exporter'
 import './tasks'
@@ -25,7 +26,7 @@ const config: HardhatUserConfig = {
   },
   gasReporter: {
     enabled: true,
-    excludeContracts: ['TestERC20.sol'],
+    excludeContracts: ['TestERC20.sol', 'TestPoolFactoryV2.sol'],
   },
   networks: {
     hardhat: {
