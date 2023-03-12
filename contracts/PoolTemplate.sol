@@ -16,6 +16,8 @@ contract PoolTemplate is Initializable {
   error OnlyParticipant();
   error OnlyFactory();
 
+  uint16 private constant maxParticipantsTs = 450;
+
   bool private poolApproved;
   bool private poolPrivatable;
   address private poolApprover;
@@ -79,6 +81,7 @@ contract PoolTemplate is Initializable {
   }
 
   function addParticipants(Participant[] calldata _participants) external onlyFactory {
+    require(_participants.length <= maxParticipantsTs, "Limit of participants per ts exceeded");
     uint256 sum;
     for (uint256 i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
@@ -88,7 +91,7 @@ contract PoolTemplate is Initializable {
 
       unchecked {
         poolParticipantsCount++;
-        sum += _participants[i].share;
+        sum += item.share;
       }
     }
     poolTokenAmount = sum;

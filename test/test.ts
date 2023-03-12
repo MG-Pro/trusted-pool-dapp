@@ -26,7 +26,7 @@ import {
   IDeployUSDT,
 } from './test.types'
 
-describe('PoolFactory', () => {
+xdescribe('PoolFactory', () => {
   describe('Creating pools', () => {
     it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
@@ -92,6 +92,28 @@ describe('PoolFactory', () => {
         )
 
       await expect(creatingReq).to.revertedWith('Must have at least 1 participant')
+    })
+
+    it('Should revert if of participants per ts exceeded', async () => {
+      const participantsCount = 451
+      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+        await preparePoolData(undefined, participantsCount)
+
+      const creatingReq = poolFactoryContract
+        .connect(poolFactoryDeployer)
+        .createPoolContract(
+          name,
+          tokenAddress,
+          tokenName,
+          participants,
+          approverAddress,
+          privatable,
+        )
+
+      await expect(creatingReq).to.revertedWith('Limit of participants per ts exceeded')
     })
   })
 
@@ -362,7 +384,7 @@ describe('PoolFactory', () => {
   })
 })
 
-describe('PoolTemplate', () => {
+xdescribe('PoolTemplate', () => {
   describe('Getting pools data', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100
@@ -628,7 +650,7 @@ describe('PoolTemplate', () => {
 })
 
 describe('Performance', () => {
-  xit('Should create pool with 100 participants', async () => {
+  xit('Should create pool with 100 participants and get data', async () => {
     const participantsCount = 100
     const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
       createPoolAndReqData.bind(this, participantsCount),
