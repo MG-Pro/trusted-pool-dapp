@@ -39,17 +39,6 @@ xdescribe('PoolFactory', () => {
       expect(participantResponse.length).to.equal(participantsCount)
     })
 
-    it('Should create pool with 3 participants', async () => {
-      const participantsCount = 3
-      const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
-        createPoolAndReqData.bind(this, participantsCount),
-      )
-      expect(poolResponse.tokenAmount).to.equal(tokenAmount)
-      expect(poolResponse.approved).to.equal(true)
-      expect(poolResponse.privatable).to.equal(false)
-      expect(participantResponse.length).to.equal(participantsCount)
-    })
-
     it('Should emit creating pool event', async () => {
       const participantsCount = 10
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
@@ -67,6 +56,7 @@ xdescribe('PoolFactory', () => {
           participants,
           approverAddress,
           privatable,
+          true,
         )
 
       await expect(creatingReq).to.emit(poolFactoryContract, 'PoolCreated')
@@ -89,9 +79,13 @@ xdescribe('PoolFactory', () => {
           participants,
           approverAddress,
           privatable,
+          true,
         )
 
-      await expect(creatingReq).to.revertedWith('Must have at least 1 participant')
+      await expect(creatingReq).to.revertedWithCustomError(
+        poolFactoryContract,
+        'WrongParticipantCount',
+      )
     })
 
     it('Should revert if of participants per ts exceeded', async () => {
@@ -111,6 +105,33 @@ xdescribe('PoolFactory', () => {
           participants,
           approverAddress,
           privatable,
+          true,
+        )
+
+      await expect(creatingReq).to.revertedWithCustomError(
+        poolFactoryContract,
+        'WrongParticipantCount',
+      )
+    })
+
+    xit('Should revert if of participants per ts exceeded', async () => {
+      const participantsCount = 451
+      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+        await preparePoolData(undefined, participantsCount)
+
+      const creatingReq = poolFactoryContract
+        .connect(poolFactoryDeployer)
+        .createPoolContract(
+          name,
+          tokenAddress,
+          tokenName,
+          participants,
+          approverAddress,
+          privatable,
+          true,
         )
 
       await expect(creatingReq).to.revertedWith('Limit of participants per ts exceeded')
@@ -160,6 +181,7 @@ xdescribe('PoolFactory', () => {
           participants,
           approverAddress,
           privatable,
+          true,
         )
 
       await expect(trReq).to.revertedWith('Not enough fee value')
@@ -188,6 +210,7 @@ xdescribe('PoolFactory', () => {
           participants,
           approverAddress,
           privatable,
+          true,
         )
 
       await expect(trReq).to.revertedWith('Not allowed amount to spend')
@@ -217,6 +240,7 @@ xdescribe('PoolFactory', () => {
           participants,
           approverAddress,
           privatable,
+          true,
         )
 
       expect(await USDTContract.balanceOf(poolFactoryContract.address)).to.equal(valueFee)
@@ -245,6 +269,7 @@ xdescribe('PoolFactory', () => {
           participants,
           approverAddress,
           privatable,
+          true,
         )
 
       await poolFactoryContract.connect(poolFactoryDeployer).withdraw()
@@ -262,6 +287,7 @@ xdescribe('PoolFactory', () => {
         await loadFixture<ICreatePoolTemplateContract>(
           createPoolContract.bind(this, participantsCount, privatable, approvable),
         )
+
       const pool: IPoolResponse = await poolTemplateContract
         .connect(creatorAndParticipant1)
         .getPoolData()
@@ -299,8 +325,9 @@ xdescribe('PoolFactory', () => {
       )
 
       expect(
-        (await poolTemplateContract.connect(creatorAndParticipant1).approvalData()).approver,
+        (await poolTemplateContract.connect(creatorAndParticipant1).getPoolData()).approver,
       ).to.equal(approver1.address)
+
       expect(
         await USDTContract.connect(poolFactoryDeployer).balanceOf(poolFactoryContract.address),
       ).to.equal(valueFee + approverValueFee)
@@ -317,7 +344,7 @@ xdescribe('PoolFactory', () => {
       )
 
       expect(
-        (await poolTemplateContract.connect(creatorAndParticipant1).approvalData()).approved,
+        (await poolTemplateContract.connect(creatorAndParticipant1).getPoolData()).approved,
       ).to.equal(true)
 
       expect(
@@ -692,6 +719,7 @@ describe('Performance', () => {
             participants,
             approverAddress,
             privatable,
+            true,
           )
       })
     await Promise.all(creatingReqs)

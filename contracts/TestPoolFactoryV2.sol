@@ -68,7 +68,7 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
 
   function approvePool(address _poolAddress) external {
     require(_existContract(_poolAddress), "Contract do not exist");
-    (bool approved, address approver) = PoolTemplate(_poolAddress).approvalData();
+    (, , , , , , , address approver, bool approved, ) = PoolTemplate(_poolAddress).getPoolData();
     require(!approved, "Pool already approved");
     require(msg.sender == approver, "Only for approver");
     uint256 balance = IERC20(stableContract).balanceOf(address(this));

@@ -12,9 +12,14 @@ import "./PoolTemplate.sol";
 contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
 
+  error WrongParticipantCount();
+
+  uint16 private constant maxParticipantsTs = 450;
+
   uint256 public stableFeeValue;
   uint256 public stableApproverFeeValue;
   uint256 public contractCount;
+
   address private templateImplementation;
   address private stableContract;
   uint256 private withdrawableBalance;
@@ -24,6 +29,22 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   modifier hasStableContract() {
     _hasStableContract();
     _;
+  }
+
+  modifier existContract(address _poolAddress) {
+    require(_existContract(_poolAddress), "Contract do not exist");
+    _;
+  }
+
+  modifier checkParticipantCount(uint256 length) {
+    _checkParticipantCount(length);
+    _;
+  }
+
+  function _checkParticipantCount(uint256 length) private pure {
+    if (length == 0 || length > maxParticipantsTs) {
+      revert WrongParticipantCount();
+    }
   }
 
   function initialize() public initializer {
@@ -38,9 +59,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     bytes32 _tokenName,
     PoolTemplate.Participant[] calldata _participants,
     address _approver,
-    bool _privatable
-  ) external {
-    require(_participants.length != 0, "Must have at least 1 participant");
+    bool _privatable,
+    bool _finalized
+  ) external checkParticipantCount(_participants.length) {
     uint256 poolFee = stableFeeValue;
     withdrawableBalance += poolFee;
 
@@ -58,23 +79,38 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     pool.addParticipants(_participants);
     contracts[contractCount] = contractAddress;
 
+    if (_finalized) {
+      pool.finalize();
+    }
+
     emit PoolCreated(contractAddress, contractCount);
     unchecked {
       contractCount++;
     }
   }
 
-  function approvePool(address _poolAddress) external {
-    require(_existContract(_poolAddress), "Contract do not exist");
-    (bool approved, address approver) = PoolTemplate(_poolAddress).approvalData();
+  function addParticipants(
+    address _poolAddress,
+    PoolTemplate.Participant[] calldata _participants
+  ) external existContract(_poolAddress) checkParticipantCount(_participants.length) {
+    require(!PoolTemplate(_poolAddress).finalized(), "Pool already finalized");
+    PoolTemplate(_poolAddress).addParticipants(_participants);
+  }
+
+  function finalize(address _poolAddress) external existContract(_poolAddress) {
+    require(!PoolTemplate(_poolAddress).finalized(), "Pool already finalized");
+    PoolTemplate(_poolAddress).finalize();
+  }
+
+  function approvePool(address _poolAddress) external existContract(_poolAddress) {
+    (bool approved, address approver) = PoolTemplate(_poolAddress).getApprovalData();
     require(!approved, "Pool already approved");
     require(msg.sender == approver, "Only for approver");
     uint256 balance = IERC20(stableContract).balanceOf(address(this));
     require(balance >= stableApproverFeeValue, "Insufficient funds");
     bool success = IERC20(stableContract).transfer(msg.sender, stableApproverFeeValue);
     require(success, "Transfer failed");
-    success = PoolTemplate(_poolAddress).approvePool();
-    require(success, "Approve failed");
+    PoolTemplate(_poolAddress).approvePool();
   }
 
   function setFeeValue(uint256 _fee) external onlyOwner {

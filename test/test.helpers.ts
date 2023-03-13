@@ -157,7 +157,15 @@ export async function createPoolContract(
 
   await poolFactoryContract
     .connect(creatorAndParticipant1)
-    .createPoolContract(name, tokenAddress, tokenName, participants, approverAddress, privatable)
+    .createPoolContract(
+      name,
+      tokenAddress,
+      tokenName,
+      participants,
+      approverAddress,
+      privatable,
+      true,
+    )
 
   const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
     participants[0].account,

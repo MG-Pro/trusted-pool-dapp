@@ -15,8 +15,9 @@ contract PoolTemplate is Initializable {
   error OnlyAdmin();
   error OnlyParticipant();
   error OnlyFactory();
+  error OnlyFinalized();
 
-  uint16 private constant maxParticipantsTs = 450;
+  bool public finalized;
 
   bool private poolApproved;
   bool private poolPrivatable;
@@ -50,6 +51,11 @@ contract PoolTemplate is Initializable {
     _;
   }
 
+  modifier onlyFinalized() {
+    _onlyFinalized();
+    _;
+  }
+
   function init(
     address _creator,
     bytes32 _name,
@@ -80,8 +86,13 @@ contract PoolTemplate is Initializable {
     poolAdmin = _newAdmin;
   }
 
+  function finalize() external onlyFactory {
+    require(!finalized, "Pool already finalized");
+    finalized = true;
+  }
+
   function addParticipants(Participant[] calldata _participants) external onlyFactory {
-    require(_participants.length <= maxParticipantsTs, "Limit of participants per ts exceeded");
+    require(!finalized, "Pool already finalized");
     uint256 sum;
     for (uint256 i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
@@ -129,17 +140,13 @@ contract PoolTemplate is Initializable {
     );
   }
 
-  function approvalData() external view returns (bool approved, address approver) {
-    return (poolApproved, poolApprover);
-  }
-
-  function approvePool() external onlyFactory returns (bool) {
+  function approvePool() external onlyFactory onlyFinalized returns (bool) {
     require(!poolApproved, "Pool already approved");
     poolApproved = true;
     return true;
   }
 
-  function setTokenAddress(address _tokenAddress) external onlyAdmin {
+  function setTokenAddress(address _tokenAddress) external onlyAdmin onlyFinalized {
     _setTokenAddress(_tokenAddress);
   }
 
@@ -148,7 +155,7 @@ contract PoolTemplate is Initializable {
       !_isZeroAddress(poolTokenAddress) ? IERC20(poolTokenAddress).balanceOf(address(this)) : 0;
   }
 
-  function claimTokens() external {
+  function claimTokens() external onlyFinalized {
     require(!_isZeroAddress(poolTokenAddress), "Token contract address no set");
     uint256 accrued = _calculateAccrued(msg.sender);
     require(accrued > 0, "There are not tokens for claim");
@@ -156,6 +163,10 @@ contract PoolTemplate is Initializable {
     poolOverallClaimed += accrued;
     bool success = IERC20(poolTokenAddress).transfer(msg.sender, accrued);
     require(success, "Claim error");
+  }
+
+  function getApprovalData() external view onlyFactory returns (bool approved, address approver) {
+    return (poolApproved, poolApprover);
   }
 
   function getParticipant() external view onlyParticipant returns (Participant memory) {
@@ -237,6 +248,12 @@ contract PoolTemplate is Initializable {
   function _onlyFactory() private view {
     if (poolFactory != msg.sender) {
       revert OnlyFactory();
+    }
+  }
+
+  function _onlyFinalized() private view {
+    if (!finalized) {
+      revert OnlyFinalized();
     }
   }
 }

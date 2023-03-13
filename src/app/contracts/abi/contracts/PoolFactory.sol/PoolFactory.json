@@ -1,5 +1,10 @@
 [
   {
+    "inputs": [],
+    "name": "WrongParticipantCount",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -101,6 +106,46 @@
         "internalType": "address",
         "name": "_poolAddress",
         "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "share",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claimed",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accrued",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct PoolTemplate.Participant[]",
+        "name": "_participants",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "addParticipants",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_poolAddress",
+        "type": "address"
       }
     ],
     "name": "approvePool",
@@ -174,9 +219,27 @@
         "internalType": "bool",
         "name": "_privatable",
         "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "_finalized",
+        "type": "bool"
       }
     ],
     "name": "createPoolContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_poolAddress",
+        "type": "address"
+      }
+    ],
+    "name": "finalize",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
