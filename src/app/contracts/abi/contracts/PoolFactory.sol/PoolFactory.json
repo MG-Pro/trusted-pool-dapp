@@ -103,11 +103,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_poolAddress",
-        "type": "address"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -232,13 +227,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_poolAddress",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "finalize",
     "outputs": [],
     "stateMutability": "nonpayable",

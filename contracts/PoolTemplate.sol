@@ -165,8 +165,13 @@ contract PoolTemplate is Initializable {
     require(success, "Claim error");
   }
 
-  function getApprovalData() external view onlyFactory returns (bool approved, address approver) {
-    return (poolApproved, poolApprover);
+  function getApprovalData()
+    external
+    view
+    onlyFactory
+    returns (bool approved, address approver, address creator)
+  {
+    return (poolApproved, poolApprover, poolAdmin);
   }
 
   function getParticipant() external view onlyParticipant returns (Participant memory) {

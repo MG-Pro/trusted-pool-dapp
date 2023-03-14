@@ -126,7 +126,6 @@ export async function preparePoolData(
     tokenAmount: participants.reduce((acc, p) => acc + p.share, 0),
   }
 }
-
 export async function createPoolContract(
   participantsCount: number,
   privatableArg: boolean = false,

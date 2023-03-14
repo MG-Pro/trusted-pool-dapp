@@ -26,7 +26,7 @@ import {
   IDeployUSDT,
 } from './test.types'
 
-xdescribe('PoolFactory', () => {
+describe('PoolFactory', () => {
   describe('Creating pools', () => {
     it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
@@ -88,7 +88,7 @@ xdescribe('PoolFactory', () => {
       )
     })
 
-    it('Should revert if of participants per ts exceeded', async () => {
+    it('Should revert if count of participants per ts exceeded', async () => {
       const participantsCount = 451
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
@@ -114,27 +114,44 @@ xdescribe('PoolFactory', () => {
       )
     })
 
-    xit('Should revert if of participants per ts exceeded', async () => {
-      const participantsCount = 451
-      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
+    it('Should create pool with separated participants', async () => {
+      const participantsCount1 = 10
+      const participantsCount2 = 10
+      const { poolFactoryContract, creator2, participant1 } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
-        await preparePoolData(undefined, participantsCount)
+      const pData1 = await preparePoolData(undefined, participantsCount1)
 
-      const creatingReq = poolFactoryContract
-        .connect(poolFactoryDeployer)
+      await poolFactoryContract
+        .connect(creator2)
         .createPoolContract(
-          name,
-          tokenAddress,
-          tokenName,
-          participants,
-          approverAddress,
-          privatable,
-          true,
+          pData1.name,
+          pData1.tokenAddress,
+          pData1.tokenName,
+          pData1.participants,
+          pData1.approverAddress,
+          pData1.privatable,
+          false,
         )
 
-      await expect(creatingReq).to.revertedWith('Limit of participants per ts exceeded')
+      const pData2 = await preparePoolData(undefined, participantsCount2)
+
+      await poolFactoryContract.connect(creator2).addParticipants(pData2.participants)
+      const poolAccounts: string[] = await poolFactoryContract
+        .connect(creator2)
+        .getContractAddressesByParticipant(pData2.participants[7].account)
+
+      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
+        'PoolTemplate',
+        poolAccounts[0],
+      )
+
+      const poolResponse: IPoolResponse = await poolTemplateContract
+        .connect(participant1)
+        .getPoolData()
+
+      console.log(poolResponse.participantsCount.toNumber())
+      // expect(creatingReq).to.equal()
     })
   })
 
@@ -142,7 +159,7 @@ xdescribe('PoolFactory', () => {
     it('Should create private pool', async () => {
       const participantsCount = 5
       const privatable = true
-      const { poolTemplateContract, participants, creatorAndParticipant1 } =
+      const { poolTemplateContract, creatorAndParticipant1 } =
         await loadFixture<ICreatePoolTemplateContract>(
           createPoolContract.bind(this, participantsCount, privatable),
         )
@@ -676,7 +693,7 @@ xdescribe('PoolTemplate', () => {
   })
 })
 
-describe('Performance', () => {
+xdescribe('Performance', () => {
   xit('Should create pool with 100 participants and get data', async () => {
     const participantsCount = 100
     const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(

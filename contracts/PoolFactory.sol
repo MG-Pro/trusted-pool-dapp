@@ -24,7 +24,8 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   address private stableContract;
   uint256 private withdrawableBalance;
 
-  mapping(uint256 => address) internal contracts; //id -> contract
+  mapping(uint256 => address) private contracts; //id -> contract
+  mapping(address => address) private finalizingContracts; //creator -> contract
 
   modifier hasStableContract() {
     _hasStableContract();
@@ -81,6 +82,8 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     if (_finalized) {
       pool.finalize();
+    } else {
+      finalizingContracts[msg.sender] = contractAddress;
     }
 
     emit PoolCreated(contractAddress, contractCount);
@@ -90,20 +93,27 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   }
 
   function addParticipants(
-    address _poolAddress,
     PoolTemplate.Participant[] calldata _participants
-  ) external existContract(_poolAddress) checkParticipantCount(_participants.length) {
-    require(!PoolTemplate(_poolAddress).finalized(), "Pool already finalized");
-    PoolTemplate(_poolAddress).addParticipants(_participants);
+  ) external checkParticipantCount(_participants.length) {
+    address _address = finalizingContracts[msg.sender];
+    require(_existContract(_address), "No finalizing pool for sender");
+
+    require(!PoolTemplate(_address).finalized(), "Pool already finalized");
+    (, , address creator) = PoolTemplate(_address).getApprovalData();
+    require(msg.sender == creator, "Only for pool creator");
+    PoolTemplate(_address).addParticipants(_participants);
   }
 
-  function finalize(address _poolAddress) external existContract(_poolAddress) {
-    require(!PoolTemplate(_poolAddress).finalized(), "Pool already finalized");
-    PoolTemplate(_poolAddress).finalize();
+  function finalize() external {
+    address _address = finalizingContracts[msg.sender];
+    require(_existContract(_address), "No finalizing pool for sender");
+    require(!PoolTemplate(_address).finalized(), "Pool already finalized");
+    PoolTemplate(_address).finalize();
+    delete finalizingContracts[msg.sender];
   }
 
   function approvePool(address _poolAddress) external existContract(_poolAddress) {
-    (bool approved, address approver) = PoolTemplate(_poolAddress).getApprovalData();
+    (bool approved, address approver, ) = PoolTemplate(_poolAddress).getApprovalData();
     require(!approved, "Pool already approved");
     require(msg.sender == approver, "Only for approver");
     uint256 balance = IERC20(stableContract).balanceOf(address(this));
@@ -145,10 +155,10 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
   function _requestContracts(
     address _address,
-    uint256 len
+    uint256 _len
   ) private view returns (address[] memory, uint256 count) {
     uint256 counter;
-    address[] memory list = new address[](len);
+    address[] memory list = new address[](_len);
     for (uint256 i; i < contractCount; i++) {
       bool exist;
       try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
@@ -176,6 +186,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   }
 
   function _existContract(address _contract) private view returns (bool exist) {
+    if (_contract == address(0)) {
+      return false;
+    }
     for (uint256 i; i <= contractCount; i++) {
       if (_contract == contracts[i]) {
         exist = true;
