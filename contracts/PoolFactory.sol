@@ -42,10 +42,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     _;
   }
 
-  function _checkParticipantCount(uint256 length) private pure {
-    if (length == 0 || length > maxParticipantsTs) {
-      revert WrongParticipantCount();
-    }
+  modifier checkFinalizing() {
+    _checkFinalizing();
+    _;
   }
 
   function initialize() public initializer {
@@ -63,6 +62,7 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     bool _privatable,
     bool _finalized
   ) external checkParticipantCount(_participants.length) {
+    require(finalizingContracts[msg.sender] == address(0), "Creator have finalizing pool");
     uint256 poolFee = stableFeeValue;
     withdrawableBalance += poolFee;
 
@@ -94,21 +94,12 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
   function addParticipants(
     PoolTemplate.Participant[] calldata _participants
-  ) external checkParticipantCount(_participants.length) {
-    address _address = finalizingContracts[msg.sender];
-    require(_existContract(_address), "No finalizing pool for sender");
-
-    require(!PoolTemplate(_address).finalized(), "Pool already finalized");
-    (, , address creator) = PoolTemplate(_address).getApprovalData();
-    require(msg.sender == creator, "Only for pool creator");
-    PoolTemplate(_address).addParticipants(_participants);
+  ) external checkParticipantCount(_participants.length) checkFinalizing {
+    PoolTemplate(finalizingContracts[msg.sender]).addParticipants(_participants);
   }
 
-  function finalize() external {
-    address _address = finalizingContracts[msg.sender];
-    require(_existContract(_address), "No finalizing pool for sender");
-    require(!PoolTemplate(_address).finalized(), "Pool already finalized");
-    PoolTemplate(_address).finalize();
+  function finalize() external checkFinalizing {
+    PoolTemplate(finalizingContracts[msg.sender]).finalize();
     delete finalizingContracts[msg.sender];
   }
 
@@ -199,6 +190,16 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
   function _hasStableContract() private view {
     require(stableContract != address(0), "Stable contract not set");
+  }
+
+  function _checkParticipantCount(uint256 length) private pure {
+    if (length == 0 || length > maxParticipantsTs) {
+      revert WrongParticipantCount();
+    }
+  }
+
+  function _checkFinalizing() private view {
+    require(_existContract(finalizingContracts[msg.sender]), "No finalizing pool for sender");
   }
 
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}

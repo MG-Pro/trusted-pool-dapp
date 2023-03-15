@@ -204,7 +204,14 @@ export async function createPoolAndReqData(
   const participantResponse: IParticipantResponse[] = await poolTemplateContract
     .connect(creatorAndParticipant1)
     .getParticipants(participantFirst, participantSize)
-  return { poolResponse, participantResponse, tokenAmount, approver1, privatable }
+  return {
+    poolResponse,
+    participantResponse,
+    tokenAmount,
+    approver1,
+    privatable,
+    poolTemplateContract,
+  }
 }
 
 export async function createAndMintTestERC20(

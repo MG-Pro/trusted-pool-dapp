@@ -7,6 +7,7 @@ export interface ICreatePool extends ITestSigners {
   participantResponse: IParticipantResponse[]
   tokenAmount: number
   privatable: boolean
+  poolTemplateContract: PoolTemplate
 }
 
 export interface ICreatePoolTemplateContract extends ITestSigners {
