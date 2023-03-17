@@ -97,6 +97,7 @@ contract PoolTemplate is Initializable {
     for (uint256 i; i < _participants.length; i++) {
       Participant memory item = _participants[i];
       require(item.share > 0, "Share value must be greater 0");
+      require(participants[item.account] == 0, "Participant not uniq");
       participants[item.account] = item.share;
       participantsMapper[poolParticipantsCount] = item.account;
 

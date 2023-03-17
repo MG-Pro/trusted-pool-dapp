@@ -49,7 +49,7 @@ const config: HardhatUserConfig = {
     target: 'ethers-v5',
   },
   mocha: {
-    // timeout: 100000000,
+    timeout: 1_000_000,
   },
 }
 

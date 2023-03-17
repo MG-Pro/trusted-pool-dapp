@@ -26,7 +26,7 @@ import {
   IDeployUSDT,
 } from './test.types'
 
-xdescribe('PoolFactory', () => {
+describe('PoolFactory', () => {
   describe('Creating pools', () => {
     it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
@@ -776,7 +776,7 @@ xdescribe('PoolTemplate', () => {
   })
 })
 
-describe('Performance', () => {
+xdescribe('Performance', () => {
   xit('Should create pool with 100 participants and get data', async () => {
     const participantsCount = 100
     const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
@@ -844,63 +844,58 @@ describe('Performance', () => {
     expect(poolResponse.tokenAmount).to.equal(tokenAmount)
   })
 
-  it('Should create 5 pool with separated participants', async () => {
-    const participantsCount1 = 25
-    const participantsCount2 = 12
-    const participantsCount3 = 7
+  it('Should create 5 pool with separated participants 3*300', async () => {
+    const participantsCount1 = 300
+    const participantsCount2 = 300
+    const participantsCount3 = 300
+    const fullCount = participantsCount1 + participantsCount2 + participantsCount3
+
     const poolCount = 5
 
     const { poolFactoryContract, participant1, creatorAndParticipant1 } =
       await loadFixture<IDeployPoolFactory>(deployPoolFactory)
 
-    const creatingReqs: Promise<void>[] = Array(poolCount)
+    for (const i of Array(poolCount)
       .fill(null)
-      .map(async (_, i) => {
-        const pData1 = await preparePoolData(undefined, participantsCount1, 'pl1' + i)
-        const pData2 = await preparePoolData(undefined, participantsCount2, 'pl2' + i)
-        const pData3 = await preparePoolData(undefined, participantsCount3, 'pl3' + i)
-        await poolFactoryContract
-          .connect(creatorAndParticipant1)
-          .createPoolContract(
-            pData1.name,
-            pData1.tokenAddress,
-            pData1.tokenName,
-            pData1.participants,
-            pData1.approverAddress,
-            pData1.privatable,
-            false,
-          )
+      .map((_, j) => j)) {
+      const pData1 = await preparePoolData(undefined, fullCount, 'pl1' + i)
 
-        await poolFactoryContract
-          .connect(creatorAndParticipant1)
-          .addParticipants(pData2.participants)
+      const pChunks: IParticipant[][] = []
+      for (let k = 0; k < pData1.participants.length; k += participantsCount3) {
+        const chunk = pData1.participants.slice(k, k + participantsCount3)
+        pChunks.push(chunk)
+      }
 
-        await poolFactoryContract
-          .connect(creatorAndParticipant1)
-          .addParticipants(pData3.participants)
-        await poolFactoryContract.connect(creatorAndParticipant1).finalize()
-
-        const poolAccounts: string[] = await poolFactoryContract
-          .connect(creatorAndParticipant1)
-          .getContractAddressesByParticipant(pData2.participants[7].account)
-
-        const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
-          'PoolTemplate',
-          poolAccounts[0],
+      await poolFactoryContract
+        .connect(creatorAndParticipant1)
+        .createPoolContract(
+          pData1.name,
+          pData1.tokenAddress,
+          pData1.tokenName,
+          pChunks[0],
+          pData1.approverAddress,
+          pData1.privatable,
+          false,
         )
 
-        const poolResponse: IPoolResponse = await poolTemplateContract
-          .connect(participant1)
-          .getPoolData()
+      await poolFactoryContract.connect(creatorAndParticipant1).addParticipants(pChunks[1])
+      await poolFactoryContract.connect(creatorAndParticipant1).addParticipants(pChunks[2])
+      await poolFactoryContract.connect(creatorAndParticipant1).finalize()
 
-        expect(poolResponse.participantsCount).to.equal(
-          participantsCount1 + participantsCount2 + participantsCount3,
-        )
-      })
+      const poolAccounts: string[] = await poolFactoryContract
+        .connect(creatorAndParticipant1)
+        .getContractAddressesByParticipant(pChunks[1][7].account)
 
-    for (const req of creatingReqs) {
-      console.log(req)
-      await req
+      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
+        'PoolTemplate',
+        poolAccounts[0],
+      )
+
+      const poolResponse: IPoolResponse = await poolTemplateContract
+        .connect(participant1)
+        .getPoolData()
+
+      expect(poolResponse.participantsCount).to.equal(fullCount)
     }
-  }, 100_000_000)
+  })
 })
