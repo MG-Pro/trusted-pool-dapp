@@ -1,6 +1,11 @@
 [
   {
     "inputs": [],
+    "name": "NoFinalizingPoolForSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "WrongParticipantCount",
     "type": "error"
   },

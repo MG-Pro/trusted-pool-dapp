@@ -199,7 +199,10 @@ describe('PoolFactory', () => {
       const { participants } = await preparePoolData(undefined, participantsCount)
 
       const req1 = poolFactoryContract.connect(creatorAndParticipant1).addParticipants(participants)
-      await expect(req1).to.revertedWith('No finalizing pool for sender')
+      await expect(req1).to.revertedWithCustomError(
+        poolFactoryContract,
+        'NoFinalizingPoolForSender',
+      )
     })
 
     it('Should revert if creator already have finalizing pool', async () => {
@@ -274,8 +277,11 @@ describe('PoolFactory', () => {
       const req = poolFactoryContract.connect(stranger1).addParticipants(ps2)
       const req2 = poolFactoryContract.connect(stranger1).finalize()
 
-      await expect(req).to.revertedWith('No finalizing pool for sender')
-      await expect(req2).to.revertedWith('No finalizing pool for sender')
+      await expect(req).to.revertedWithCustomError(poolFactoryContract, 'NoFinalizingPoolForSender')
+      await expect(req2).to.revertedWithCustomError(
+        poolFactoryContract,
+        'NoFinalizingPoolForSender',
+      )
     })
 
     it('Should revert if separated participants not uniq', async () => {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -56,6 +56,11 @@ contract PoolTemplate is Initializable {
     _;
   }
 
+  modifier onlyNoFinalized() {
+    _checkFinalizing();
+    _;
+  }
+
   function init(
     address _creator,
     bytes32 _name,
@@ -86,15 +91,15 @@ contract PoolTemplate is Initializable {
     poolAdmin = _newAdmin;
   }
 
-  function finalize() external onlyFactory {
-    require(!finalized, "Pool already finalized");
+  function finalize() external onlyFactory onlyNoFinalized {
     finalized = true;
   }
 
-  function addParticipants(Participant[] calldata _participants) external onlyFactory {
-    require(!finalized, "Pool already finalized");
+  function addParticipants(
+    Participant[] calldata _participants
+  ) external onlyFactory onlyNoFinalized {
     uint256 sum;
-    for (uint256 i; i < _participants.length; i++) {
+    for (uint256 i; i < _participants.length; ) {
       Participant memory item = _participants[i];
       require(item.share > 0, "Share value must be greater 0");
       require(participants[item.account] == 0, "Participant not uniq");
@@ -102,6 +107,7 @@ contract PoolTemplate is Initializable {
       participantsMapper[poolParticipantsCount] = item.account;
 
       unchecked {
+        i++;
         poolParticipantsCount++;
         sum += item.share;
       }
@@ -205,7 +211,7 @@ contract PoolTemplate is Initializable {
     Participant[] memory pList = new Participant[](size);
 
     uint256 counter;
-    for (uint256 i = first; i < first + size; i++) {
+    for (uint256 i = first; i < first + size; ) {
       pList[counter] = Participant(
         participantsMapper[i],
         participants[participantsMapper[i]],
@@ -213,6 +219,7 @@ contract PoolTemplate is Initializable {
         _calculateAccrued(participantsMapper[i])
       );
       unchecked {
+        i++;
         counter++;
       }
     }
@@ -261,5 +268,9 @@ contract PoolTemplate is Initializable {
     if (!finalized) {
       revert OnlyFinalized();
     }
+  }
+
+  function _checkFinalizing() private view {
+    require(!finalized, "Pool already finalized");
   }
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,6 +13,7 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
 
   error WrongParticipantCount();
+  error NoFinalizingPoolForSender();
 
   uint16 private constant maxParticipantsTs = 450;
 
@@ -62,11 +63,11 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     bool _privatable,
     bool _finalized
   ) external checkParticipantCount(_participants.length) {
-    require(finalizingContracts[msg.sender] == address(0), "Creator have finalizing pool");
+    require(_isZeroAddress(finalizingContracts[msg.sender]), "Creator have finalizing pool");
     uint256 poolFee = stableFeeValue;
     withdrawableBalance += poolFee;
 
-    if (_approver != address(0)) {
+    if (!_isZeroAddress(_approver)) {
       poolFee += stableApproverFeeValue;
     }
 
@@ -150,7 +151,7 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   ) private view returns (address[] memory, uint256 count) {
     uint256 counter;
     address[] memory list = new address[](_len);
-    for (uint256 i; i < contractCount; i++) {
+    for (uint256 i; i < contractCount; ) {
       bool exist;
       try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
         exist = res;
@@ -161,6 +162,10 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
       if (exist) {
         list[counter] = contracts[i];
         counter++;
+      }
+
+      unchecked {
+        i++;
       }
     }
 
@@ -177,19 +182,22 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   }
 
   function _existContract(address _contract) private view returns (bool exist) {
-    if (_contract == address(0)) {
+    if (_isZeroAddress(_contract)) {
       return false;
     }
-    for (uint256 i; i <= contractCount; i++) {
+    for (uint256 i; i <= contractCount; ) {
       if (_contract == contracts[i]) {
         exist = true;
         break;
+      }
+      unchecked {
+        i++;
       }
     }
   }
 
   function _hasStableContract() private view {
-    require(stableContract != address(0), "Stable contract not set");
+    require(!_isZeroAddress(stableContract), "Stable contract not set");
   }
 
   function _checkParticipantCount(uint256 length) private pure {
@@ -199,7 +207,13 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   }
 
   function _checkFinalizing() private view {
-    require(_existContract(finalizingContracts[msg.sender]), "No finalizing pool for sender");
+    if (!_existContract(finalizingContracts[msg.sender])) {
+      revert NoFinalizingPoolForSender();
+    }
+  }
+
+  function _isZeroAddress(address _address) private pure returns (bool) {
+    return _address == address(0);
   }
 
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
