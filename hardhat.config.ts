@@ -25,6 +25,7 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: {
+    showTimeSpent: true,
     enabled: true,
     excludeContracts: ['TestERC20.sol', 'TestPoolFactoryV2.sol'],
   },

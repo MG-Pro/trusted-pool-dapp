@@ -20,6 +20,15 @@ export const participantSize = 25
 export const valueFee = 10
 export const approverValueFee = 5
 
+export function splitParticipants(participants: IParticipant[], size: number): IParticipant[][] {
+  const pChunks: IParticipant[][] = []
+  for (let k = 0; k < participants.length; k += size) {
+    const chunk = participants.slice(k, k + size)
+    pChunks.push(chunk)
+  }
+  return pChunks
+}
+
 export async function getTestSigners(): Promise<ITestSigners> {
   const s = (await ethers.getSigners()) as unknown as SignerWithAddress[]
   return {

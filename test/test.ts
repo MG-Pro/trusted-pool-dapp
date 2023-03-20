@@ -17,6 +17,7 @@ import {
   valueFee,
   approverValueFee,
   upgradePoolFactory,
+  splitParticipants,
 } from './test.helpers'
 import {
   ICreatePool,
@@ -114,16 +115,45 @@ describe('PoolFactory', () => {
         'WrongParticipantCount',
       )
     })
+
+    it('Should revert if participants not uniq', async () => {
+      const participantsCount = 50
+      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+        await preparePoolData(undefined, participantsCount)
+
+      const poolData2 = await preparePoolData(undefined, participantsCount)
+
+      const creatingReq = poolFactoryContract
+        .connect(poolFactoryDeployer)
+        .createPoolContract(
+          name,
+          tokenAddress,
+          tokenName,
+          [...participants, ...poolData2.participants],
+          approverAddress,
+          privatable,
+          true,
+        )
+
+      await expect(creatingReq).to.revertedWith('Participant not uniq')
+    })
   })
 
   describe('Creating pool with separated participants', () => {
     it('Should create pool with separated participants', async () => {
       const participantsCount1 = 10
       const participantsCount2 = 10
+      const fullCount = participantsCount1 + participantsCount2
+
       const { poolFactoryContract, creator2, participant1 } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
-      const pData1 = await preparePoolData(undefined, participantsCount1)
+      const pData1 = await preparePoolData(undefined, fullCount)
+
+      const pChunks: IParticipant[][] = splitParticipants(pData1.participants, participantsCount1)
 
       await poolFactoryContract
         .connect(creator2)
@@ -131,18 +161,16 @@ describe('PoolFactory', () => {
           pData1.name,
           pData1.tokenAddress,
           pData1.tokenName,
-          pData1.participants,
+          pChunks[0],
           pData1.approverAddress,
           pData1.privatable,
           false,
         )
 
-      const pData2 = await preparePoolData(undefined, participantsCount2)
-
-      await poolFactoryContract.connect(creator2).addParticipants(pData2.participants)
+      await poolFactoryContract.connect(creator2).addParticipants(pChunks[1])
       const poolAccounts: string[] = await poolFactoryContract
         .connect(creator2)
-        .getContractAddressesByParticipant(pData2.participants[7].account)
+        .getContractAddressesByParticipant(pData1.participants[7].account)
 
       const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
         'PoolTemplate',
@@ -153,7 +181,7 @@ describe('PoolFactory', () => {
         .connect(participant1)
         .getPoolData()
 
-      expect(poolResponse.participantsCount).to.equal(participantsCount1 + participantsCount2)
+      expect(poolResponse.participantsCount).to.equal(fullCount)
       expect(await poolTemplateContract.connect(participant1).finalized()).to.equal(false)
       await poolFactoryContract.connect(creator2).finalize()
       expect(await poolTemplateContract.connect(participant1).finalized()).to.equal(true)
@@ -177,10 +205,17 @@ describe('PoolFactory', () => {
     it('Should revert if creator already have finalizing pool', async () => {
       const participantsCount1 = 10
       const participantsCount2 = 10
-      const { poolFactoryContract, creatorAndParticipant1, creator2, stranger1 } =
-        await loadFixture<IDeployPoolFactory>(deployPoolFactory)
-      const pData1 = await preparePoolData(undefined, participantsCount1)
-      const pData2 = await preparePoolData(undefined, participantsCount2)
+      const fullCount = participantsCount1 + participantsCount2
+
+      const participantsCount3 = 10
+      const { poolFactoryContract, creator2 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const pData1 = await preparePoolData(undefined, fullCount)
+      const [ps1, ps2]: IParticipant[][] = splitParticipants(
+        pData1.participants,
+        participantsCount1,
+      )
 
       await poolFactoryContract
         .connect(creator2)
@@ -188,13 +223,14 @@ describe('PoolFactory', () => {
           pData1.name,
           pData1.tokenAddress,
           pData1.tokenName,
-          pData1.participants,
+          ps1,
           pData1.approverAddress,
           pData1.privatable,
           false,
         )
-      await poolFactoryContract.connect(creator2).addParticipants(pData2.participants)
+      await poolFactoryContract.connect(creator2).addParticipants(ps2)
 
+      const pData2 = await preparePoolData(undefined, participantsCount3)
       const req = poolFactoryContract
         .connect(creator2)
         .createPoolContract(
@@ -204,7 +240,7 @@ describe('PoolFactory', () => {
           pData2.participants,
           pData2.approverAddress,
           pData2.privatable,
-          false,
+          true,
         )
 
       await expect(req).to.revertedWith('Creator have finalizing pool')
@@ -213,11 +249,44 @@ describe('PoolFactory', () => {
     it('Should revert if finalization ts was not made by creator', async () => {
       const participantsCount1 = 10
       const participantsCount2 = 5
+      const fullCount = participantsCount1 + participantsCount2
       const { poolFactoryContract, creator2, stranger1 } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
-      const pData1 = await preparePoolData(undefined, participantsCount1)
-      const pData2 = await preparePoolData(undefined, participantsCount2, 'pl2')
+      const pData1 = await preparePoolData(undefined, fullCount)
+
+      const [ps1, ps2]: IParticipant[][] = splitParticipants(
+        pData1.participants,
+        participantsCount2,
+      )
+
+      await poolFactoryContract
+        .connect(creator2)
+        .createPoolContract(
+          pData1.name,
+          pData1.tokenAddress,
+          pData1.tokenName,
+          ps1,
+          pData1.approverAddress,
+          pData1.privatable,
+          false,
+        )
+      const req = poolFactoryContract.connect(stranger1).addParticipants(ps2)
+      const req2 = poolFactoryContract.connect(stranger1).finalize()
+
+      await expect(req).to.revertedWith('No finalizing pool for sender')
+      await expect(req2).to.revertedWith('No finalizing pool for sender')
+    })
+
+    it('Should revert if separated participants not uniq', async () => {
+      const participantsCount1 = 10
+      const participantsCount2 = 5
+      const fullCount = participantsCount1 + participantsCount2
+      const { poolFactoryContract, creator2 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const pData1 = await preparePoolData(undefined, fullCount)
+      const pData2 = await preparePoolData(undefined, fullCount)
 
       await poolFactoryContract
         .connect(creator2)
@@ -230,11 +299,9 @@ describe('PoolFactory', () => {
           pData1.privatable,
           false,
         )
-      const req = poolFactoryContract.connect(stranger1).addParticipants(pData2.participants)
-      const req2 = poolFactoryContract.connect(stranger1).finalize()
+      const req = poolFactoryContract.connect(creator2).addParticipants(pData2.participants)
 
-      await expect(req).to.revertedWith('No finalizing pool for sender')
-      await expect(req2).to.revertedWith('No finalizing pool for sender')
+      await expect(req).to.revertedWith('Participant not uniq')
     })
   })
 
@@ -511,7 +578,7 @@ describe('PoolFactory', () => {
   })
 })
 
-xdescribe('PoolTemplate', () => {
+describe('PoolTemplate', () => {
   describe('Getting pools data', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100
@@ -860,11 +927,7 @@ xdescribe('Performance', () => {
       .map((_, j) => j)) {
       const pData1 = await preparePoolData(undefined, fullCount, 'pl1' + i)
 
-      const pChunks: IParticipant[][] = []
-      for (let k = 0; k < pData1.participants.length; k += participantsCount3) {
-        const chunk = pData1.participants.slice(k, k + participantsCount3)
-        pChunks.push(chunk)
-      }
+      const pChunks: IParticipant[][] = splitParticipants(pData1.participants, participantsCount3)
 
       await poolFactoryContract
         .connect(creatorAndParticipant1)
