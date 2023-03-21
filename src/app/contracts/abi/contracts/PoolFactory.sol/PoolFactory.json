@@ -108,31 +108,14 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "account",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "share",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "claimed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accrued",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct PoolTemplate.Participant[]",
+        "internalType": "address[]",
         "name": "_participants",
-        "type": "tuple[]"
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_shares",
+        "type": "uint256[]"
       }
     ],
     "name": "addParticipants",
@@ -184,31 +167,14 @@
         "type": "bytes32"
       },
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "account",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "share",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "claimed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accrued",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct PoolTemplate.Participant[]",
+        "internalType": "address[]",
         "name": "_participants",
-        "type": "tuple[]"
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_shares",
+        "type": "uint256[]"
       },
       {
         "internalType": "address",
@@ -250,7 +216,7 @@
     "outputs": [
       {
         "internalType": "address[]",
-        "name": "",
+        "name": "filteredList",
         "type": "address[]"
       }
     ],

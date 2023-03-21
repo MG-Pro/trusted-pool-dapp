@@ -29,6 +29,17 @@ export interface IPool {
   status: PoolStatuses
 }
 
+export interface ICreatePoolRequest {
+  name: string
+  tokenAddress?: string
+  tokenName: string
+  participants: string[]
+  shares: number[]
+  approverAddress: string
+  privatable: boolean
+  finalized: boolean
+}
+
 export interface IPoolResponse {
   name: BytesLike
   tokenAddress: string

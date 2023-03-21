@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract PoolTemplate is Initializable {
-  struct Participant {
+  struct ParticipantView {
     address account;
     uint256 share;
     uint256 claimed;
@@ -96,23 +96,30 @@ contract PoolTemplate is Initializable {
   }
 
   function addParticipants(
-    Participant[] calldata _participants
+    address[] calldata _participants,
+    uint256[] calldata _shares
   ) external onlyFactory onlyNoFinalized {
     uint256 sum;
-    for (uint256 i; i < _participants.length; ) {
-      Participant memory item = _participants[i];
-      require(item.share > 0, "Share value must be greater 0");
-      require(participants[item.account] == 0, "Participant not uniq");
-      participants[item.account] = item.share;
-      participantsMapper[poolParticipantsCount] = item.account;
+    uint length = _participants.length;
+    require(length == _shares.length, "Arguments is not matched");
+    uint tempPoolParticipantsCount = poolParticipantsCount;
+    for (uint256 i; i < length; ) {
+      address p = _participants[i];
+      uint s = _shares[i];
+
+      require(s > 0, "Share value must be greater 0");
+      require(participants[p] == 0, "Participant not uniq");
+      participants[p] = s;
+      participantsMapper[tempPoolParticipantsCount] = p;
 
       unchecked {
-        i++;
-        poolParticipantsCount++;
-        sum += item.share;
+        tempPoolParticipantsCount++;
+        sum += s;
+        ++i;
       }
     }
     poolTokenAmount = sum;
+    poolParticipantsCount = tempPoolParticipantsCount;
   }
 
   function getPoolData()
@@ -181,9 +188,9 @@ contract PoolTemplate is Initializable {
     return (poolApproved, poolApprover, poolAdmin);
   }
 
-  function getParticipant() external view onlyParticipant returns (Participant memory) {
+  function getParticipant() external view onlyParticipant returns (ParticipantView memory) {
     return
-      Participant(
+      ParticipantView(
         msg.sender,
         participants[msg.sender],
         participantsClaims[msg.sender],
@@ -198,9 +205,9 @@ contract PoolTemplate is Initializable {
   function getParticipants(
     uint256 first,
     uint256 size
-  ) external view onlyParticipant returns (Participant[] memory) {
+  ) external view onlyParticipant returns (ParticipantView[] memory pList) {
     if (poolParticipantsCount == 0) {
-      return new Participant[](0);
+      return new ParticipantView[](0);
     }
     require(!poolPrivatable, "Forbidden for private pool");
     require(poolParticipantsCount > first, "Start index greater than count of participants");
@@ -208,11 +215,11 @@ contract PoolTemplate is Initializable {
     if (size > poolParticipantsCount - first) {
       size = poolParticipantsCount - first;
     }
-    Participant[] memory pList = new Participant[](size);
+    pList = new ParticipantView[](size);
 
     uint256 counter;
     for (uint256 i = first; i < first + size; ) {
-      pList[counter] = Participant(
+      pList[counter] = ParticipantView(
         participantsMapper[i],
         participants[participantsMapper[i]],
         participantsClaims[participantsMapper[i]],
@@ -223,8 +230,6 @@ contract PoolTemplate is Initializable {
         counter++;
       }
     }
-
-    return pList;
   }
 
   function _setTokenAddress(address _tokenAddress) private {

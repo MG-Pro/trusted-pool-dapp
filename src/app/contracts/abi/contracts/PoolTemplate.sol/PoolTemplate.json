@@ -35,31 +35,14 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "account",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "share",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "claimed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accrued",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct PoolTemplate.Participant[]",
+        "internalType": "address[]",
         "name": "_participants",
-        "type": "tuple[]"
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_shares",
+        "type": "uint256[]"
       }
     ],
     "name": "addParticipants",
@@ -170,7 +153,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct PoolTemplate.Participant",
+        "internalType": "struct PoolTemplate.ParticipantView",
         "name": "",
         "type": "tuple"
       }
@@ -216,8 +199,8 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct PoolTemplate.Participant[]",
-        "name": "",
+        "internalType": "struct PoolTemplate.ParticipantView[]",
+        "name": "pList",
         "type": "tuple[]"
       }
     ],

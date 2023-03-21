@@ -1,5 +1,5 @@
 import { PoolFactory, PoolTemplate, TestERC20 } from '@app/typechain'
-import { IParticipant, IParticipantResponse, IPool, IPoolResponse } from '@app/types'
+import { ICreatePoolRequest, IParticipantResponse, IPoolResponse } from '@app/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
 import { Contract } from 'ethers'
 import { ethers, upgrades } from 'hardhat'
@@ -20,8 +20,8 @@ export const participantSize = 25
 export const valueFee = 10
 export const approverValueFee = 5
 
-export function splitParticipants(participants: IParticipant[], size: number): IParticipant[][] {
-  const pChunks: IParticipant[][] = []
+export function splitParticipants<T = unknown>(participants: T[], size: number): T[][] {
+  const pChunks: T[][] = []
   for (let k = 0; k < participants.length; k += size) {
     const chunk = participants.slice(k, k + size)
     pChunks.push(chunk)
@@ -107,34 +107,33 @@ export async function preparePoolData(
   nonce: string = '',
   approverAddress: string = ethers.constants.AddressZero,
   privatable: boolean = false,
-): Promise<Partial<IPool>> {
+): Promise<Partial<ICreatePoolRequest>> {
   const { participant1, participant2, participant3, creatorAndParticipant1 }: ITestSigners =
     await getTestSigners()
   const accounts = [creatorAndParticipant1, participant1, participant2, participant3]
 
-  const participants: IParticipant[] = Array(participantsCount)
+  const participants: [string[], number[]] = Array(participantsCount)
     .fill(null)
-    .map((_, i) => {
-      const account = i > 3 ? ethers.Wallet.createRandom().address : accounts[i].address
-
-      return {
-        account,
-        share: 50_000 + i * 5_000,
-        claimed: 0,
-        accrued: 0,
-      }
-    })
+    .reduce(
+      (acc: [string[], number[]], _, i) => {
+        acc[0].push(i > 3 ? ethers.Wallet.createRandom().address : accounts[i].address)
+        acc[1].push(50_000 + i * 5_000)
+        return acc
+      },
+      [[], []],
+    )
 
   return {
     name: ethers.utils.formatBytes32String('VC' + nonce),
     tokenName: ethers.utils.formatBytes32String('BTC' + nonce),
     tokenAddress,
-    participants,
+    participants: participants[0],
+    shares: participants[1],
     approverAddress,
     privatable,
-    tokenAmount: participants.reduce((acc, p) => acc + p.share, 0),
   }
 }
+
 export async function createPoolContract(
   participantsCount: number,
   privatableArg: boolean = false,
@@ -158,8 +157,13 @@ export async function createPoolContract(
     await deployedHook(poolFactoryContract, poolFactoryDeployer, creatorAndParticipant1)
   }
 
-  const { name, tokenName, participants, tokenAddress, tokenAmount, privatable } =
-    await preparePoolData(undefined, participantsCount, '', approver1.address, privatableArg)
+  const { name, tokenName, participants, shares, tokenAddress, privatable } = await preparePoolData(
+    undefined,
+    participantsCount,
+    '',
+    approver1.address,
+    privatableArg,
+  )
 
   const approverAddress = approvable ? approver1.address : ethers.constants.AddressZero
 
@@ -170,13 +174,14 @@ export async function createPoolContract(
       tokenAddress,
       tokenName,
       participants,
+      shares,
       approverAddress,
       privatable,
       true,
     )
 
   const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-    participants[0].account,
+    participants[0],
   )
 
   const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
@@ -187,8 +192,8 @@ export async function createPoolContract(
   return {
     poolTemplateContract,
     poolFactoryContract,
-    tokenAmount,
     participants,
+    shares,
     poolFactoryDeployer,
     approver1,
     participant1,
@@ -196,6 +201,10 @@ export async function createPoolContract(
     privatable,
     creatorAndParticipant1,
     poolAccounts,
+    tokenAmount: shares.reduce((acc, item) => {
+      acc += item
+      return acc
+    }, 0),
   }
 }
 

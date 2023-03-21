@@ -1,5 +1,5 @@
 import type { PoolFactory, PoolTemplate } from '@app/typechain'
-import type { IParticipant, IParticipantResponse, IPoolResponse } from '@app/types'
+import type { IParticipantResponse, IPoolResponse } from '@app/types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import type { ContractTransaction } from 'ethers'
@@ -46,7 +46,7 @@ describe('PoolFactory', () => {
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       const creatingReq = poolFactoryContract
@@ -56,6 +56,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           participants,
+          shares,
           approverAddress,
           privatable,
           true,
@@ -69,7 +70,7 @@ describe('PoolFactory', () => {
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       const creatingReq = poolFactoryContract
@@ -79,6 +80,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           participants,
+          shares,
           approverAddress,
           privatable,
           true,
@@ -95,7 +97,7 @@ describe('PoolFactory', () => {
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       const creatingReq = poolFactoryContract
@@ -105,6 +107,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           participants,
+          shares,
           approverAddress,
           privatable,
           true,
@@ -121,7 +124,7 @@ describe('PoolFactory', () => {
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       const poolData2 = await preparePoolData(undefined, participantsCount)
@@ -133,6 +136,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           [...participants, ...poolData2.participants],
+          [...shares, ...poolData2.shares],
           approverAddress,
           privatable,
           true,
@@ -153,7 +157,8 @@ describe('PoolFactory', () => {
       )
       const pData1 = await preparePoolData(undefined, fullCount)
 
-      const pChunks: IParticipant[][] = splitParticipants(pData1.participants, participantsCount1)
+      const pChunks: string[][] = splitParticipants(pData1.participants, participantsCount1)
+      const sChunks: number[][] = splitParticipants(pData1.shares, participantsCount1)
 
       await poolFactoryContract
         .connect(creator2)
@@ -162,15 +167,16 @@ describe('PoolFactory', () => {
           pData1.tokenAddress,
           pData1.tokenName,
           pChunks[0],
+          sChunks[0],
           pData1.approverAddress,
           pData1.privatable,
           false,
         )
 
-      await poolFactoryContract.connect(creator2).addParticipants(pChunks[1])
+      await poolFactoryContract.connect(creator2).addParticipants(pChunks[1], sChunks[1])
       const poolAccounts: string[] = await poolFactoryContract
         .connect(creator2)
-        .getContractAddressesByParticipant(pData1.participants[7].account)
+        .getContractAddressesByParticipant(pData1.participants[7])
 
       const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
         'PoolTemplate',
@@ -196,9 +202,11 @@ describe('PoolFactory', () => {
 
       expect(await poolTemplateContract.finalized()).to.equal(true)
 
-      const { participants } = await preparePoolData(undefined, participantsCount)
+      const { participants, shares } = await preparePoolData(undefined, participantsCount)
 
-      const req1 = poolFactoryContract.connect(creatorAndParticipant1).addParticipants(participants)
+      const req1 = poolFactoryContract
+        .connect(creatorAndParticipant1)
+        .addParticipants(participants, shares)
       await expect(req1).to.revertedWithCustomError(
         poolFactoryContract,
         'NoFinalizingPoolForSender',
@@ -215,10 +223,9 @@ describe('PoolFactory', () => {
         deployPoolFactory,
       )
       const pData1 = await preparePoolData(undefined, fullCount)
-      const [ps1, ps2]: IParticipant[][] = splitParticipants(
-        pData1.participants,
-        participantsCount1,
-      )
+      const [ps1, ps2]: string[][] = splitParticipants(pData1.participants, participantsCount1)
+
+      const [ss1, ss2]: number[][] = splitParticipants(pData1.shares, participantsCount1)
 
       await poolFactoryContract
         .connect(creator2)
@@ -227,11 +234,12 @@ describe('PoolFactory', () => {
           pData1.tokenAddress,
           pData1.tokenName,
           ps1,
+          ss1,
           pData1.approverAddress,
           pData1.privatable,
           false,
         )
-      await poolFactoryContract.connect(creator2).addParticipants(ps2)
+      await poolFactoryContract.connect(creator2).addParticipants(ps2, ss2)
 
       const pData2 = await preparePoolData(undefined, participantsCount3)
       const req = poolFactoryContract
@@ -241,6 +249,7 @@ describe('PoolFactory', () => {
           pData2.tokenAddress,
           pData2.tokenName,
           pData2.participants,
+          pData2.shares,
           pData2.approverAddress,
           pData2.privatable,
           true,
@@ -258,11 +267,9 @@ describe('PoolFactory', () => {
       )
       const pData1 = await preparePoolData(undefined, fullCount)
 
-      const [ps1, ps2]: IParticipant[][] = splitParticipants(
-        pData1.participants,
-        participantsCount2,
-      )
+      const [ps1, ps2]: string[][] = splitParticipants(pData1.participants, participantsCount2)
 
+      const [ss1, ss2]: number[][] = splitParticipants(pData1.shares, participantsCount2)
       await poolFactoryContract
         .connect(creator2)
         .createPoolContract(
@@ -270,11 +277,12 @@ describe('PoolFactory', () => {
           pData1.tokenAddress,
           pData1.tokenName,
           ps1,
+          ss1,
           pData1.approverAddress,
           pData1.privatable,
           false,
         )
-      const req = poolFactoryContract.connect(stranger1).addParticipants(ps2)
+      const req = poolFactoryContract.connect(stranger1).addParticipants(ps2, ss2)
       const req2 = poolFactoryContract.connect(stranger1).finalize()
 
       await expect(req).to.revertedWithCustomError(poolFactoryContract, 'NoFinalizingPoolForSender')
@@ -301,11 +309,14 @@ describe('PoolFactory', () => {
           pData1.tokenAddress,
           pData1.tokenName,
           pData1.participants,
+          pData1.shares,
           pData1.approverAddress,
           pData1.privatable,
           false,
         )
-      const req = poolFactoryContract.connect(creator2).addParticipants(pData2.participants)
+      const req = poolFactoryContract
+        .connect(creator2)
+        .addParticipants(pData2.participants, pData2.shares)
 
       await expect(req).to.revertedWith('Participant not uniq')
     })
@@ -342,7 +353,7 @@ describe('PoolFactory', () => {
       await poolFactoryContract.connect(poolFactoryDeployer).setStableContract(USDTContract.address)
       await poolFactoryContract.connect(poolFactoryDeployer).setFeeValue(valueFee)
 
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       const trReq = poolFactoryContract
@@ -352,6 +363,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           participants,
+          shares,
           approverAddress,
           privatable,
           true,
@@ -371,7 +383,7 @@ describe('PoolFactory', () => {
       await poolFactoryContract.connect(poolFactoryDeployer).setStableContract(USDTContract.address)
       await poolFactoryContract.connect(poolFactoryDeployer).setFeeValue(valueFee)
 
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       const trReq = poolFactoryContract
@@ -381,6 +393,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           participants,
+          shares,
           approverAddress,
           privatable,
           true,
@@ -401,7 +414,7 @@ describe('PoolFactory', () => {
       await poolFactoryContract.connect(poolFactoryDeployer).setStableContract(USDTContract.address)
       await poolFactoryContract.connect(poolFactoryDeployer).setFeeValue(valueFee)
 
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       await poolFactoryContract
@@ -411,6 +424,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           participants,
+          shares,
           approverAddress,
           privatable,
           true,
@@ -430,7 +444,7 @@ describe('PoolFactory', () => {
       await poolFactoryContract.connect(poolFactoryDeployer).setStableContract(USDTContract.address)
       await poolFactoryContract.connect(poolFactoryDeployer).setFeeValue(valueFee)
 
-      const { name, tokenName, participants, tokenAddress, approverAddress, privatable } =
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
       await poolFactoryContract
@@ -440,6 +454,7 @@ describe('PoolFactory', () => {
           tokenAddress,
           tokenName,
           participants,
+          shares,
           approverAddress,
           privatable,
           true,
@@ -610,22 +625,20 @@ describe('PoolTemplate', () => {
       // 0-25
       participants
         .slice(participantFirst, participantFirst + participantSize)
-        .forEach((p: IParticipant, i: number) => {
-          expect(p.account.toLowerCase()).to.equal(response0_25[i]?.account.toLowerCase())
+        .forEach((p: string, i: number) => {
+          expect(p.toLowerCase()).to.equal(response0_25[i]?.account.toLowerCase())
         })
       expect(response0_25.length).to.equal(participantSize)
 
       // 25-25
-      participants
-        .slice(first25, first25 + participantSize)
-        .forEach((p: IParticipant, i: number) => {
-          expect(p.account.toLowerCase()).to.equal(response25_25[i]?.account.toLowerCase())
-        })
+      participants.slice(first25, first25 + participantSize).forEach((p: string, i: number) => {
+        expect(p.toLowerCase()).to.equal(response25_25[i]?.account.toLowerCase())
+      })
       expect(response25_25.length).to.equal(participantSize)
 
       // 99-25
-      participants.slice(first99, first99 + size50).forEach((p: IParticipant, i: number) => {
-        expect(p.account.toLowerCase()).to.equal(response99_50[i]?.account.toLowerCase())
+      participants.slice(first99, first99 + size50).forEach((p: string, i: number) => {
+        expect(p.toLowerCase()).to.equal(response99_50[i]?.account.toLowerCase())
       })
       expect(response99_50.length).to.equal(1)
     })
@@ -697,7 +710,7 @@ describe('PoolTemplate', () => {
       const mintAmount = 25_000
       const participantsCount = 5
 
-      const { poolTemplateContract, creatorAndParticipant1, tokenAmount, participants } =
+      const { poolTemplateContract, creatorAndParticipant1, tokenAmount, shares } =
         await loadFixture<ICreatePoolTemplateContract>(
           createPoolContract.bind(this, participantsCount),
         )
@@ -714,8 +727,8 @@ describe('PoolTemplate', () => {
         .connect(creatorAndParticipant1)
         .getParticipants(participantFirst, participantSize)
 
-      participants.forEach((p, i) => {
-        const accrued = Math.floor((mintAmount * p.share) / tokenAmount)
+      shares.forEach((share, i) => {
+        const accrued = Math.floor((mintAmount * share) / tokenAmount)
         const cP: IParticipantResponse = res[i]
         expect(cP.accrued).to.equal(accrued)
       })
@@ -726,7 +739,7 @@ describe('PoolTemplate', () => {
       const participantsCount = 5
       let minted = 0
 
-      const { poolTemplateContract, creatorAndParticipant1, tokenAmount, participants } =
+      const { poolTemplateContract, creatorAndParticipant1, tokenAmount, participants, shares } =
         await loadFixture<ICreatePoolTemplateContract>(
           createPoolContract.bind(this, participantsCount),
         )
@@ -738,12 +751,12 @@ describe('PoolTemplate', () => {
         .connect(creatorAndParticipant1)
         .setTokenAddress(testERC20CContract.address)
 
-      const participant = participants.find(
-        ({ account }) => account.toLowerCase() === creatorAndParticipant1.address.toLowerCase(),
+      const participantIdx: number = participants.findIndex(
+        (account) => account.toLowerCase() === creatorAndParticipant1.address.toLowerCase(),
       )
 
       await poolTemplateContract.connect(creatorAndParticipant1).claimTokens()
-      const accrued1 = Math.floor((minted * participant.share) / tokenAmount)
+      const accrued1 = Math.floor((minted * shares[participantIdx]) / tokenAmount)
       expect(await testERC20CContract.balanceOf(creatorAndParticipant1.address)).to.equal(accrued1)
       expect(
         (await poolTemplateContract.connect(creatorAndParticipant1).getPoolData()).filledAmount,
@@ -755,7 +768,7 @@ describe('PoolTemplate', () => {
       minted += mintAmount
 
       await poolTemplateContract.connect(creatorAndParticipant1).claimTokens()
-      const accrued2 = Math.floor((minted * participant.share) / tokenAmount)
+      const accrued2 = Math.floor((minted * shares[participantIdx]) / tokenAmount)
       expect(await testERC20CContract.balanceOf(creatorAndParticipant1.address)).to.equal(accrued2)
       expect(
         (await poolTemplateContract.connect(creatorAndParticipant1).getPoolData()).filledAmount,
@@ -849,7 +862,7 @@ describe('PoolTemplate', () => {
   })
 })
 
-xdescribe('Performance', () => {
+describe('Performance', () => {
   xit('Should create pool with 100 participants and get data', async () => {
     const participantsCount = 100
     const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
@@ -861,23 +874,20 @@ xdescribe('Performance', () => {
     expect(participantResponse.length).to.equal(participantSize)
   })
 
-  xit('Should create 10 pools with 300 participants', async () => {
+  it('Should create 10 pools with 300 participants', async () => {
     const participantsCount = 300
     const poolCount = 10
 
     const { poolFactoryContract, participant1 } = await loadFixture<IDeployPoolFactory>(
       deployPoolFactory,
     )
-    const {
-      name,
-      tokenName,
-      participants,
-      tokenAddress,
-      approverAddress,
-      privatable,
-      tokenAmount,
-    } = await preparePoolData(undefined, participantsCount)
+    const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
+      await preparePoolData(undefined, participantsCount)
     const accs = await ethers.getSigners()
+    const tokenAmount = shares.reduce((acc, item) => {
+      acc += item
+      return acc
+    }, 0)
 
     const creatingReqs: Promise<ContractTransaction>[] = Array(poolCount)
       .fill(null)
@@ -890,6 +900,7 @@ xdescribe('Performance', () => {
             tokenAddress,
             tokenName,
             participants,
+            shares,
             approverAddress,
             privatable,
             true,
@@ -898,7 +909,7 @@ xdescribe('Performance', () => {
     await Promise.all(creatingReqs)
 
     const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
-      participants[0].account,
+      participants[0],
     )
 
     const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
@@ -917,7 +928,7 @@ xdescribe('Performance', () => {
     expect(poolResponse.tokenAmount).to.equal(tokenAmount)
   })
 
-  it('Should create 5 pool with separated participants 3*300', async () => {
+  xit('Should create 5 pool with separated participants 3*300', async () => {
     const participantsCount1 = 300
     const participantsCount2 = 300
     const participantsCount3 = 300
@@ -933,7 +944,9 @@ xdescribe('Performance', () => {
       .map((_, j) => j)) {
       const pData1 = await preparePoolData(undefined, fullCount, 'pl1' + i)
 
-      const pChunks: IParticipant[][] = splitParticipants(pData1.participants, participantsCount3)
+      const pChunks: string[][] = splitParticipants(pData1.participants, participantsCount3)
+
+      const sChunks: number[][] = splitParticipants(pData1.shares, participantsCount3)
 
       await poolFactoryContract
         .connect(creatorAndParticipant1)
@@ -942,18 +955,23 @@ xdescribe('Performance', () => {
           pData1.tokenAddress,
           pData1.tokenName,
           pChunks[0],
+          sChunks[0],
           pData1.approverAddress,
           pData1.privatable,
           false,
         )
 
-      await poolFactoryContract.connect(creatorAndParticipant1).addParticipants(pChunks[1])
-      await poolFactoryContract.connect(creatorAndParticipant1).addParticipants(pChunks[2])
+      await poolFactoryContract
+        .connect(creatorAndParticipant1)
+        .addParticipants(pChunks[1], sChunks[1])
+      await poolFactoryContract
+        .connect(creatorAndParticipant1)
+        .addParticipants(pChunks[2], sChunks[2])
       await poolFactoryContract.connect(creatorAndParticipant1).finalize()
 
       const poolAccounts: string[] = await poolFactoryContract
         .connect(creatorAndParticipant1)
-        .getContractAddressesByParticipant(pChunks[1][7].account)
+        .getContractAddressesByParticipant(pChunks[1][7])
 
       const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
         'PoolTemplate',

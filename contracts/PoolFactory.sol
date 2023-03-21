@@ -58,7 +58,8 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     bytes32 _name,
     address _tokenAddress,
     bytes32 _tokenName,
-    PoolTemplate.Participant[] calldata _participants,
+    address[] calldata _participants,
+    uint256[] calldata _shares,
     address _approver,
     bool _privatable,
     bool _finalized
@@ -78,7 +79,7 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     address contractAddress = Clones.clone(templateImplementation);
     PoolTemplate pool = PoolTemplate(contractAddress);
     pool.init(msg.sender, _name, _tokenAddress, _tokenName, _approver, _privatable);
-    pool.addParticipants(_participants);
+    pool.addParticipants(_participants, _shares);
     contracts[contractCount] = contractAddress;
 
     if (_finalized) {
@@ -89,14 +90,15 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     emit PoolCreated(contractAddress, contractCount);
     unchecked {
-      contractCount++;
+      ++contractCount;
     }
   }
 
   function addParticipants(
-    PoolTemplate.Participant[] calldata _participants
+    address[] calldata _participants,
+    uint256[] calldata _shares
   ) external checkParticipantCount(_participants.length) checkFinalizing {
-    PoolTemplate(finalizingContracts[msg.sender]).addParticipants(_participants);
+    PoolTemplate(finalizingContracts[msg.sender]).addParticipants(_participants, _shares);
   }
 
   function finalize() external checkFinalizing {
@@ -133,10 +135,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
   function getContractAddressesByParticipant(
     address _address
-  ) external view returns (address[] memory) {
-    (, uint256 count) = _requestContracts(_address, contractCount);
-    (address[] memory list, ) = _requestContracts(_address, count);
-    return list;
+  ) external view returns (address[] memory filteredList) {
+    address[] memory list = _requestContracts(_address, contractCount);
+    filteredList = _requestContracts(_address, list.length);
   }
 
   function withdraw() external onlyOwner hasStableContract {
@@ -148,9 +149,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   function _requestContracts(
     address _address,
     uint256 _len
-  ) private view returns (address[] memory, uint256 count) {
+  ) private view returns (address[] memory list) {
     uint256 counter;
-    address[] memory list = new address[](_len);
+    list = new address[](_len);
     for (uint256 i; i < contractCount; ) {
       bool exist;
       try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
@@ -168,8 +169,6 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         i++;
       }
     }
-
-    return (list, counter);
   }
 
   function _spendFee(uint256 _fee) private hasStableContract {
