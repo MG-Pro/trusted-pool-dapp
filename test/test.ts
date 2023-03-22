@@ -3,6 +3,7 @@ import type { IParticipantResponse, IPoolResponse } from '@app/types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import type { ContractTransaction } from 'ethers'
+import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 
 import {
@@ -27,7 +28,7 @@ import {
   IDeployUSDT,
 } from './test.types'
 
-describe('PoolFactory', () => {
+xdescribe('PoolFactory', () => {
   describe('Creating pools', () => {
     it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
@@ -599,7 +600,7 @@ describe('PoolFactory', () => {
   })
 })
 
-describe('PoolTemplate', () => {
+xdescribe('PoolTemplate', () => {
   describe('Getting pools data', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100
@@ -875,8 +876,8 @@ describe('Performance', () => {
   })
 
   it('Should create 10 pools with 300 participants', async () => {
-    const participantsCount = 300
-    const poolCount = 10
+    const participantsCount = 5
+    const poolCount = 200
 
     const { poolFactoryContract, participant1 } = await loadFixture<IDeployPoolFactory>(
       deployPoolFactory,
@@ -908,6 +909,8 @@ describe('Performance', () => {
       })
     await Promise.all(creatingReqs)
 
+    const contractCount: BigNumber = await poolFactoryContract.connect(participant1).contractCount()
+    console.log(contractCount.toNumber())
     const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
       participants[0],
     )

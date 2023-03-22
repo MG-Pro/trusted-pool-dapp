@@ -146,23 +146,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
   function getContractAddressesByParticipant(
     address _address
-  ) external view returns (address[] memory filteredList) {
-    address[] memory list = _requestContracts(_address, contractCount);
-    filteredList = _requestContracts(_address, list.length);
-  }
-
-  function withdraw() external onlyOwner hasStableContract {
-    require(withdrawableBalance > 0, "Nothing to withdraw");
-    bool success = IERC20(stableContract).transfer(owner(), withdrawableBalance);
-    require(success, "Withdraw failed");
-  }
-
-  function _requestContracts(
-    address _address,
-    uint256 _len
-  ) private view returns (address[] memory list) {
+  ) external view returns (address[] memory list) {
     uint256 counter;
-    list = new address[](_len);
+    list = new address[](0);
     for (uint256 i; i < contractCount; ) {
       bool exist;
       try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
@@ -172,7 +158,19 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
       }
 
       if (exist) {
-        list[counter] = contracts[i];
+        address[] memory tempList = new address[](list.length + 1);
+
+        for (uint t; t < list.length; t++) {
+          tempList[t] = list[t];
+        }
+
+        tempList[counter] = contracts[i];
+        list = new address[](tempList.length);
+
+        for (uint t; t < tempList.length; t++) {
+          list[t] = tempList[t];
+        }
+
         counter++;
       }
 
@@ -180,6 +178,12 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         i++;
       }
     }
+  }
+
+  function withdraw() external onlyOwner hasStableContract {
+    require(withdrawableBalance > 0, "Nothing to withdraw");
+    bool success = IERC20(stableContract).transfer(owner(), withdrawableBalance);
+    require(success, "Withdraw failed");
   }
 
   function _spendFee(uint256 _fee) private hasStableContract {
