@@ -167,18 +167,18 @@ export async function createPoolContract(
 
   const approverAddress = approvable ? approver1.address : ethers.constants.AddressZero
 
-  await poolFactoryContract
-    .connect(creatorAndParticipant1)
-    .createPoolContract(
+  await poolFactoryContract.connect(creatorAndParticipant1).createPoolContract(
+    {
       name,
       tokenAddress,
       tokenName,
-      participants,
-      shares,
-      approverAddress,
+      approver: approverAddress,
       privatable,
-      true,
-    )
+      finalized: true,
+    },
+    participants,
+    shares,
+  )
 
   const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
     participants[0],

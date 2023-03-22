@@ -9,6 +9,15 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./PoolTemplate.sol";
 
+struct PoolData {
+  bytes32 name;
+  bytes32 tokenName;
+  address tokenAddress;
+  address approver;
+  bool privatable;
+  bool finalized;
+}
+
 contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
 
@@ -55,20 +64,15 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
   }
 
   function createPoolContract(
-    bytes32 _name,
-    address _tokenAddress,
-    bytes32 _tokenName,
+    PoolData calldata data,
     address[] calldata _participants,
-    uint256[] calldata _shares,
-    address _approver,
-    bool _privatable,
-    bool _finalized
+    uint256[] calldata _shares
   ) external checkParticipantCount(_participants.length) {
     require(_isZeroAddress(finalizingContracts[msg.sender]), "Creator have finalizing pool");
     uint256 poolFee = stableFeeValue;
     withdrawableBalance += poolFee;
 
-    if (!_isZeroAddress(_approver)) {
+    if (!_isZeroAddress(data.approver)) {
       poolFee += stableApproverFeeValue;
     }
 
@@ -78,11 +82,18 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     address contractAddress = Clones.clone(templateImplementation);
     PoolTemplate pool = PoolTemplate(contractAddress);
-    pool.init(msg.sender, _name, _tokenAddress, _tokenName, _approver, _privatable);
+    pool.init(
+      msg.sender,
+      data.name,
+      data.tokenAddress,
+      data.tokenName,
+      data.approver,
+      data.privatable
+    );
     pool.addParticipants(_participants, _shares);
     contracts[contractCount] = contractAddress;
 
-    if (_finalized) {
+    if (data.finalized) {
       pool.finalize();
     } else {
       finalizingContracts[msg.sender] = contractAddress;
@@ -90,7 +101,7 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     emit PoolCreated(contractAddress, contractCount);
     unchecked {
-      contractCount++;
+      ++contractCount;
     }
   }
 

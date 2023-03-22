@@ -152,19 +152,41 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_name",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_tokenName",
-        "type": "bytes32"
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "name",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "tokenName",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "approver",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "privatable",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "finalized",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct PoolData",
+        "name": "data",
+        "type": "tuple"
       },
       {
         "internalType": "address[]",
@@ -175,21 +197,6 @@
         "internalType": "uint256[]",
         "name": "_shares",
         "type": "uint256[]"
-      },
-      {
-        "internalType": "address",
-        "name": "_approver",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_privatable",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "_finalized",
-        "type": "bool"
       }
     ],
     "name": "createPoolContract",

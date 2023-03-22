@@ -49,18 +49,18 @@ describe('PoolFactory', () => {
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      const creatingReq = poolFactoryContract
-        .connect(poolFactoryDeployer)
-        .createPoolContract(
+      const creatingReq = poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          participants,
-          shares,
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        participants,
+        shares,
+      )
 
       await expect(creatingReq).to.emit(poolFactoryContract, 'PoolCreated')
     })
@@ -73,18 +73,18 @@ describe('PoolFactory', () => {
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      const creatingReq = poolFactoryContract
-        .connect(poolFactoryDeployer)
-        .createPoolContract(
+      const creatingReq = poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          participants,
-          shares,
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        participants,
+        shares,
+      )
 
       await expect(creatingReq).to.revertedWithCustomError(
         poolFactoryContract,
@@ -100,18 +100,18 @@ describe('PoolFactory', () => {
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      const creatingReq = poolFactoryContract
-        .connect(poolFactoryDeployer)
-        .createPoolContract(
+      const creatingReq = poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          participants,
-          shares,
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        participants,
+        shares,
+      )
 
       await expect(creatingReq).to.revertedWithCustomError(
         poolFactoryContract,
@@ -129,18 +129,18 @@ describe('PoolFactory', () => {
 
       const poolData2 = await preparePoolData(undefined, participantsCount)
 
-      const creatingReq = poolFactoryContract
-        .connect(poolFactoryDeployer)
-        .createPoolContract(
+      const creatingReq = poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          [...participants, ...poolData2.participants],
-          [...shares, ...poolData2.shares],
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        [...participants, ...poolData2.participants],
+        [...shares, ...poolData2.shares],
+      )
 
       await expect(creatingReq).to.revertedWith('Participant not uniq')
     })
@@ -160,18 +160,18 @@ describe('PoolFactory', () => {
       const pChunks: string[][] = splitParticipants(pData1.participants, participantsCount1)
       const sChunks: number[][] = splitParticipants(pData1.shares, participantsCount1)
 
-      await poolFactoryContract
-        .connect(creator2)
-        .createPoolContract(
-          pData1.name,
-          pData1.tokenAddress,
-          pData1.tokenName,
-          pChunks[0],
-          sChunks[0],
-          pData1.approverAddress,
-          pData1.privatable,
-          false,
-        )
+      await poolFactoryContract.connect(creator2).createPoolContract(
+        {
+          name: pData1.name,
+          tokenAddress: pData1.tokenAddress,
+          tokenName: pData1.tokenName,
+          approver: pData1.approverAddress,
+          privatable: pData1.privatable,
+          finalized: false,
+        },
+        pChunks[0],
+        sChunks[0],
+      )
 
       await poolFactoryContract.connect(creator2).addParticipants(pChunks[1], sChunks[1])
       const poolAccounts: string[] = await poolFactoryContract
@@ -227,33 +227,33 @@ describe('PoolFactory', () => {
 
       const [ss1, ss2]: number[][] = splitParticipants(pData1.shares, participantsCount1)
 
-      await poolFactoryContract
-        .connect(creator2)
-        .createPoolContract(
-          pData1.name,
-          pData1.tokenAddress,
-          pData1.tokenName,
-          ps1,
-          ss1,
-          pData1.approverAddress,
-          pData1.privatable,
-          false,
-        )
+      await poolFactoryContract.connect(creator2).createPoolContract(
+        {
+          name: pData1.name,
+          tokenAddress: pData1.tokenAddress,
+          tokenName: pData1.tokenName,
+          approver: pData1.approverAddress,
+          privatable: pData1.privatable,
+          finalized: false,
+        },
+        ps1,
+        ss1,
+      )
       await poolFactoryContract.connect(creator2).addParticipants(ps2, ss2)
 
       const pData2 = await preparePoolData(undefined, participantsCount3)
-      const req = poolFactoryContract
-        .connect(creator2)
-        .createPoolContract(
-          pData2.name,
-          pData2.tokenAddress,
-          pData2.tokenName,
-          pData2.participants,
-          pData2.shares,
-          pData2.approverAddress,
-          pData2.privatable,
-          true,
-        )
+      const req = poolFactoryContract.connect(creator2).createPoolContract(
+        {
+          name: pData2.name,
+          tokenAddress: pData2.tokenAddress,
+          tokenName: pData2.tokenName,
+          approver: pData2.approverAddress,
+          privatable: pData2.privatable,
+          finalized: false,
+        },
+        pData2.participants,
+        pData2.shares,
+      )
 
       await expect(req).to.revertedWith('Creator have finalizing pool')
     })
@@ -270,18 +270,18 @@ describe('PoolFactory', () => {
       const [ps1, ps2]: string[][] = splitParticipants(pData1.participants, participantsCount2)
 
       const [ss1, ss2]: number[][] = splitParticipants(pData1.shares, participantsCount2)
-      await poolFactoryContract
-        .connect(creator2)
-        .createPoolContract(
-          pData1.name,
-          pData1.tokenAddress,
-          pData1.tokenName,
-          ps1,
-          ss1,
-          pData1.approverAddress,
-          pData1.privatable,
-          false,
-        )
+      await poolFactoryContract.connect(creator2).createPoolContract(
+        {
+          name: pData1.name,
+          tokenAddress: pData1.tokenAddress,
+          tokenName: pData1.tokenName,
+          approver: pData1.approverAddress,
+          privatable: pData1.privatable,
+          finalized: false,
+        },
+        ps1,
+        ss1,
+      )
       const req = poolFactoryContract.connect(stranger1).addParticipants(ps2, ss2)
       const req2 = poolFactoryContract.connect(stranger1).finalize()
 
@@ -302,18 +302,18 @@ describe('PoolFactory', () => {
       const pData1 = await preparePoolData(undefined, fullCount)
       const pData2 = await preparePoolData(undefined, fullCount)
 
-      await poolFactoryContract
-        .connect(creator2)
-        .createPoolContract(
-          pData1.name,
-          pData1.tokenAddress,
-          pData1.tokenName,
-          pData1.participants,
-          pData1.shares,
-          pData1.approverAddress,
-          pData1.privatable,
-          false,
-        )
+      await poolFactoryContract.connect(creator2).createPoolContract(
+        {
+          name: pData1.name,
+          tokenAddress: pData1.tokenAddress,
+          tokenName: pData1.tokenName,
+          approver: pData1.approverAddress,
+          privatable: pData1.privatable,
+          finalized: false,
+        },
+        pData1.participants,
+        pData1.shares,
+      )
       const req = poolFactoryContract
         .connect(creator2)
         .addParticipants(pData2.participants, pData2.shares)
@@ -356,18 +356,18 @@ describe('PoolFactory', () => {
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      const trReq = poolFactoryContract
-        .connect(poolFactoryDeployer)
-        .createPoolContract(
+      const trReq = poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          participants,
-          shares,
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        participants,
+        shares,
+      )
 
       await expect(trReq).to.revertedWith('Not enough fee value')
     })
@@ -386,18 +386,18 @@ describe('PoolFactory', () => {
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      const trReq = poolFactoryContract
-        .connect(poolFactoryDeployer)
-        .createPoolContract(
+      const trReq = poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          participants,
-          shares,
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        participants,
+        shares,
+      )
 
       await expect(trReq).to.revertedWith('Not allowed amount to spend')
     })
@@ -417,18 +417,18 @@ describe('PoolFactory', () => {
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      await poolFactoryContract
-        .connect(poolFactoryDeployer)
-        .createPoolContract(
+      await poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          participants,
-          shares,
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        participants,
+        shares,
+      )
 
       expect(await USDTContract.balanceOf(poolFactoryContract.address)).to.equal(valueFee)
     })
@@ -447,18 +447,18 @@ describe('PoolFactory', () => {
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      await poolFactoryContract
-        .connect(participant1)
-        .createPoolContract(
+      await poolFactoryContract.connect(participant1).createPoolContract(
+        {
           name,
           tokenAddress,
           tokenName,
-          participants,
-          shares,
-          approverAddress,
+          approver: approverAddress,
           privatable,
-          true,
-        )
+          finalized: true,
+        },
+        participants,
+        shares,
+      )
 
       await poolFactoryContract.connect(poolFactoryDeployer).withdraw()
 
@@ -893,18 +893,18 @@ describe('Performance', () => {
       .fill(null)
       .map((_, i) => {
         const creator = accs[i] ? accs[i] : accs[0]
-        return poolFactoryContract
-          .connect(creator)
-          .createPoolContract(
+        return poolFactoryContract.connect(creator).createPoolContract(
+          {
             name,
             tokenAddress,
             tokenName,
-            participants,
-            shares,
-            approverAddress,
+            approver: approverAddress,
             privatable,
-            true,
-          )
+            finalized: true,
+          },
+          participants,
+          shares,
+        )
       })
     await Promise.all(creatingReqs)
 
@@ -948,18 +948,18 @@ describe('Performance', () => {
 
       const sChunks: number[][] = splitParticipants(pData1.shares, participantsCount3)
 
-      await poolFactoryContract
-        .connect(creatorAndParticipant1)
-        .createPoolContract(
-          pData1.name,
-          pData1.tokenAddress,
-          pData1.tokenName,
-          pChunks[0],
-          sChunks[0],
-          pData1.approverAddress,
-          pData1.privatable,
-          false,
-        )
+      await poolFactoryContract.connect(creatorAndParticipant1).createPoolContract(
+        {
+          name: pData1.name,
+          tokenAddress: pData1.tokenAddress,
+          tokenName: pData1.tokenName,
+          approver: pData1.approverAddress,
+          privatable: pData1.privatable,
+          finalized: false,
+        },
+        pChunks[0],
+        sChunks[0],
+      )
 
       await poolFactoryContract
         .connect(creatorAndParticipant1)
