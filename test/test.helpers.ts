@@ -1,6 +1,7 @@
 import { PoolFactory, PoolTemplate, TestERC20 } from '@app/typechain'
 import { ICreatePoolRequest, IParticipantResponse, IPoolResponse } from '@app/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
+import { expect } from 'chai'
 import { Contract } from 'ethers'
 import { ethers, upgrades } from 'hardhat'
 
@@ -180,8 +181,10 @@ export async function createPoolContract(
     shares,
   )
 
-  const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
+  const poolAccounts: string[] = await poolFactoryContract.findPoolsByParticipant(
     participants[0],
+    0,
+    100,
   )
 
   const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
@@ -244,4 +247,10 @@ export async function createAndMintTestERC20(
   }
 
   return { testERC20CContract, testERC20Deployer, mintAmount }
+}
+
+export function noAddressZeroInArray(arr: string[]): void {
+  arr.forEach((a) => {
+    expect(a).to.not.equal(ethers.constants.AddressZero)
+  })
 }

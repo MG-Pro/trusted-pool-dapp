@@ -19,6 +19,8 @@ import {
   approverValueFee,
   upgradePoolFactory,
   splitParticipants,
+  getTestSigners,
+  noAddressZeroInArray,
 } from './test.helpers'
 import {
   ICreatePool,
@@ -28,7 +30,7 @@ import {
   IDeployUSDT,
 } from './test.types'
 
-xdescribe('PoolFactory', () => {
+describe('PoolFactory', () => {
   describe('Creating pools', () => {
     it('Should create pool with 10 participants', async () => {
       const participantsCount = 10
@@ -177,7 +179,7 @@ xdescribe('PoolFactory', () => {
       await poolFactoryContract.connect(creator2).addParticipants(pChunks[1], sChunks[1])
       const poolAccounts: string[] = await poolFactoryContract
         .connect(creator2)
-        .getContractAddressesByParticipant(pData1.participants[7])
+        .findPoolsByParticipant(pData1.participants[7], 0, 100)
 
       const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
         'PoolTemplate',
@@ -598,9 +600,64 @@ xdescribe('PoolFactory', () => {
       expect(await req).to.equal(poolFactoryDeployer.address)
     })
   })
+
+  describe('Pools pagination', () => {
+    it('Should create 200 pools and get addresses with pagination', async () => {
+      const participantsCount = 3
+      const poolCount = 200
+      const first = 100
+      const size = 100
+
+      const { creator2 } = await getTestSigners()
+      const { poolFactoryContract, participant1 } = await loadFixture<IDeployPoolFactory>(
+        deployPoolFactory,
+      )
+      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
+        await preparePoolData(undefined, participantsCount)
+
+      await Promise.all(
+        Array(poolCount)
+          .fill(null)
+          .map(() => {
+            return poolFactoryContract.connect(creator2).createPoolContract(
+              {
+                name,
+                tokenAddress,
+                tokenName,
+                approver: approverAddress,
+                privatable,
+                finalized: true,
+              },
+              participants,
+              shares,
+            )
+          }),
+      )
+
+      const poolAccountsAcc: string[] = []
+      for (const _ of Array(Math.floor(poolCount / size)).fill(null)) {
+        const poolAccounts: string[] = await poolFactoryContract.findPoolsByParticipant(
+          participants[0],
+          first,
+          size,
+        )
+        expect(poolAccounts.length).to.equal(size)
+        noAddressZeroInArray(poolAccounts)
+        poolAccountsAcc.push(...poolAccounts)
+      }
+
+      const contractCount: BigNumber = await poolFactoryContract
+        .connect(participant1)
+        .contractCount()
+
+      expect(poolCount).to.equal(contractCount)
+      expect(poolAccountsAcc.length).to.equal(contractCount)
+      noAddressZeroInArray(poolAccountsAcc)
+    })
+  })
 })
 
-xdescribe('PoolTemplate', () => {
+describe('PoolTemplate', () => {
   describe('Getting pools data', () => {
     it('Should return pool participants with pagination', async () => {
       const participantsCount = 100
@@ -665,7 +722,7 @@ xdescribe('PoolTemplate', () => {
       const pReq = poolTemplateContract
         .connect(creatorAndParticipant1)
         .getParticipants(11, participantSize)
-      await expect(pReq).to.revertedWith('Start index greater than count of participants')
+      await expect(pReq).to.revertedWith('Start index greater than count')
     })
 
     it('Should revert if participant does not exist', async () => {
@@ -864,7 +921,7 @@ xdescribe('PoolTemplate', () => {
 })
 
 describe('Performance', () => {
-  xit('Should create pool with 100 participants and get data', async () => {
+  it('Should create pool with 100 participants and get data', async () => {
     const participantsCount = 100
     const { poolResponse, tokenAmount, participantResponse } = await loadFixture<ICreatePool>(
       createPoolAndReqData.bind(this, participantsCount),
@@ -876,8 +933,8 @@ describe('Performance', () => {
   })
 
   it('Should create 10 pools with 300 participants', async () => {
-    const participantsCount = 5
-    const poolCount = 200
+    const participantsCount = 300
+    const poolCount = 10
 
     const { poolFactoryContract, participant1 } = await loadFixture<IDeployPoolFactory>(
       deployPoolFactory,
@@ -909,10 +966,10 @@ describe('Performance', () => {
       })
     await Promise.all(creatingReqs)
 
-    const contractCount: BigNumber = await poolFactoryContract.connect(participant1).contractCount()
-    console.log(contractCount.toNumber())
-    const poolAccounts: string[] = await poolFactoryContract.getContractAddressesByParticipant(
+    const poolAccounts: string[] = await poolFactoryContract.findPoolsByParticipant(
       participants[0],
+      0,
+      200,
     )
 
     const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
@@ -925,9 +982,7 @@ describe('Performance', () => {
       .getPoolData()
 
     expect(poolAccounts.length).to.equal(poolCount)
-    poolAccounts.forEach((a) => {
-      expect(a).to.not.equal(ethers.constants.AddressZero)
-    })
+    noAddressZeroInArray(poolAccounts)
     expect(poolResponse.tokenAmount).to.equal(tokenAmount)
   })
 
@@ -974,7 +1029,7 @@ describe('Performance', () => {
 
       const poolAccounts: string[] = await poolFactoryContract
         .connect(creatorAndParticipant1)
-        .getContractAddressesByParticipant(pChunks[1][7])
+        .findPoolsByParticipant(pChunks[1][7], 0, 100)
 
       const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
         'PoolTemplate',

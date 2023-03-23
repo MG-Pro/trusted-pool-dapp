@@ -217,9 +217,19 @@
         "internalType": "address",
         "name": "_address",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "first",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "size",
+        "type": "uint256"
       }
     ],
-    "name": "getContractAddressesByParticipant",
+    "name": "findPoolsByParticipant",
     "outputs": [
       {
         "internalType": "address[]",

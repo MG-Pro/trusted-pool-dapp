@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
-//import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
@@ -20,9 +18,6 @@ struct PoolData {
 
 contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
-
-  error WrongParticipantCount();
-  error NoFinalizingPoolForSender();
 
   uint16 private constant maxParticipantsTs = 450;
 
@@ -144,9 +139,17 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     return withdrawableBalance;
   }
 
-  function getContractAddressesByParticipant(
-    address _address
+  function findPoolsByParticipant(
+    address _address,
+    uint256 first,
+    uint256 size
   ) external view returns (address[] memory list) {
+    require(contractCount > first, "Start index greater than count");
+
+    if (size > contractCount - first) {
+      size = contractCount - first;
+    }
+
     uint256 counter;
     list = new address[](0);
     for (uint256 i; i < contractCount; ) {
@@ -158,20 +161,25 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
       }
 
       if (exist) {
-        address[] memory tempList = new address[](list.length + 1);
+        counter++;
+        if (counter < first) {
+          continue;
+        }
 
+        address[] memory tempList = new address[](list.length + 1);
         for (uint t; t < list.length; t++) {
           tempList[t] = list[t];
         }
+        tempList[tempList.length - 1] = contracts[i];
 
-        tempList[counter] = contracts[i];
         list = new address[](tempList.length);
-
         for (uint t; t < tempList.length; t++) {
           list[t] = tempList[t];
         }
 
-        counter++;
+        if (list.length == size) {
+          return list;
+        }
       }
 
       unchecked {

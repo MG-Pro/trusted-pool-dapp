@@ -21,9 +21,6 @@ struct PoolData {
 contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
 
-  error WrongParticipantCount();
-  error NoFinalizingPoolForSender();
-
   uint16 private constant maxParticipantsTs = 450;
 
   uint256 public stableFeeValue;

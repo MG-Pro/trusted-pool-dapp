@@ -4,6 +4,13 @@ pragma solidity ^0.8.18;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+error OnlyAdmin();
+error OnlyParticipant();
+error OnlyFactory();
+error OnlyFinalized();
+error WrongParticipantCount();
+error NoFinalizingPoolForSender();
+
 contract PoolTemplate is Initializable {
   struct ParticipantView {
     address account;
@@ -11,11 +18,6 @@ contract PoolTemplate is Initializable {
     uint256 claimed;
     uint256 accrued;
   }
-
-  error OnlyAdmin();
-  error OnlyParticipant();
-  error OnlyFactory();
-  error OnlyFinalized();
 
   bool public finalized;
 
@@ -210,7 +212,7 @@ contract PoolTemplate is Initializable {
       return new ParticipantView[](0);
     }
     require(!poolPrivatable, "Forbidden for private pool");
-    require(poolParticipantsCount > first, "Start index greater than count of participants");
+    require(poolParticipantsCount > first, "Start index greater than count");
 
     if (size > poolParticipantsCount - first) {
       size = poolParticipantsCount - first;
