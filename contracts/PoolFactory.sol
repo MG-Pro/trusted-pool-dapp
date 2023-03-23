@@ -16,6 +16,14 @@ struct PoolData {
   bool finalized;
 }
 
+error WrongParticipantCount();
+error NoFinalizingPoolForSender();
+error ContractNotExist();
+error CreatorHaveFinalizingPool();
+error ApproverOnly();
+error InsufficientFunds();
+error NoStableContract();
+
 contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
 
@@ -38,7 +46,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   }
 
   modifier existContract(address _poolAddress) {
-    require(_existContract(_poolAddress), "Contract do not exist");
+    if (!_existContract(_poolAddress)) {
+      revert ContractNotExist();
+    }
     _;
   }
 
@@ -63,7 +73,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     address[] calldata _participants,
     uint256[] calldata _shares
   ) external checkParticipantCount(_participants.length) {
-    require(_isZeroAddress(finalizingContracts[msg.sender]), "Creator have finalizing pool");
+    if (!_isZeroAddress(finalizingContracts[msg.sender])) {
+      revert CreatorHaveFinalizingPool();
+    }
     uint256 poolFee = stableFeeValue;
     withdrawableBalance += poolFee;
 
@@ -114,12 +126,17 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
   function approvePool(address _poolAddress) external existContract(_poolAddress) {
     (bool approved, address approver, ) = PoolTemplate(_poolAddress).getApprovalData();
-    require(!approved, "Pool already approved");
-    require(msg.sender == approver, "Only for approver");
+    if (approved) {
+      revert AlreadyApproved();
+    }
+    if (msg.sender != approver) {
+      revert ApproverOnly();
+    }
     uint256 balance = IERC20(stableContract).balanceOf(address(this));
-    require(balance >= stableApproverFeeValue, "Insufficient funds");
-    bool success = IERC20(stableContract).transfer(msg.sender, stableApproverFeeValue);
-    require(success, "Transfer failed");
+    if (balance < stableApproverFeeValue) {
+      revert InsufficientFunds();
+    }
+    IERC20(stableContract).transfer(msg.sender, stableApproverFeeValue);
     PoolTemplate(_poolAddress).approvePool();
   }
 
@@ -144,7 +161,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     uint256 first,
     uint256 size
   ) external view returns (address[] memory list) {
-    require(contractCount > first, "Start index greater than count");
+    if (first > contractCount) {
+      revert StartIndexGreaterThanItemsCount();
+    }
 
     if (size > contractCount - first) {
       size = contractCount - first;
@@ -189,18 +208,18 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   }
 
   function withdraw() external onlyOwner hasStableContract {
-    require(withdrawableBalance > 0, "Nothing to withdraw");
-    bool success = IERC20(stableContract).transfer(owner(), withdrawableBalance);
-    require(success, "Withdraw failed");
+    if (withdrawableBalance == 0) {
+      revert InsufficientFunds();
+    }
+    IERC20(stableContract).transfer(owner(), withdrawableBalance);
   }
 
   function _spendFee(uint256 _fee) private hasStableContract {
     uint256 balance = IERC20(stableContract).balanceOf(msg.sender);
-    require(balance >= _fee, "Not enough fee value");
-    uint256 result = IERC20(stableContract).allowance(msg.sender, address(this));
-    require(result >= _fee, "Not allowed amount to spend");
-    bool success = IERC20(stableContract).transferFrom(msg.sender, address(this), _fee);
-    require(success, "Spending failed");
+    if (_fee > balance) {
+      revert InsufficientFunds();
+    }
+    IERC20(stableContract).transferFrom(msg.sender, address(this), _fee);
   }
 
   function _existContract(address _contract) private view returns (bool exist) {
@@ -219,7 +238,9 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   }
 
   function _hasStableContract() private view {
-    require(!_isZeroAddress(stableContract), "Stable contract not set");
+    if (_isZeroAddress(stableContract)) {
+      revert NoStableContract();
+    }
   }
 
   function _checkParticipantCount(uint256 length) private pure {

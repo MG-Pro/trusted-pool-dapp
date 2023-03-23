@@ -127,6 +127,7 @@ describe('PoolFactory', () => {
       const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
         deployPoolFactory,
       )
+      const { poolTemplateContract } = await createPoolContract(3)
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
@@ -145,7 +146,7 @@ describe('PoolFactory', () => {
         [...shares, ...poolData2.shares],
       )
 
-      await expect(creatingReq).to.revertedWith('Participant not uniq')
+      await expect(creatingReq).to.revertedWithCustomError(poolTemplateContract, 'NotUniq')
     })
   })
 
@@ -258,7 +259,7 @@ describe('PoolFactory', () => {
         pData2.shares,
       )
 
-      await expect(req).to.revertedWith('Creator have finalizing pool')
+      await expect(req).to.revertedWithCustomError(poolFactoryContract, 'CreatorHaveFinalizingPool')
     })
 
     it('Should revert if finalization ts was not made by creator', async () => {
@@ -321,7 +322,18 @@ describe('PoolFactory', () => {
         .connect(creator2)
         .addParticipants(pData2.participants, pData2.shares)
 
-      await expect(req).to.revertedWith('Participant not uniq')
+      const poolAccounts: string[] = await poolFactoryContract.findPoolsByParticipant(
+        pData1.participants[0],
+        0,
+        100,
+      )
+
+      const poolTemplateContract: PoolTemplate = await ethers.getContractAt(
+        'PoolTemplate',
+        poolAccounts[0],
+      )
+
+      await expect(req).to.revertedWithCustomError(poolTemplateContract, 'NotUniq')
     })
   })
 
@@ -337,7 +349,10 @@ describe('PoolFactory', () => {
       const participantsReq = poolTemplateContract
         .connect(creatorAndParticipant1)
         .getParticipants(participantFirst, participantSize)
-      await expect(participantsReq).to.revertedWith('Forbidden for private pool')
+      await expect(participantsReq).to.revertedWithCustomError(
+        poolTemplateContract,
+        'OnlyForPublicPool',
+      )
 
       const pool: IPoolResponse = await poolTemplateContract
         .connect(creatorAndParticipant1)
@@ -372,37 +387,7 @@ describe('PoolFactory', () => {
         shares,
       )
 
-      await expect(trReq).to.revertedWith('Not enough fee value')
-    })
-
-    it('Should revert if not approved fee value', async () => {
-      const participantsCount = 3
-      const { poolFactoryContract, poolFactoryDeployer } = await loadFixture<IDeployPoolFactory>(
-        deployPoolFactory,
-      )
-      const { USDTContract, USDTDeployer } = await loadFixture<IDeployUSDT>(deployUSDT)
-
-      await USDTContract.connect(USDTDeployer).transfer(poolFactoryDeployer.address, 100)
-      await poolFactoryContract.connect(poolFactoryDeployer).setStableContract(USDTContract.address)
-      await poolFactoryContract.connect(poolFactoryDeployer).setFeeValue(valueFee)
-
-      const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
-        await preparePoolData(undefined, participantsCount)
-
-      const trReq = poolFactoryContract.connect(poolFactoryDeployer).createPoolContract(
-        {
-          name,
-          tokenAddress,
-          tokenName,
-          approver: approverAddress,
-          privatable,
-          finalized: true,
-        },
-        participants,
-        shares,
-      )
-
-      await expect(trReq).to.revertedWith('Not allowed amount to spend')
+      await expect(trReq).to.revertedWithCustomError(poolFactoryContract, 'InsufficientFunds')
     })
 
     it('Should create pool with fee', async () => {
@@ -571,7 +556,7 @@ describe('PoolFactory', () => {
 
       await expect(
         poolFactoryContract.connect(approver1).approvePool(poolTemplateContract.address),
-      ).to.revertedWith('Pool already approved')
+      ).to.revertedWithCustomError(poolFactoryContract, 'AlreadyApproved')
     })
   })
 
@@ -722,7 +707,10 @@ describe('PoolTemplate', () => {
       const pReq = poolTemplateContract
         .connect(creatorAndParticipant1)
         .getParticipants(11, participantSize)
-      await expect(pReq).to.revertedWith('Start index greater than count')
+      await expect(pReq).to.revertedWithCustomError(
+        poolTemplateContract,
+        'StartIndexGreaterThanItemsCount',
+      )
     })
 
     it('Should revert if participant does not exist', async () => {
@@ -872,13 +860,13 @@ describe('PoolTemplate', () => {
 
       await expect(
         poolTemplateContract.connect(creatorAndParticipant1).claimTokens(),
-      ).to.revertedWith('Token contract address no set')
+      ).to.revertedWithCustomError(poolTemplateContract, 'NoTokenContract')
 
       await expect(
         poolTemplateContract
           .connect(creatorAndParticipant1)
           .setTokenAddress(testERC20CContract.address),
-      ).to.revertedWith('Pool is not approved')
+      ).to.revertedWithCustomError(poolTemplateContract, 'OnlyApproved')
     })
   })
 

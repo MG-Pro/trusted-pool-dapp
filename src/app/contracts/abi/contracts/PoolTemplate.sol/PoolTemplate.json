@@ -1,7 +1,57 @@
 [
   {
     "inputs": [],
+    "name": "AddressNotContract",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AlreadyApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AlreadyFinalized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LengthsNotMatched",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MustBeGreaterZero",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoTokenContract",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoTokensForClaim",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoZeroAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotUniq",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "OnlyAdmin",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyApproved",
     "type": "error"
   },
   {
@@ -16,7 +66,22 @@
   },
   {
     "inputs": [],
+    "name": "OnlyForPublicPool",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "OnlyParticipant",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "StartIndexGreaterThanItemsCount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TokenAddressAlreadySet",
     "type": "error"
   },
   {

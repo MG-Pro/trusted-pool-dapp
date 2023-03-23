@@ -1,7 +1,42 @@
 [
   {
     "inputs": [],
+    "name": "AlreadyApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ApproverOnly",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ContractNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CreatorHaveFinalizingPool",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientFunds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NoFinalizingPoolForSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoStableContract",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "StartIndexGreaterThanItemsCount",
     "type": "error"
   },
   {

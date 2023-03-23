@@ -18,6 +18,9 @@ struct PoolData {
   bool finalized;
 }
 
+error WrongParticipantCount();
+error NoFinalizingPoolForSender();
+
 contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
   event PoolCreated(address indexed contractAddress, uint256 indexed id);
 

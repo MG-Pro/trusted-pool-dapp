@@ -8,8 +8,19 @@ error OnlyAdmin();
 error OnlyParticipant();
 error OnlyFactory();
 error OnlyFinalized();
-error WrongParticipantCount();
-error NoFinalizingPoolForSender();
+error OnlyApproved();
+error OnlyForPublicPool();
+error NoZeroAddress();
+error LengthsNotMatched();
+error MustBeGreaterZero();
+error NotUniq();
+error AlreadyApproved();
+error NoTokenContract();
+error NoTokensForClaim();
+error StartIndexGreaterThanItemsCount();
+error AlreadyFinalized();
+error TokenAddressAlreadySet();
+error AddressNotContract();
 
 contract PoolTemplate is Initializable {
   struct ParticipantView {
@@ -89,7 +100,10 @@ contract PoolTemplate is Initializable {
   }
 
   function changeAdmin(address _newAdmin) external onlyAdmin {
-    require(!_isZeroAddress(_newAdmin), "Zero address do not allowed");
+    if (_isZeroAddress(_newAdmin)) {
+      revert NoZeroAddress();
+    }
+
     poolAdmin = _newAdmin;
   }
 
@@ -103,14 +117,22 @@ contract PoolTemplate is Initializable {
   ) external onlyFactory onlyNoFinalized {
     uint256 sum;
     uint length = _participants.length;
-    require(length == _shares.length, "Arguments is not matched");
+    if (length != _shares.length) {
+      revert LengthsNotMatched();
+    }
+
     uint tempPoolParticipantsCount = poolParticipantsCount;
     for (uint256 i; i < length; ) {
       address p = _participants[i];
       uint s = _shares[i];
 
-      require(s > 0, "Share value must be greater 0");
-      require(participants[p] == 0, "Participant not uniq");
+      if (s == 0) {
+        revert MustBeGreaterZero();
+      }
+
+      if (participants[p] != 0) {
+        revert NotUniq();
+      }
       participants[p] = s;
       participantsMapper[tempPoolParticipantsCount] = p;
 
@@ -157,7 +179,9 @@ contract PoolTemplate is Initializable {
   }
 
   function approvePool() external onlyFactory onlyFinalized returns (bool) {
-    require(!poolApproved, "Pool already approved");
+    if (poolApproved) {
+      revert AlreadyApproved();
+    }
     poolApproved = true;
     return true;
   }
@@ -172,13 +196,17 @@ contract PoolTemplate is Initializable {
   }
 
   function claimTokens() external onlyFinalized {
-    require(!_isZeroAddress(poolTokenAddress), "Token contract address no set");
+    if (_isZeroAddress(poolTokenAddress)) {
+      revert NoTokenContract();
+    }
+
     uint256 accrued = _calculateAccrued(msg.sender);
-    require(accrued > 0, "There are not tokens for claim");
+    if (accrued == 0) {
+      revert NoTokensForClaim();
+    }
     participantsClaims[msg.sender] += accrued;
     poolOverallClaimed += accrued;
-    bool success = IERC20(poolTokenAddress).transfer(msg.sender, accrued);
-    require(success, "Claim error");
+    IERC20(poolTokenAddress).transfer(msg.sender, accrued);
   }
 
   function getApprovalData()
@@ -211,14 +239,17 @@ contract PoolTemplate is Initializable {
     if (poolParticipantsCount == 0) {
       return new ParticipantView[](0);
     }
-    require(!poolPrivatable, "Forbidden for private pool");
-    require(poolParticipantsCount > first, "Start index greater than count");
-
+    if (poolPrivatable) {
+      revert OnlyForPublicPool();
+    }
+    if (first > poolParticipantsCount) {
+      revert StartIndexGreaterThanItemsCount();
+    }
     if (size > poolParticipantsCount - first) {
       size = poolParticipantsCount - first;
     }
-    pList = new ParticipantView[](size);
 
+    pList = new ParticipantView[](size);
     uint256 counter;
     for (uint256 i = first; i < first + size; ) {
       pList[counter] = ParticipantView(
@@ -235,9 +266,15 @@ contract PoolTemplate is Initializable {
   }
 
   function _setTokenAddress(address _tokenAddress) private {
-    require(poolApproved, "Pool is not approved");
-    require(_isZeroAddress(poolTokenAddress), "Token address already set");
-    require(_tokenAddress.code.length != 0, "Address is not contract");
+    if (!poolApproved) {
+      revert OnlyApproved();
+    }
+    if (!_isZeroAddress(poolTokenAddress)) {
+      revert TokenAddressAlreadySet();
+    }
+    if (_tokenAddress.code.length == 0) {
+      revert AddressNotContract();
+    }
     poolTokenAddress = _tokenAddress;
   }
 
@@ -278,6 +315,8 @@ contract PoolTemplate is Initializable {
   }
 
   function _checkFinalizing() private view {
-    require(!finalized, "Pool already finalized");
+    if (finalized) {
+      revert AlreadyFinalized();
+    }
   }
 }
