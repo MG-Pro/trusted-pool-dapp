@@ -11,6 +11,7 @@ struct PoolData {
   address approver;
   bool privatable;
   bool finalized;
+  uint256 stableApproverFee;
 }
 
 struct ParticipantView {
@@ -49,7 +50,7 @@ contract PoolTemplate is Initializable {
   address private poolFactory;
   bytes32 private poolName;
   bytes32 private poolTokenName;
-
+  uint256 private poolStableApproverFee;
   uint256 private poolParticipantsCount;
   uint256 private poolTokenAmount;
   uint256 private poolOverallClaimed;
@@ -96,6 +97,7 @@ contract PoolTemplate is Initializable {
 
     if (!_isZeroAddress(data.approver)) {
       poolApprover = data.approver;
+      poolStableApproverFee = data.stableApproverFee;
     } else {
       poolApproved = true;
     }
@@ -215,9 +217,9 @@ contract PoolTemplate is Initializable {
     external
     view
     onlyFactory
-    returns (bool approved, address approver, address creator)
+    returns (bool approved, address approver, uint stableApproverFee)
   {
-    return (poolApproved, poolApprover, poolAdmin);
+    return (poolApproved, poolApprover, poolStableApproverFee);
   }
 
   function getParticipant() external view onlyParticipant returns (ParticipantView memory) {

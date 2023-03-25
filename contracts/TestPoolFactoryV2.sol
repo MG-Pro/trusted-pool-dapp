@@ -21,7 +21,6 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
   uint16 private constant maxParticipantsTs = 450;
 
   uint256 public stableFeeValue;
-  uint256 public stableApproverFeeValue;
   uint256 public contractCount;
 
   address private templateImplementation;
@@ -71,10 +70,10 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
     withdrawableBalance += poolFee;
 
     if (!_isZeroAddress(data.approver)) {
-      poolFee += stableApproverFeeValue;
+      poolFee += data.stableApproverFee;
     }
 
-    if (poolFee > 0) {
+    if (poolFee != 0) {
       _spendFee(poolFee);
     }
 
@@ -109,7 +108,8 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
   }
 
   function approvePool(address _poolAddress) external existContract(_poolAddress) {
-    (bool approved, address approver, ) = PoolTemplate(_poolAddress).getApprovalData();
+    (bool approved, address approver, uint256 stableApproverFee) = PoolTemplate(_poolAddress)
+      .getApprovalData();
     if (approved) {
       revert AlreadyApproved();
     }
@@ -117,19 +117,15 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
       revert ApproverOnly();
     }
     uint256 balance = IERC20(stableContract).balanceOf(address(this));
-    if (balance < stableApproverFeeValue) {
+    if (balance < stableApproverFee) {
       revert InsufficientFunds();
     }
-    IERC20(stableContract).transfer(msg.sender, stableApproverFeeValue);
+    IERC20(stableContract).transfer(msg.sender, stableApproverFee);
     PoolTemplate(_poolAddress).approvePool();
   }
 
   function setFeeValue(uint256 _fee) external onlyOwner {
     stableFeeValue = _fee;
-  }
-
-  function setApproverFeeValue(uint256 _fee) external onlyOwner {
-    stableApproverFeeValue = _fee;
   }
 
   function setStableContract(address _stableAddress) external onlyOwner {

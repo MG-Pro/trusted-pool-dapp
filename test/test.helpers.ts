@@ -139,6 +139,7 @@ export async function createPoolContract(
   participantsCount: number,
   privatableArg: boolean = false,
   approvable: boolean = false,
+  approverFee: number = 0,
   deployedHook?: (
     pfc: PoolFactory,
     pfcDeployer: SignerWithAddress,
@@ -176,6 +177,7 @@ export async function createPoolContract(
       approver: approverAddress,
       privatable,
       finalized: true,
+      stableApproverFee: approverFee,
     },
     participants,
     shares,

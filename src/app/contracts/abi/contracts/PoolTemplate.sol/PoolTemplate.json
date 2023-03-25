@@ -183,9 +183,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "stableApproverFee",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -387,6 +387,11 @@
             "internalType": "bool",
             "name": "finalized",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "stableApproverFee",
+            "type": "uint256"
           }
         ],
         "internalType": "struct PoolData",

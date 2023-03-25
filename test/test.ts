@@ -60,6 +60,7 @@ describe('PoolFactory', () => {
           approver: approverAddress,
           privatable,
           finalized: true,
+          stableApproverFee: 0,
         },
         participants,
         shares,
@@ -84,6 +85,7 @@ describe('PoolFactory', () => {
           approver: approverAddress,
           privatable,
           finalized: true,
+          stableApproverFee: 0,
         },
         participants,
         shares,
@@ -111,6 +113,7 @@ describe('PoolFactory', () => {
           approver: approverAddress,
           privatable,
           finalized: true,
+          stableApproverFee: 0,
         },
         participants,
         shares,
@@ -141,6 +144,7 @@ describe('PoolFactory', () => {
           approver: approverAddress,
           privatable,
           finalized: true,
+          stableApproverFee: 0,
         },
         [...participants, ...poolData2.participants],
         [...shares, ...poolData2.shares],
@@ -172,6 +176,7 @@ describe('PoolFactory', () => {
           approver: pData1.approverAddress,
           privatable: pData1.privatable,
           finalized: false,
+          stableApproverFee: 0,
         },
         pChunks[0],
         sChunks[0],
@@ -239,6 +244,7 @@ describe('PoolFactory', () => {
           approver: pData1.approverAddress,
           privatable: pData1.privatable,
           finalized: false,
+          stableApproverFee: 0,
         },
         ps1,
         ss1,
@@ -254,6 +260,7 @@ describe('PoolFactory', () => {
           approver: pData2.approverAddress,
           privatable: pData2.privatable,
           finalized: false,
+          stableApproverFee: 0,
         },
         pData2.participants,
         pData2.shares,
@@ -282,6 +289,7 @@ describe('PoolFactory', () => {
           approver: pData1.approverAddress,
           privatable: pData1.privatable,
           finalized: false,
+          stableApproverFee: 0,
         },
         ps1,
         ss1,
@@ -314,6 +322,7 @@ describe('PoolFactory', () => {
           approver: pData1.approverAddress,
           privatable: pData1.privatable,
           finalized: false,
+          stableApproverFee: 0,
         },
         pData1.participants,
         pData1.shares,
@@ -382,6 +391,7 @@ describe('PoolFactory', () => {
           approver: approverAddress,
           privatable,
           finalized: true,
+          stableApproverFee: 0,
         },
         participants,
         shares,
@@ -413,6 +423,7 @@ describe('PoolFactory', () => {
           approver: approverAddress,
           privatable,
           finalized: true,
+          stableApproverFee: 0,
         },
         participants,
         shares,
@@ -443,6 +454,7 @@ describe('PoolFactory', () => {
           approver: approverAddress,
           privatable,
           finalized: true,
+          stableApproverFee: 0,
         },
         participants,
         shares,
@@ -490,10 +502,10 @@ describe('PoolFactory', () => {
           participantsCount,
           privatable,
           approvable,
+          approverValueFee,
           async (pfc: PoolFactory, pfcDeployer, creator) => {
             await pfc.connect(pfcDeployer).setStableContract(USDTContract.address)
             await pfc.connect(pfcDeployer).setFeeValue(valueFee)
-            await pfc.connect(pfcDeployer).setApproverFeeValue(approverValueFee)
             await USDTContract.connect(USDTDeployer).transfer(creator.address, 100)
             await USDTContract.connect(creator).approve(pfc.address, 100)
           },
@@ -542,10 +554,10 @@ describe('PoolFactory', () => {
             participantsCount,
             privatable,
             approvable,
+            approverValueFee,
             async (pfc: PoolFactory, pfcDeployer, creator) => {
               await pfc.connect(pfcDeployer).setStableContract(USDTContract.address)
               await pfc.connect(pfcDeployer).setFeeValue(valueFee)
-              await pfc.connect(pfcDeployer).setApproverFeeValue(approverValueFee)
               await USDTContract.connect(USDTDeployer).transfer(creator.address, 100)
               await USDTContract.connect(creator).approve(pfc.address, 100)
             },
@@ -612,6 +624,7 @@ describe('PoolFactory', () => {
                 approver: approverAddress,
                 privatable,
                 finalized: true,
+                stableApproverFee: 0,
               },
               participants,
               shares,
@@ -885,10 +898,10 @@ describe('PoolTemplate', () => {
             participantsCount,
             privatable,
             approvable,
+            approverValueFee,
             async (pfc: PoolFactory, pfcDeployer, creator) => {
               await pfc.connect(pfcDeployer).setStableContract(USDTContract.address)
               await pfc.connect(pfcDeployer).setFeeValue(valueFee)
-              await pfc.connect(pfcDeployer).setApproverFeeValue(approverValueFee)
               await USDTContract.connect(USDTDeployer).transfer(creator.address, 100)
               await USDTContract.connect(creator).approve(pfc.address, 100)
             },
@@ -947,6 +960,7 @@ describe('Performance', () => {
             approver: approverAddress,
             privatable,
             finalized: true,
+            stableApproverFee: 0,
           },
           participants,
           shares,
@@ -1002,6 +1016,7 @@ describe('Performance', () => {
           approver: pData1.approverAddress,
           privatable: pData1.privatable,
           finalized: false,
+          stableApproverFee: 0,
         },
         pChunks[0],
         sChunks[0],

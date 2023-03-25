@@ -217,6 +217,11 @@
             "internalType": "bool",
             "name": "finalized",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "stableApproverFee",
+            "type": "uint256"
           }
         ],
         "internalType": "struct PoolData",
@@ -336,19 +341,6 @@
         "type": "uint256"
       }
     ],
-    "name": "setApproverFeeValue",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_fee",
-        "type": "uint256"
-      }
-    ],
     "name": "setFeeValue",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -365,19 +357,6 @@
     "name": "setStableContract",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stableApproverFeeValue",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
