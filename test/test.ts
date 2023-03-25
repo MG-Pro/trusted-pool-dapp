@@ -576,7 +576,7 @@ describe('PoolFactory', () => {
 
       const poolAccountsAfterUp = await upgradedContract
         .connect(creatorAndParticipant1)
-        .getContractAddressesByParticipant(creatorAndParticipant1.address)
+        .findPoolsByParticipant(creatorAndParticipant1.address, 0, 100)
 
       const req = upgradedContract.connect(poolFactoryDeployer).getTestDataV2()
 

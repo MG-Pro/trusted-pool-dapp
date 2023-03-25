@@ -218,7 +218,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct PoolTemplate.ParticipantView",
+        "internalType": "struct ParticipantView",
         "name": "",
         "type": "tuple"
       }
@@ -264,7 +264,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct PoolTemplate.ParticipantView[]",
+        "internalType": "struct ParticipantView[]",
         "name": "pList",
         "type": "tuple[]"
       }
@@ -357,29 +357,41 @@
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "_name",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_tokenName",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "_approver",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_privatable",
-        "type": "bool"
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "name",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "tokenName",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "approver",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "privatable",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "finalized",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct PoolData",
+        "name": "data",
+        "type": "tuple"
       }
     ],
     "name": "init",

@@ -7,15 +7,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./PoolTemplate.sol";
 
-struct PoolData {
-  bytes32 name;
-  bytes32 tokenName;
-  address tokenAddress;
-  address approver;
-  bool privatable;
-  bool finalized;
-}
-
 error WrongParticipantCount();
 error NoFinalizingPoolForSender();
 error ContractNotExist();
@@ -83,20 +74,13 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
       poolFee += stableApproverFeeValue;
     }
 
-    if (poolFee > 0) {
+    if (poolFee != 0) {
       _spendFee(poolFee);
     }
 
     address contractAddress = Clones.clone(templateImplementation);
     PoolTemplate pool = PoolTemplate(contractAddress);
-    pool.init(
-      msg.sender,
-      data.name,
-      data.tokenAddress,
-      data.tokenName,
-      data.approver,
-      data.privatable
-    );
+    pool.init(msg.sender, data);
     pool.addParticipants(_participants, _shares);
     contracts[contractCount] = contractAddress;
 
@@ -106,10 +90,10 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
       finalizingContracts[msg.sender] = contractAddress;
     }
 
-    emit PoolCreated(contractAddress, contractCount);
     unchecked {
       ++contractCount;
     }
+    emit PoolCreated(contractAddress, contractCount);
   }
 
   function addParticipants(

@@ -4,6 +4,22 @@ pragma solidity ^0.8.18;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+struct PoolData {
+  bytes32 name;
+  bytes32 tokenName;
+  address tokenAddress;
+  address approver;
+  bool privatable;
+  bool finalized;
+}
+
+struct ParticipantView {
+  address account;
+  uint256 share;
+  uint256 claimed;
+  uint256 accrued;
+}
+
 error OnlyAdmin();
 error OnlyParticipant();
 error OnlyFactory();
@@ -23,13 +39,6 @@ error TokenAddressAlreadySet();
 error AddressNotContract();
 
 contract PoolTemplate is Initializable {
-  struct ParticipantView {
-    address account;
-    uint256 share;
-    uint256 claimed;
-    uint256 accrued;
-  }
-
   bool public finalized;
 
   bool private poolApproved;
@@ -74,26 +83,19 @@ contract PoolTemplate is Initializable {
     _;
   }
 
-  function init(
-    address _creator,
-    bytes32 _name,
-    address _tokenAddress,
-    bytes32 _tokenName,
-    address _approver,
-    bool _privatable
-  ) external initializer {
+  function init(address _creator, PoolData calldata data) external initializer {
     poolFactory = msg.sender;
     poolAdmin = _creator;
-    poolName = _name;
-    poolTokenName = _tokenName;
-    poolPrivatable = _privatable;
+    poolName = data.name;
+    poolTokenName = data.tokenName;
+    poolPrivatable = data.privatable;
 
-    if (!_isZeroAddress(_tokenAddress)) {
-      _setTokenAddress(_tokenAddress);
+    if (!_isZeroAddress(data.tokenAddress)) {
+      _setTokenAddress(data.tokenAddress);
     }
 
-    if (!_isZeroAddress(_approver)) {
-      poolApprover = _approver;
+    if (!_isZeroAddress(data.approver)) {
+      poolApprover = data.approver;
     } else {
       poolApproved = true;
     }
@@ -229,7 +231,7 @@ contract PoolTemplate is Initializable {
   }
 
   function hasParticipant(address _address) external view onlyFactory returns (bool) {
-    return participants[_address] > 0;
+    return participants[_address] != 0;
   }
 
   function getParticipants(
