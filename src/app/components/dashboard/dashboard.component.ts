@@ -1,7 +1,13 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
 import { LocalState } from '@app/components/dashboard/dashboard.types'
 import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
-import { IGlobalState, IParticipantLoadParams, IPool } from '@app/types'
+import {
+  ICreatePoolRequestParams,
+  IGlobalState,
+  IPageParams,
+  IParticipantLoadParams,
+  IPool,
+} from '@app/types'
 import { BehaviorSubject, filter, map, Observable, tap } from 'rxjs'
 
 @Component({
@@ -35,14 +41,19 @@ export class DashboardComponent implements OnInit {
   )
 
   public localState$ = new BehaviorSubject<LocalState>({
-    showCreatingForm: false,
+    showCreatingForm: true,
     activePool: null,
   })
 
   private readonly defaultPLoadParams: IParticipantLoadParams = {
     first: 0,
-    size: 9,
+    size: 25,
     mergeMode: false,
+  }
+
+  private readonly defaultPDataLoadParams: IPageParams = {
+    first: 0,
+    size: 10,
   }
 
   private pLoadParams: IParticipantLoadParams = { ...this.defaultPLoadParams }
@@ -73,7 +84,10 @@ export class DashboardComponent implements OnInit {
   }
 
   public async saveNewForm(poolData: Partial<IPool>): Promise<void> {
-    await this.contractService.createNewPool(poolData)
+    await this.contractService.createNewPool(
+      poolData as ICreatePoolRequestParams,
+      poolData.participants,
+    )
     await this.loadData()
     this.closeNewForm()
   }
@@ -108,7 +122,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private async loadData(): Promise<void> {
-    await this.contractService.dispatchPoolsData()
+    await this.contractService.dispatchPoolsData(this.defaultPDataLoadParams)
 
     if (this.stateService.value.userPools.length) {
       this.activePoolChange(this.stateService.value.userPools[0])

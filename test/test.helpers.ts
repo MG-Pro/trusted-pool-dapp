@@ -1,5 +1,5 @@
 import { PoolFactory, PoolTemplate, TestERC20 } from '@app/typechain'
-import { ICreatePoolRequest, IParticipantResponse, IPoolResponse } from '@app/types'
+import { ICreatePoolRequestParams, IParticipantResponse, IPoolResponse } from '@app/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
 import { expect } from 'chai'
 import { Contract } from 'ethers'
@@ -108,7 +108,7 @@ export async function preparePoolData(
   nonce: string = '',
   approverAddress: string = ethers.constants.AddressZero,
   privatable: boolean = false,
-): Promise<Partial<ICreatePoolRequest>> {
+): Promise<Partial<ICreatePoolRequestParams> & { participants: string[]; shares: number[] }> {
   const { participant1, participant2, participant3, creatorAndParticipant1 }: ITestSigners =
     await getTestSigners()
   const accounts = [creatorAndParticipant1, participant1, participant2, participant3]

@@ -26,18 +26,18 @@ export interface IPool {
   approverAddress: string
   privatable: boolean
   approved: boolean
+  finalized: boolean
   status: PoolStatuses
 }
 
-export interface ICreatePoolRequest {
+export interface ICreatePoolRequestParams {
   name: string
   tokenAddress?: string
   tokenName: string
-  participants: string[]
-  shares: number[]
   approverAddress: string
   privatable: boolean
   finalized: boolean
+  stableApproverFee?: number
 }
 
 export interface IPoolResponse {
@@ -60,8 +60,11 @@ export interface IParticipantResponse {
   accrued: BigNumber
 }
 
-export interface IParticipantLoadParams {
+export interface IPageParams {
   first: number
   size: number
+}
+
+export interface IParticipantLoadParams extends IPageParams {
   mergeMode?: boolean
 }

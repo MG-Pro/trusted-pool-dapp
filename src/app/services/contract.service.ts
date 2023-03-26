@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core'
 import abi from '@app/contracts/abi/contracts/PoolTemplate.sol/PoolTemplate.json'
 import { NotificationService, StatusClasses } from '@app/modules/notification'
 import {
+  ICreatePoolRequestParams,
+  IPageParams,
   IParticipant,
   IParticipantLoadParams,
   IParticipantResponse,
@@ -37,7 +39,10 @@ export class ContractService {
     return this.stateService.state$.value?.userAccount
   }
 
-  public async createNewPool(poolData: Partial<IPool>): Promise<void> {
+  public async createNewPool(
+    poolData: ICreatePoolRequestParams,
+    participants: Partial<IParticipant>[],
+  ): Promise<void> {
     if (!this.checkContract()) {
       return
     }
@@ -47,18 +52,18 @@ export class ContractService {
       ? poolData.tokenAddress
       : ethers.constants.AddressZero
 
-    const participants: IParticipant[] = poolData.participants.map((p) => ({
-      ...p,
-      claimed: 0,
-      accrued: 0,
-    }))
-
     try {
       const tr: TransactionResponse = await this.poolFactoryContract.createPoolContract(
-        poolData.name,
-        tokenAddress,
-        poolData.tokenName,
-        participants,
+        {
+          name: poolData.name,
+          tokenAddress,
+          tokenName: poolData.tokenName,
+          privatable: poolData.privatable,
+          finalized: poolData.finalized,
+          stableApproverFee: poolData.stableApproverFee,
+        },
+        participants.map(({ account }) => account),
+        participants.map(({ share }) => share),
       )
       await tr.wait()
     } catch (e) {
@@ -96,14 +101,14 @@ export class ContractService {
     }
   }
 
-  public async dispatchPoolsData(): Promise<void> {
+  public async dispatchPoolsData(params: IPageParams): Promise<void> {
     if (!this.checkContract()) {
       return
     }
     this.connectionService.setLoadingStatus()
 
     try {
-      const poolsAccounts: string[] = await this.loadPoolAddresses()
+      const poolsAccounts: string[] = await this.loadPoolAddresses(params)
 
       if (poolsAccounts.length) {
         const reqPools = poolsAccounts.map((poolAccount: string) => {
@@ -150,30 +155,38 @@ export class ContractService {
   }
 
   private async loadPoolData(poolAccount: string): Promise<IPool> {
-    const res: IPoolResponse = await this.getPoolTemplateInstance(poolAccount).getPoolData()
-    return this.poolMapper(res, poolAccount)
+    const poolTemplateInstance: Contract = this.getPoolTemplateInstance(poolAccount)
+    const res: IPoolResponse = await poolTemplateInstance.getPoolData()
+    const finalized: boolean = await poolTemplateInstance.finalized()
+    return this.poolMapper(res, finalized, poolAccount)
   }
 
-  private async loadPoolAddresses(): Promise<string[]> {
-    return this.poolFactoryContract.getContractAddressesByParticipant(this.userAccount)
+  private async loadPoolAddresses(params: IPageParams): Promise<string[]> {
+    return this.poolFactoryContract.findPoolsByParticipant(
+      this.userAccount,
+      params.first,
+      params.size,
+    )
   }
 
-  private poolMapper(item: IPoolResponse, poolAccount: string): IPool {
+  private poolMapper(item: IPoolResponse, finalized: boolean, poolAccount: string): IPool {
     const tokenAddress =
       item.tokenAddress !== ethers.constants.AddressZero ? item.tokenAddress?.toLowerCase() : null
 
     return {
+      finalized,
+      name: ethers.utils.parseBytes32String(item.name),
+      contractAddress: poolAccount?.toLowerCase(),
+      tokenAddress,
+      tokenName: ethers.utils.parseBytes32String(item.tokenName),
+      filledAmount: item.filledAmount.toNumber(),
+      adminAddress: item.admin?.toLowerCase(),
       approved: item.approved,
       approverAddress: item.approver,
       privatable: item.privatable,
-      tokenAddress,
-      contractAddress: poolAccount?.toLowerCase(),
-      name: ethers.utils.parseBytes32String(item.name),
-      tokenName: ethers.utils.parseBytes32String(item.tokenName),
-      adminAddress: item.admin?.toLowerCase(),
       status: this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber()),
       tokenAmount: item.tokenAmount.toNumber(),
-      filledAmount: item.filledAmount.toNumber(),
+
       participantsCount: item.participantsCount.toNumber(),
       participants: [],
     }
