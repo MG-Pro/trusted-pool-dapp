@@ -235,10 +235,6 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
     }
   }
 
-  function _isZeroAddress(address _address) private pure returns (bool) {
-    return _address == address(0);
-  }
-
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
   function getTestDataV2() external view onlyOwner returns (address) {

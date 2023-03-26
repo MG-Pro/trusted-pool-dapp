@@ -235,9 +235,5 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
   }
 
-  function _isZeroAddress(address _address) private pure returns (bool) {
-    return _address == address(0);
-  }
-
   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

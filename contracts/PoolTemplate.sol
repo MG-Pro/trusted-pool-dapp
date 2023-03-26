@@ -39,6 +39,10 @@ error AlreadyFinalized();
 error TokenAddressAlreadySet();
 error AddressNotContract();
 
+function _isZeroAddress(address _address) pure returns (bool) {
+  return _address == address(0);
+}
+
 contract PoolTemplate is Initializable {
   bool public finalized;
 
@@ -288,10 +292,6 @@ contract PoolTemplate is Initializable {
       ((overallBalance + poolOverallClaimed) * participants[_address]) /
       poolTokenAmount -
       participantsClaims[_address];
-  }
-
-  function _isZeroAddress(address _address) private pure returns (bool) {
-    return _address == address(0);
   }
 
   function _onlyAdmin() private view {
