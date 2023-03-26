@@ -7,24 +7,26 @@
     <h6 class="card-subtitle mb-4 fs-6 text-success">
       Please, fill the form for creating new pool
     </h6>
-    <div class="mb-3">
-      <label class="form-label">Pool name <span class="text-danger">*</span></label>
-      <input
-        class="form-control bg-dark text-light border-opacity-50"
-        formControlName="name"
-        [class.is-invalid]="hasErrors('name')"
-      />
-      <p class="invalid-feedback">Input from 3 to 10 symbols</p>
-    </div>
+    <div class="d-flex gap-3">
+      <div class="mb-3 flex-grow-1">
+        <label class="form-label">Pool name <span class="text-danger">*</span></label>
+        <input
+          class="form-control bg-dark text-light border-opacity-50"
+          formControlName="name"
+          [class.is-invalid]="hasErrors('name')"
+        />
+        <p class="invalid-feedback">Input from 3 to 10 symbols</p>
+      </div>
 
-    <div class="mb-3">
-      <label class="form-label">Token name <span class="text-danger">*</span></label>
-      <input
-        class="form-control bg-dark text-light"
-        formControlName="tokenName"
-        [class.is-invalid]="hasErrors('tokenName')"
-      />
-      <p class="invalid-feedback">Input from 1 to 10 symbols</p>
+      <div class="mb-3 flex-grow-1">
+        <label class="form-label">Token name <span class="text-danger">*</span></label>
+        <input
+          class="form-control bg-dark text-light"
+          formControlName="tokenName"
+          [class.is-invalid]="hasErrors('tokenName')"
+        />
+        <p class="invalid-feedback">Input from 1 to 10 symbols</p>
+      </div>
     </div>
 
     <div class="mb-3">
@@ -37,8 +39,33 @@
       <p class="invalid-feedback">Token address not valid</p>
     </div>
 
+    <div class="d-flex gap-3">
+      <div class="mb-3 flex-grow-1">
+        <label class="form-label">Approver address</label>
+        <input
+          class="form-control bg-dark text-light"
+          formControlName="approverAddress"
+          [class.is-invalid]="hasErrors('approverAddress')"
+        />
+        <p class="invalid-feedback">Token address not valid</p>
+      </div>
+
+      <div
+        class="mb-3"
+        *ngIf="form.get('approverAddress').value && form.get('approverAddress').valid"
+      >
+        <label class="form-label">Approver`s fee {{ FEE_TOKEN.name }}</label>
+        <input
+          class="form-control bg-dark text-light"
+          formControlName="stableApproverFee"
+          [class.is-invalid]="hasErrors('stableApproverFee')"
+        />
+        <p class="invalid-feedback">Token address not valid</p>
+      </div>
+    </div>
+
     <div class="mb-3">
-      <label class="form-label">Token amount <span class="text-danger">*</span></label>
+      <label class="form-label">Pool token amount <span class="text-danger">*</span></label>
       <input
         type="number"
         class="form-control bg-dark text-light"
@@ -49,6 +76,11 @@
         Input value more than {{ form.getError('min', 'tokenAmount')?.min }} tokens
       </p>
     </div>
+    <div class="mb-3 form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" formControlName="privatable" />
+      <label class="form-check-label">Private pool</label>
+    </div>
+
     <ng-container formArrayName="participants">
       <ng-container *ngFor="let participant of $any(participantsForm.controls); let i = index">
         <div class="card text-bg-dark border border-secondary mb-3">

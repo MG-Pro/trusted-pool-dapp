@@ -18,7 +18,9 @@ import {
 } from '@angular/forms'
 import {
   EVM_ADDRESS_REGEXP,
+  FEE_TOKEN,
   MAX_POOL_PARTICIPANTS,
+  MIN_APPROVER_FEE,
   MIN_POOL_AMOUNT,
   MIN_SHARE_AMOUNT,
 } from '@app/settings'
@@ -42,15 +44,19 @@ export class NewPoolComponent implements OnInit, OnDestroy {
 
   public form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
-    tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
     tokenName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(10)]],
+    tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
+    approverAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
     tokenAmount: [0, [Validators.required, Validators.min(MIN_POOL_AMOUNT)]],
+    stableApproverFee: [MIN_APPROVER_FEE, [Validators.min(MIN_APPROVER_FEE)]],
+    privatable: false,
     participants: this.fb.array(
       [],
       [this.participantNumberValidator, this.participantsAmountValidator],
     ),
   })
 
+  public readonly FEE_TOKEN = FEE_TOKEN
   private formData: Partial<IPool>
   private destroyed$ = new Subject<void>()
 
@@ -69,31 +75,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       this.formData = val as Partial<IPool>
     })
     //
-    this.form.patchValue({ name: 'VC2', tokenName: 'MTG' })
-    this.participantsForm.push(
-      this.fb.group({
-        account: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-        share: 5000,
-      }),
-    )
-
-    Array(29)
-      .fill(null)
-      .forEach(() => {
-        this.participantsForm.push(
-          this.fb.group({
-            account: ethers.Wallet.createRandom().address,
-            share: 5000,
-          }),
-        )
-      })
-
-    const tokenAmount = this.participantsForm.controls.reduce((acc, form) => {
-      acc += parseInt(form.get('share').value || 0, 10)
-      return acc
-    }, 0)
-
-    this.form.patchValue({ tokenAmount })
+    this.fillTestForm()
   }
 
   public ngOnDestroy(): void {
@@ -182,5 +164,33 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       formArray?.controls.some((formGroup) => formGroup.get('address')?.value === control.value) ||
       true
     return !isUniq ? { participantsUniq: true } : null
+  }
+
+  private fillTestForm(pCount = 10): void {
+    this.form.patchValue({ name: 'VC2', tokenName: 'MTG' })
+    this.participantsForm.push(
+      this.fb.group({
+        account: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        share: 5000,
+      }),
+    )
+
+    Array(pCount)
+      .fill(null)
+      .forEach(() => {
+        this.participantsForm.push(
+          this.fb.group({
+            account: ethers.Wallet.createRandom().address,
+            share: 5000,
+          }),
+        )
+      })
+
+    const tokenAmount = this.participantsForm.controls.reduce((acc, form) => {
+      acc += parseInt(form.get('share').value || 0, 10)
+      return acc
+    }, 0)
+
+    this.form.patchValue({ tokenAmount })
   }
 }
