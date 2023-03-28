@@ -16,6 +16,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms'
+import { IconComponent } from '@app/components/icon/icon.component'
 import {
   EVM_ADDRESS_REGEXP,
   FEE_TOKEN,
@@ -31,7 +32,7 @@ import { Subject, takeUntil } from 'rxjs'
 @Component({
   selector: 'app-new-pool',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent],
   templateUrl: './new-pool.component.html',
   styleUrls: ['./new-pool.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,9 +48,10 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     tokenName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(10)]],
     tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
     approverAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
+    approvable: false,
     tokenAmount: [0, [Validators.required, Validators.min(MIN_POOL_AMOUNT)]],
     stableApproverFee: [MIN_APPROVER_FEE, [Validators.min(MIN_APPROVER_FEE)]],
-    privatable: false,
+    privatable: true,
     participants: this.fb.array(
       [],
       [this.participantNumberValidator, this.participantsAmountValidator],
@@ -177,11 +179,11 @@ export class NewPoolComponent implements OnInit, OnDestroy {
 
     Array(pCount)
       .fill(null)
-      .forEach(() => {
+      .forEach((_, i) => {
         this.participantsForm.push(
           this.fb.group({
             account: ethers.Wallet.createRandom().address,
-            share: 5000,
+            share: 5000 + i * 100,
           }),
         )
       })

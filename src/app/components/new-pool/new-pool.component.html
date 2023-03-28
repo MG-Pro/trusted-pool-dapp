@@ -38,8 +38,23 @@
       />
       <p class="invalid-feedback">Token address not valid</p>
     </div>
-
-    <div class="d-flex gap-3">
+    <div class="mb-3 form-check form-switch">
+      <input
+        class="form-check-input c-pointer"
+        type="checkbox"
+        role="switch"
+        formControlName="approvable"
+      />
+      <label class="form-check-label d-flex align-items-center"
+        ><span>Approvable pool</span>
+        <app-icon
+          class="text-danger ms-3"
+          icon="icon-info-circled"
+          toolTipText="Approvable"
+        ></app-icon
+      ></label>
+    </div>
+    <div class="d-flex gap-3" *ngIf="form.get('approvable').value">
       <div class="mb-3 flex-grow-1">
         <label class="form-label">Approver address</label>
         <input
@@ -50,10 +65,7 @@
         <p class="invalid-feedback">Token address not valid</p>
       </div>
 
-      <div
-        class="mb-3"
-        *ngIf="form.get('approverAddress').value && form.get('approverAddress').valid"
-      >
+      <div class="mb-3">
         <label class="form-label">Approver`s fee {{ FEE_TOKEN.name }}</label>
         <input
           class="form-control bg-dark text-light"
@@ -77,7 +89,12 @@
       </p>
     </div>
     <div class="mb-3 form-check form-switch">
-      <input class="form-check-input" type="checkbox" role="switch" formControlName="privatable" />
+      <input
+        class="form-check-input c-pointer"
+        type="checkbox"
+        role="switch"
+        formControlName="privatable"
+      />
       <label class="form-check-label">Private pool</label>
     </div>
 
@@ -91,32 +108,34 @@
             <button class="btn-close btn-close-white fs-5" (click)="deleteParticipant(i)"></button>
           </div>
           <div class="card-body" [formGroup]="participant">
-            <div class="mb-3">
-              <label class="form-label">
-                Participant address <span class="text-danger">*</span>
-              </label>
-              <input
-                class="form-control bg-dark text-light"
-                formControlName="account"
-                [class.is-invalid]="hasFormArrayError('address', i)"
-              />
-              <p class="invalid-feedback">Participant address not valid or not uniq</p>
-            </div>
+            <div class="d-flex gap-3">
+              <div class="mb-3 flex-grow-1">
+                <label class="form-label">
+                  Participant address <span class="text-danger">*</span>
+                </label>
+                <input
+                  class="form-control bg-dark text-light"
+                  formControlName="account"
+                  [class.is-invalid]="hasFormArrayError('address', i)"
+                />
+                <p class="invalid-feedback">Participant address not valid or not uniq</p>
+              </div>
 
-            <div class="mb-3">
-              <label class="form-label">
-                Participant share in tokens <span class="text-danger">*</span>
-              </label>
-              <input
-                type="number"
-                class="form-control bg-dark text-light"
-                formControlName="share"
-                [class.is-invalid]="hasFormArrayError('share', i)"
-              />
-              <p class="invalid-feedback">
-                Input value more than
-                {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
-              </p>
+              <div class="mb-3">
+                <label class="form-label">
+                  Participant share in tokens <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  class="form-control bg-dark text-light"
+                  formControlName="share"
+                  [class.is-invalid]="hasFormArrayError('share', i)"
+                />
+                <p class="invalid-feedback">
+                  Input value more than
+                  {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
+                </p>
+              </div>
             </div>
           </div>
         </div>
