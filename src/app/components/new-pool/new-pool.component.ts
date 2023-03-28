@@ -58,6 +58,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     ),
   })
 
+  public readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
   public readonly FEE_TOKEN = FEE_TOKEN
   private formData: Partial<IPool>
   private destroyed$ = new Subject<void>()
@@ -68,16 +69,12 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     return this.form.get('participants') as FormArray
   }
 
-  public get addingDisabled(): boolean {
-    return this.participantsForm.length >= MAX_POOL_PARTICIPANTS
-  }
-
   public ngOnInit(): void {
     this.form.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
       this.formData = val as Partial<IPool>
     })
     //
-    this.fillTestForm()
+    this.fillTestForm(30)
   }
 
   public ngOnDestroy(): void {

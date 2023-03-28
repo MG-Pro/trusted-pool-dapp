@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
 import { LocalState } from '@app/components/dashboard/dashboard.types'
-import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
+import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
+import { MAX_POOL_PARTICIPANTS } from '@app/settings'
 import {
   ICreatePoolRequestParams,
   IGlobalState,
@@ -62,6 +63,7 @@ export class DashboardComponent implements OnInit {
     public connectionService: ConnectionService,
     private stateService: GlobalStateService,
     private contractService: ContractService,
+    private modalService: ModalService,
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -84,6 +86,12 @@ export class DashboardComponent implements OnInit {
   }
 
   public async saveNewForm(poolData: Partial<IPool>): Promise<void> {
+    if (poolData.participants.length > MAX_POOL_PARTICIPANTS) {
+      this.modalService.open('Modal').result.then((res) => {
+        console.log(res)
+      })
+      return
+    }
     await this.contractService.createNewPool(
       poolData as ICreatePoolRequestParams,
       poolData.participants,

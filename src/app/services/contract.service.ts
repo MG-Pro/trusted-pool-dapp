@@ -52,11 +52,16 @@ export class ContractService {
       ? poolData.tokenAddress
       : ethers.constants.AddressZero
 
+    const approver = poolData.approverAddress
+      ? poolData.approverAddress
+      : ethers.constants.AddressZero
+
     try {
       const tr: TransactionResponse = await this.poolFactoryContract.createPoolContract(
         {
-          name: poolData.name,
+          approver,
           tokenAddress,
+          name: poolData.name,
           tokenName: poolData.tokenName,
           privatable: poolData.privatable,
           finalized: poolData.finalized,
