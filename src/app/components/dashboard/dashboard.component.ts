@@ -9,6 +9,7 @@ import {
   IParticipantLoadParams,
   IPool,
 } from '@app/types'
+import { TranslateService } from '@ngx-translate/core'
 import { BehaviorSubject, filter, map, Observable, tap } from 'rxjs'
 
 @Component({
@@ -64,6 +65,7 @@ export class DashboardComponent implements OnInit {
     private stateService: GlobalStateService,
     private contractService: ContractService,
     private modalService: ModalService,
+    private translate: TranslateService,
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -87,9 +89,17 @@ export class DashboardComponent implements OnInit {
 
   public async saveNewForm(poolData: Partial<IPool>): Promise<void> {
     if (poolData.participants.length > MAX_POOL_PARTICIPANTS) {
-      this.modalService.open('Modal').result.then((res) => {
-        console.log(res)
-      })
+      const tsCount = Math.floor(poolData.participants.length / MAX_POOL_PARTICIPANTS)
+      this.modalService
+        .open(
+          this.translate.instant('MaxPoolParticipantTsKey', {
+            max: MAX_POOL_PARTICIPANTS,
+            tsCount,
+          }),
+        )
+        .result.then((res) => {
+          console.log(res)
+        })
       return
     }
     await this.contractService.createNewPool(

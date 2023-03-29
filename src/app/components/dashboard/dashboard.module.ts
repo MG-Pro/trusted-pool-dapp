@@ -22,5 +22,6 @@ const routes: Routes = [{ path: '', component: DashboardComponent }]
     PoolsComponent,
     NewPoolComponent,
   ],
+  providers: [],
 })
 export class DashboardModule {}

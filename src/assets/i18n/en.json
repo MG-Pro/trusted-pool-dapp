@@ -1,0 +1,4 @@
+{
+  "MaxPoolParticipantTsKey": "Max pool participant per one transaction is {{max}}. It will be split into {{tsCount}} transactions",
+  "Creating new pool": "Creating new pool"
+}

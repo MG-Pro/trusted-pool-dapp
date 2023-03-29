@@ -26,13 +26,14 @@ import {
   MIN_SHARE_AMOUNT,
 } from '@app/settings'
 import { IPool } from '@app/types'
+import { TranslateModule } from '@ngx-translate/core'
 import { ethers } from 'ethers'
 import { Subject, takeUntil } from 'rxjs'
 
 @Component({
   selector: 'app-new-pool',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IconComponent],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent, TranslateModule],
   templateUrl: './new-pool.component.html',
   styleUrls: ['./new-pool.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
