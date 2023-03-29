@@ -7,9 +7,10 @@ import detectEthereumProvider from '@metamask/detect-provider'
 import { Contract, ethers, Signer } from 'ethers'
 import { BehaviorSubject } from 'rxjs'
 
-import { NotificationService, StatusClasses } from '../modules/notification'
+import { StatusClasses } from '../types/notification.types'
 
 import { GlobalStateService } from './global-state.service'
+import { NotificationService } from './notification.service'
 
 @Injectable({
   providedIn: 'root',

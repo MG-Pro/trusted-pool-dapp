@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common'
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,14 +6,12 @@ import {
   Input,
   Output,
 } from '@angular/core'
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
+import { FormControl, Validators } from '@angular/forms'
 import { EVM_ADDRESS_REGEXP } from '@app/settings'
 import { IParticipant, IPool } from '@app/types'
 
 @Component({
   selector: 'app-pools',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './pools.component.html',
   styleUrls: ['./pools.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common'
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core'
 import { map, Observable } from 'rxjs'
 
@@ -6,12 +7,14 @@ import { MessageData } from '../../types/notification.types'
 
 @Component({
   selector: 'app-notification',
+  standalone: true,
   templateUrl: './notification.component.html',
   styleUrls: ['./notification.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule],
 })
 export class NotificationComponent {
-  @Input() id: string
+  @Input() public id: string
 
   public messages$: Observable<MessageData[]> = this.notificationService.messageData$.pipe(
     map((messagesMap) => {

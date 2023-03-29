@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common'
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,16 +6,16 @@ import {
   OnDestroy,
   OnInit,
   Output,
+  TrackByFunction,
 } from '@angular/core'
 import {
   AbstractControl,
   FormArray,
   FormBuilder,
-  ReactiveFormsModule,
+  FormGroup,
   ValidationErrors,
   Validators,
 } from '@angular/forms'
-import { IconComponent } from '@app/components/icon/icon.component'
 import {
   EVM_ADDRESS_REGEXP,
   FEE_TOKEN,
@@ -26,14 +25,11 @@ import {
   MIN_SHARE_AMOUNT,
 } from '@app/settings'
 import { IPool } from '@app/types'
-import { TranslateModule } from '@ngx-translate/core'
 import { ethers } from 'ethers'
 import { Subject, takeUntil } from 'rxjs'
 
 @Component({
   selector: 'app-new-pool',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IconComponent, TranslateModule],
   templateUrl: './new-pool.component.html',
   styleUrls: ['./new-pool.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -115,6 +111,8 @@ export class NewPoolComponent implements OnInit, OnDestroy {
         share: [null, [Validators.required, Validators.min(MIN_SHARE_AMOUNT)]],
       }),
     )
+
+    this.participantsForm.controls = [...this.participantsForm.controls]
   }
 
   public deleteParticipant(id: number): void {
@@ -127,6 +125,10 @@ export class NewPoolComponent implements OnInit, OnDestroy {
 
   public close(): void {
     this.closeForm.emit()
+  }
+
+  public trackById(_, fg: FormGroup): TrackByFunction<unknown> {
+    return fg.get('account')?.value
   }
 
   private hasFieldError(field: string): boolean {

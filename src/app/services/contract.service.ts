@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core'
 import abi from '@app/contracts/abi/contracts/PoolTemplate.sol/PoolTemplate.json'
-import { NotificationService, StatusClasses } from '@app/modules/notification'
 import {
   ICreatePoolRequestParams,
   IPageParams,
@@ -14,8 +13,11 @@ import {
 import { TransactionResponse } from '@ethersproject/abstract-provider/src.ts'
 import { Contract, ethers, Signer } from 'ethers'
 
+import { StatusClasses } from '../types/notification.types'
+
 import { ConnectionService } from './connection.service'
 import { GlobalStateService } from './global-state.service'
+import { NotificationService } from './notification.service'
 
 @Injectable({
   providedIn: 'root',

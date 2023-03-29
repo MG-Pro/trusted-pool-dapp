@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
-import { LocalState } from '@app/components/dashboard/dashboard.types'
+import { LocalState } from '@app/modules/pools/pools.types'
 import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
 import { MAX_POOL_PARTICIPANTS } from '@app/settings'
 import {
