@@ -89,7 +89,7 @@ export class DashboardComponent implements OnInit {
 
   public async saveNewForm(poolData: Partial<IPool>): Promise<void> {
     if (poolData.participants.length > MAX_POOL_PARTICIPANTS) {
-      const tsCount = Math.floor(poolData.participants.length / MAX_POOL_PARTICIPANTS)
+      const tsCount = Math.ceil(poolData.participants.length / MAX_POOL_PARTICIPANTS)
       this.modalService
         .open(
           this.translate.instant('MaxPoolParticipantTsKey', {
@@ -100,6 +100,7 @@ export class DashboardComponent implements OnInit {
         .result.then((res) => {
           console.log(res)
         })
+        .catch(() => {})
       return
     }
     await this.contractService.createNewPool(

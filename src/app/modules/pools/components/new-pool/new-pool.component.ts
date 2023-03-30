@@ -21,7 +21,6 @@ import {
   FEE_TOKEN,
   MAX_POOL_PARTICIPANTS,
   MIN_APPROVER_FEE,
-  MIN_POOL_AMOUNT,
   MIN_SHARE_AMOUNT,
 } from '@app/settings'
 import { IPool } from '@app/types'
@@ -44,19 +43,18 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
     tokenName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(10)]],
     tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
-    approverAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
+    approverAddress: ['', [Validators.required, Validators.pattern(EVM_ADDRESS_REGEXP)]],
+    stableApproverFee: [MIN_APPROVER_FEE, [Validators.required, Validators.min(MIN_APPROVER_FEE)]],
     approvable: false,
-    tokenAmount: [0, [Validators.required, Validators.min(MIN_POOL_AMOUNT)]],
-    stableApproverFee: [MIN_APPROVER_FEE, [Validators.min(MIN_APPROVER_FEE)]],
-    privatable: true,
-    participants: this.fb.array(
-      [],
-      [this.participantNumberValidator, this.participantsAmountValidator],
-    ),
+    privatable: false,
+    participants: this.fb.array([], [this.participantNumberValidator]),
   })
 
+  public readonly MIN_APPROVER_FEE = MIN_APPROVER_FEE
   public readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
   public readonly FEE_TOKEN = FEE_TOKEN
+  public readonly participantItemHeight = 160
+
   private formData: Partial<IPool>
   private destroyed$ = new Subject<void>()
 
@@ -66,12 +64,26 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     return this.form.get('participants') as FormArray
   }
 
+  public get participantViewportHeight(): number {
+    const viewportHeight = this.participantItemHeight * 3
+    const h = this.participantsForm.length * this.participantItemHeight
+    return h > viewportHeight ? viewportHeight : h
+  }
+
+  public get tokenAmount(): number {
+    return this.participantsForm.controls.reduce((acc, form) => {
+      acc += parseInt(form.get('share').value || 0, 10)
+      return acc
+    }, 0)
+  }
+
   public ngOnInit(): void {
     this.form.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
       this.formData = val as Partial<IPool>
+      console.log(this.form)
     })
     //
-    this.fillTestForm(30)
+    this.fillTestForm(15)
   }
 
   public ngOnDestroy(): void {
@@ -80,7 +92,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   }
 
   public hasErrors(field: string): boolean {
-    return this.form.get(field)?.dirty && this.hasFieldError(field)
+    return this.form.dirty && this.hasFieldError(field)
   }
 
   public hasFormArrayError(field: string, id: number): boolean {
@@ -90,8 +102,6 @@ export class NewPoolComponent implements OnInit, OnDestroy {
         return form.hasError('pattern', [field]) || form.hasError('participantsUniq', [field])
       case 'share':
         return form.hasError('min', [field])
-      case 'description':
-        return form.hasError('maxlength', [field])
       default:
         return false
     }
@@ -112,11 +122,12 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       }),
     )
 
-    this.participantsForm.controls = [...this.participantsForm.controls]
+    this.participantsFormUp()
   }
 
   public deleteParticipant(id: number): void {
     this.participantsForm.removeAt(id)
+    this.participantsFormUp()
   }
 
   public save(): void {
@@ -138,10 +149,10 @@ export class NewPoolComponent implements OnInit, OnDestroy {
         return this.form.hasError('minlength', [field]) || this.form.hasError('maxlength', [field])
       case 'tokenAddress':
         return this.form.hasError('pattern', [field])
-      case 'tokenAmount':
+      case 'approverAddress':
+        return this.form.hasError('pattern', [field])
+      case 'stableApproverFee':
         return this.form.hasError('min', [field])
-      case 'participants':
-        return this.form.hasError('participantsAmount', [field])
       default:
         return false
     }
@@ -149,15 +160,6 @@ export class NewPoolComponent implements OnInit, OnDestroy {
 
   private participantNumberValidator(formArray: FormArray): ValidationErrors {
     return !formArray.length ? { participantNumber: true } : null
-  }
-
-  private participantsAmountValidator(formArray: FormArray): ValidationErrors {
-    const tokenAmount = formArray.parent?.get('tokenAmount')?.value || 0
-    const amount = formArray.controls.reduce((acc, form) => {
-      acc += parseInt(form.get('share').value || 0, 10)
-      return acc
-    }, 0)
-    return tokenAmount !== amount ? { participantsAmount: true } : null
   }
 
   private participantsUniqValidator(control: AbstractControl): ValidationErrors {
@@ -177,7 +179,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       }),
     )
 
-    Array(pCount)
+    Array(pCount - 1)
       .fill(null)
       .forEach((_, i) => {
         this.participantsForm.push(
@@ -187,12 +189,10 @@ export class NewPoolComponent implements OnInit, OnDestroy {
           }),
         )
       })
+  }
 
-    const tokenAmount = this.participantsForm.controls.reduce((acc, form) => {
-      acc += parseInt(form.get('share').value || 0, 10)
-      return acc
-    }, 0)
-
-    this.form.patchValue({ tokenAmount })
+  private participantsFormUp(): void {
+    this.form.markAsDirty()
+    this.participantsForm.controls = [...this.participantsForm.controls]
   }
 }

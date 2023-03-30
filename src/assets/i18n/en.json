@@ -1,4 +1,8 @@
 {
   "MaxPoolParticipantTsKey": "Max pool participant per one transaction is {{max}}. It will be split into {{tsCount}} transactions",
-  "Creating new pool": "Creating new pool"
+  "ApprovableTipKey": "Approvable pool",
+  "PrivatableTipKey": "Private pool",
+  "Creating new pool": "Creating new pool",
+  "Participant": "Participant",
+  "Participant address": "Participant address"
 }
