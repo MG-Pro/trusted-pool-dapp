@@ -103,6 +103,7 @@ export class DashboardComponent implements OnInit {
         .catch(() => {})
       return
     }
+    poolData.finalized = true
     await this.contractService.createNewPool(
       poolData as ICreatePoolRequestParams,
       poolData.participants,

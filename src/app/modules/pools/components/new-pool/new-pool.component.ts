@@ -12,8 +12,10 @@ import {
   AbstractControl,
   FormArray,
   FormBuilder,
+  FormControl,
   FormGroup,
   ValidationErrors,
+  ValidatorFn,
   Validators,
 } from '@angular/forms'
 import {
@@ -43,7 +45,13 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
     tokenName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(10)]],
     tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
-    approverAddress: ['', [Validators.required, Validators.pattern(EVM_ADDRESS_REGEXP)]],
+    approverAddress: [
+      '',
+      [
+        Validators.pattern(EVM_ADDRESS_REGEXP),
+        this.conditionalRequired(() => this.form.get('approvable').value),
+      ],
+    ],
     stableApproverFee: [MIN_APPROVER_FEE, [Validators.required, Validators.min(MIN_APPROVER_FEE)]],
     approvable: false,
     privatable: false,
@@ -82,8 +90,16 @@ export class NewPoolComponent implements OnInit, OnDestroy {
       this.formData = val as Partial<IPool>
       console.log(this.form)
     })
+
+    this.form
+      .get('approvable')
+      .valueChanges.pipe(takeUntil(this.destroyed$))
+      .subscribe(() => {
+        this.form.get('approverAddress').updateValueAndValidity()
+        this.form.get('stableApproverFee').updateValueAndValidity()
+      })
     //
-    this.fillTestForm(15)
+    this.fillTestForm(10)
   }
 
   public ngOnDestroy(): void {
@@ -92,7 +108,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   }
 
   public hasErrors(field: string): boolean {
-    return this.form.dirty && this.hasFieldError(field)
+    return this.form.get(field).dirty && this.hasFieldError(field)
   }
 
   public hasFormArrayError(field: string, id: number): boolean {
@@ -146,13 +162,17 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     switch (field) {
       case 'tokenName':
       case 'name':
-        return this.form.hasError('minlength', [field]) || this.form.hasError('maxlength', [field])
+        return (
+          this.form.hasError('required', [field]) ||
+          this.form.hasError('minlength', [field]) ||
+          this.form.hasError('maxlength', [field])
+        )
       case 'tokenAddress':
         return this.form.hasError('pattern', [field])
       case 'approverAddress':
-        return this.form.hasError('pattern', [field])
+        return this.form.hasError('required', [field]) || this.form.hasError('pattern', [field])
       case 'stableApproverFee':
-        return this.form.hasError('min', [field])
+        return this.form.hasError('required', [field]) || this.form.hasError('min', [field])
       default:
         return false
     }
@@ -170,11 +190,25 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     return !isUniq ? { participantsUniq: true } : null
   }
 
+  private conditionalRequired(condition: () => boolean): ValidatorFn {
+    return (control: FormControl) => {
+      if (control.parent) {
+        return condition() ? Validators.required(control) : null
+      }
+      return null
+    }
+  }
+
+  private participantsFormUp(): void {
+    this.form.markAsDirty()
+    this.participantsForm.controls = [...this.participantsForm.controls]
+  }
+
   private fillTestForm(pCount = 10): void {
     this.form.patchValue({ name: 'VC2', tokenName: 'MTG' })
     this.participantsForm.push(
       this.fb.group({
-        account: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        account: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
         share: 5000,
       }),
     )
@@ -189,10 +223,5 @@ export class NewPoolComponent implements OnInit, OnDestroy {
           }),
         )
       })
-  }
-
-  private participantsFormUp(): void {
-    this.form.markAsDirty()
-    this.participantsForm.controls = [...this.participantsForm.controls]
   }
 }

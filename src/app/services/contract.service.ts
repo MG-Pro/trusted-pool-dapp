@@ -50,6 +50,8 @@ export class ContractService {
     }
     this.connectionService.setLoadingStatus()
 
+    const stableApproverFee = poolData.approverAddress ? poolData.stableApproverFee : 0
+
     const tokenAddress = poolData.tokenAddress
       ? poolData.tokenAddress
       : ethers.constants.AddressZero
@@ -62,12 +64,12 @@ export class ContractService {
       const tr: TransactionResponse = await this.poolFactoryContract.createPoolContract(
         {
           approver,
+          stableApproverFee,
           tokenAddress,
-          name: poolData.name,
-          tokenName: poolData.tokenName,
+          name: ethers.utils.formatBytes32String(poolData.name),
+          tokenName: ethers.utils.formatBytes32String(poolData.tokenName),
           privatable: poolData.privatable,
           finalized: poolData.finalized,
-          stableApproverFee: poolData.stableApproverFee,
         },
         participants.map(({ account }) => account),
         participants.map(({ share }) => share),
