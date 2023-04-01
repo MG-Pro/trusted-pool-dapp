@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit {
   )
 
   public localState$ = new BehaviorSubject<LocalState>({
-    showCreatingForm: true,
+    showCreatingForm: false,
     activePool: null,
   })
 
@@ -143,9 +143,9 @@ export class DashboardComponent implements OnInit {
 
   private async loadData(): Promise<void> {
     await this.contractService.dispatchPoolsData(this.defaultPDataLoadParams)
-
-    if (this.stateService.value.userPools.length) {
-      this.activePoolChange(this.stateService.value.userPools[0])
+    if (!this.stateService.value.userPools.length) {
+      return
     }
+    this.activePoolChange(this.stateService.value.userPools[0])
   }
 }

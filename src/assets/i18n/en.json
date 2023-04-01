@@ -4,5 +4,10 @@
   "PrivatableTipKey": "Private pool",
   "Creating new pool": "Creating new pool",
   "Participant": "Participant",
-  "Participant address": "Participant address"
+  "Participant address": "Participant address",
+  "Private pool": "Private pool",
+  "Approved": "Approved",
+  "Approvable pool": "Approvable pool",
+  "Waiting approve": "Waiting approve",
+  "Token address not set": "Token address not set"
 }

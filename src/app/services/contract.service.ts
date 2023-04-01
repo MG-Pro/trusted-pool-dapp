@@ -137,14 +137,16 @@ export class ContractService {
   }
 
   public async dispatchParticipants(
-    { contractAddress }: IPool,
+    { contractAddress, privatable }: IPool,
     params: IParticipantLoadParams,
   ): Promise<void> {
     this.connectionService.setLoadingStatus(true)
     try {
-      const participants: IParticipantResponse[] = await this.getPoolTemplateInstance(
-        contractAddress,
-      ).getParticipants(params.first, params.size)
+      const instance: Contract = this.getPoolTemplateInstance(contractAddress)
+
+      const participants: IParticipantResponse[] = !privatable
+        ? await instance.getParticipants(params.first, params.size)
+        : [await instance.getParticipant()]
 
       this.stateService.patchState({
         userPools: this.stateService.state$.value.userPools.map((poolItem: IPool) => {
@@ -182,20 +184,22 @@ export class ContractService {
     const tokenAddress =
       item.tokenAddress !== ethers.constants.AddressZero ? item.tokenAddress?.toLowerCase() : null
 
+    const approverAddress =
+      item.approver !== ethers.constants.AddressZero ? item.approver?.toLowerCase() : null
+
     return {
       finalized,
+      tokenAddress,
+      approverAddress,
       name: ethers.utils.parseBytes32String(item.name),
       contractAddress: poolAccount?.toLowerCase(),
-      tokenAddress,
       tokenName: ethers.utils.parseBytes32String(item.tokenName),
       filledAmount: item.filledAmount.toNumber(),
       adminAddress: item.admin?.toLowerCase(),
       approved: item.approved,
-      approverAddress: item.approver,
       privatable: item.privatable,
       status: this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber()),
       tokenAmount: item.tokenAmount.toNumber(),
-
       participantsCount: item.participantsCount.toNumber(),
       participants: [],
     }

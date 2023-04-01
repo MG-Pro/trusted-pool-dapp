@@ -28,11 +28,16 @@
       </div>
       <div class="card-body">
         <div class="row mb-3">
-          <div class="col">
+          <div class="col-6">
+            <h6 class="card-title">Pool contract address:</h6>
+            <p class="card-text">{{ activePool?.contractAddress }}</p>
+          </div>
+          <div class="col-3">
             <h6 class="card-title">Token name:</h6>
             <p class="card-text">{{ activePool?.tokenName }}</p>
           </div>
-          <div class="col">
+
+          <div class="col-3">
             <h6 class="card-title">Token amount/filled:</h6>
             <p class="card-text">
               {{ activePool?.tokenAmount | number }}/{{ activePool?.filledAmount | number }}
@@ -40,15 +45,14 @@
           </div>
         </div>
         <div class="row mb-3">
-          <div class="col">
-            <h6 class="card-title">Pool contract address:</h6>
-            <p class="card-text">{{ activePool?.contractAddress }}</p>
-          </div>
-
-          <div class="col">
+          <div class="col-6">
             <h6 class="card-title">Token contract address:</h6>
-            <p class="card-text d-flex">
-              {{ activePool?.tokenAddress ? activePool?.tokenAddress : 'N/A' }}
+            <p class="card-text d-flex" [class.text-danger]="!activePool?.tokenAddress">
+              {{
+                activePool?.tokenAddress
+                  ? activePool?.tokenAddress
+                  : ('Token address not set' | translate)
+              }}
               <button
                 class="ms-auto btn btn-success btn-sm"
                 [disabled]="disabledEditTokenAddress"
@@ -78,6 +82,36 @@
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <h6 class="card-title" *ngIf="activePool?.privatable">
+              <span>{{ 'Private pool' | translate }} </span>
+              <app-icon
+                class="text-warning ms-1"
+                icon="icon-info-circled"
+                [toolTipText]="'PrivatableTipKey' | translate"
+              ></app-icon>
+            </h6>
+          </div>
+
+          <div class="col-3">
+            <div *ngIf="activePool.approverAddress">
+              <h6 class="card-title" *ngIf="true">
+                <span>{{ 'Approvable pool' | translate }} </span>
+                <app-icon
+                  class="text-warning ms-1"
+                  icon="icon-info-circled"
+                  [toolTipText]="'ApprovableTipKey' | translate"
+                ></app-icon>
+              </h6>
+              <p
+                class="card-text"
+                [class.text-danger]="!activePool?.approved"
+                [class.text-success]="activePool?.approved"
+              >
+                {{ (activePool?.approved ? 'Approved' : 'Waiting approve') | translate }}
+              </p>
             </div>
           </div>
         </div>
@@ -118,7 +152,9 @@
           </div>
           <div
             class="card text-bg-dark me-2 mb-2 w250"
-            *ngIf="!isLastParticipants && activePool?.participants.length"
+            *ngIf="
+              !activePool?.privatable && !isLastParticipants && activePool?.participants.length
+            "
           >
             <div class="card-body d-flex align-items-center">
               <button

@@ -88,7 +88,6 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.form.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
       this.formData = val as Partial<IPool>
-      console.log(this.form)
     })
 
     this.form
