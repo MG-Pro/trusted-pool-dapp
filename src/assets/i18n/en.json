@@ -2,6 +2,7 @@
   "MaxPoolParticipantTsKey": "Max pool participant per one transaction is {{max}}. It will be split into {{tsCount}} transactions",
   "ApprovableTipKey": "Approvable pool",
   "PrivatableTipKey": "Private pool",
+  "AppInfoKey": "App info text",
   "Creating new pool": "Creating new pool",
   "Participant": "Participant",
   "Participant address": "Participant address",

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core'
+import { ChangeDetectionStrategy, Component, HostBinding, OnDestroy, OnInit } from '@angular/core'
+import { ActivatedRoute, Router } from '@angular/router'
 import { LocalState } from '@app/modules/pools/pools.types'
 import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
 import { MAX_POOL_PARTICIPANTS } from '@app/settings'
@@ -10,7 +11,17 @@ import {
   IPool,
 } from '@app/types'
 import { TranslateService } from '@ngx-translate/core'
-import { BehaviorSubject, filter, map, Observable, tap } from 'rxjs'
+import {
+  BehaviorSubject,
+  combineLatest,
+  distinctUntilChanged,
+  filter,
+  map,
+  Observable,
+  Subject,
+  takeUntil,
+  tap,
+} from 'rxjs'
 
 @Component({
   selector: 'app-dashboard',
@@ -18,7 +29,7 @@ import { BehaviorSubject, filter, map, Observable, tap } from 'rxjs'
   styleUrls: ['./dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   @HostBinding('class') private readonly classes = 'main-layout flex-shrink-0 flex-grow-1'
 
   public state$: Observable<IGlobalState> = this.stateService.state$.pipe(
@@ -30,16 +41,6 @@ export class DashboardComponent implements OnInit {
   public userPools$: Observable<IPool[]> = this.state$.pipe(
     map((s) => s.userPools),
     filter((userPools) => !!userPools?.length),
-    tap((userPools: IPool[]) => {
-      console.log('userPools', userPools)
-      const activePool = userPools.find(
-        ({ contractAddress }) =>
-          this.localState$.value.activePool?.contractAddress === contractAddress,
-      )
-      if (activePool) {
-        this.patchLocalState({ activePool })
-      }
-    }),
   )
 
   public localState$ = new BehaviorSubject<LocalState>({
@@ -59,6 +60,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private pLoadParams: IParticipantLoadParams = { ...this.defaultPLoadParams }
+  private destroyed$ = new Subject<void>()
 
   constructor(
     public connectionService: ConnectionService,
@@ -66,6 +68,8 @@ export class DashboardComponent implements OnInit {
     private contractService: ContractService,
     private modalService: ModalService,
     private translate: TranslateService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -73,6 +77,33 @@ export class DashboardComponent implements OnInit {
     if (this.connectionService.userConnected) {
       await this.loadData()
     }
+
+    combineLatest([this.route.params, this.userPools$])
+      .pipe(
+        distinctUntilChanged(([prevParams], [curParams]) => {
+          return prevParams.id === curParams.id
+        }),
+        takeUntil(this.destroyed$),
+      )
+      .subscribe(([params, userPools]) => {
+        if (userPools.length) {
+          if (params.id) {
+            const activePoolId = params.id ? +params.id : 0
+            if (userPools[activePoolId]) {
+              this.activePoolChange(userPools[activePoolId])
+            } else {
+              this.router.navigate(['/0'])
+            }
+          } else {
+            this.router.navigate(['/0'])
+          }
+        }
+      })
+  }
+
+  public ngOnDestroy(): void {
+    this.destroyed$.next()
+    this.destroyed$.complete()
   }
 
   public async onConnectWallet(): Promise<void> {
@@ -128,6 +159,10 @@ export class DashboardComponent implements OnInit {
     this.contractService.dispatchParticipants(activePool, this.pLoadParams)
   }
 
+  public goToActivePool(activePool: number): void {
+    this.router.navigate(['/', activePool + ''])
+  }
+
   public async nextParticipants(pool: IPool): Promise<void> {
     this.pLoadParams = {
       ...this.pLoadParams,
@@ -143,9 +178,5 @@ export class DashboardComponent implements OnInit {
 
   private async loadData(): Promise<void> {
     await this.contractService.dispatchPoolsData(this.defaultPDataLoadParams)
-    if (!this.stateService.value.userPools.length) {
-      return
-    }
-    this.activePoolChange(this.stateService.value.userPools[0])
   }
 }

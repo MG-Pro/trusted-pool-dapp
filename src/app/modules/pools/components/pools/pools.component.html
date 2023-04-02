@@ -2,13 +2,14 @@
   <div class="col-2">
     <div class="list-group list-group-light">
       <a
-        href="#"
-        class="list-group-item list-group-item-action"
+        class="list-group-item list-group-item-action c-pointer"
+        [routerLink]=""
+        *ngFor="let pool of pools; index as i"
         [class.text-bg-warning]="isTabActive(pool)"
-        (click)="setActivePool(pool)"
-        *ngFor="let pool of pools"
+        (click)="setActivePool(i)"
       >
         {{ pool.name }}({{ pool.tokenName }})
+        <span> {{ pool.privatable ? ('Private pool' | translate) : '' }} </span>
       </a>
     </div>
   </div>

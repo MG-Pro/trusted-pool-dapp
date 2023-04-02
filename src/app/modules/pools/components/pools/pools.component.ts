@@ -25,7 +25,7 @@ export class PoolsComponent {
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
   @Output() public nextParticipantsLoad = new EventEmitter<IPool>()
-  @Output() public activePoolChange = new EventEmitter<IPool>()
+  @Output() public activePoolChange = new EventEmitter<number>()
 
   @HostBinding('class') private readonly classes = 'row'
 
@@ -88,7 +88,7 @@ export class PoolsComponent {
     return this.activePool?.contractAddress === pool.contractAddress
   }
 
-  public setActivePool(pool: IPool): void {
+  public setActivePool(pool: number): void {
     this.activePoolChange.emit(pool)
   }
 

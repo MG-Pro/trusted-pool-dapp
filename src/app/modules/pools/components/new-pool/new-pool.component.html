@@ -54,8 +54,8 @@
         ></app-icon
       ></label>
     </div>
-    <div class="d-flex gap-3" *ngIf="form.get('approvable').value">
-      <div class="mb-3 flex-grow-1">
+    <div class="row mb-3" *ngIf="form.get('approvable').value">
+      <div class="col-8">
         <label class="form-label">Approver address <span class="text-danger">*</span></label>
         <input
           class="form-control bg-dark text-light"
@@ -65,7 +65,7 @@
         <p class="invalid-feedback">Address not valid</p>
       </div>
 
-      <div class="mb-3">
+      <div class="col-4 ps-0">
         <label class="form-label"
           >Approver`s fee {{ FEE_TOKEN.name }} <span class="text-danger">*</span></label
         >
@@ -128,8 +128,8 @@
             <button class="btn-close btn-close-white fs-5" (click)="deleteParticipant(i)"></button>
           </div>
           <div class="card-body" [formGroup]="participant">
-            <div class="d-flex gap-3">
-              <div class="flex-grow-1">
+            <div class="row">
+              <div class="col-8">
                 <label class="form-label">
                   {{ 'Participant address' | translate }} <span class="text-danger">*</span>
                 </label>
@@ -141,9 +141,9 @@
                 <p class="invalid-feedback">Participant address not valid or not uniq</p>
               </div>
 
-              <div class="">
+              <div class="col-4 ps-0">
                 <label class="form-label">
-                  Participant share in tokens <span class="text-danger">*</span>
+                  <span>Participant share in tokens</span> <span class="text-danger ms-1">*</span>
                 </label>
                 <input
                   type="number"

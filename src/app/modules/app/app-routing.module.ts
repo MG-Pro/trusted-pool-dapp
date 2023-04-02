@@ -13,7 +13,12 @@ const routes: Routes = [
 ]
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, {})],
+  imports: [
+    RouterModule.forRoot(routes, {
+      paramsInheritanceStrategy: 'always',
+      onSameUrlNavigation: 'ignore',
+    }),
+  ],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

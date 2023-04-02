@@ -46,9 +46,10 @@
           (claimTokens)="claimTokens($event)"
           (tokenAddressChange)="tokenAddressChange($event)"
           (nextParticipantsLoad)="nextParticipants($event)"
-          (activePoolChange)="activePoolChange($event)"
+          (activePoolChange)="goToActivePool($event)"
         ></app-pools>
       </ng-container>
+      <div class="">{{ 'AppInfoKey' | translate }}</div>
     </div>
   </main>
 </ng-container>

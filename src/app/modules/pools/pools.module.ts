@@ -13,7 +13,10 @@ import { TranslateModule } from '@ngx-translate/core'
 
 import { DashboardComponent } from './containers/dashboard/dashboard.component'
 
-const routes: Routes = [{ path: '', component: DashboardComponent }]
+const routes: Routes = [
+  { path: '', component: DashboardComponent },
+  { path: ':id', component: DashboardComponent },
+]
 
 @NgModule({
   declarations: [DashboardComponent, NewPoolComponent, PoolsComponent],
