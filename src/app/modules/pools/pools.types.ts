@@ -1,6 +1,6 @@
 import { IPool } from '@app/types'
 
-export interface LocalState {
+export interface IDashboardLocalState {
   showCreatingForm: boolean
   activePool: IPool
 }

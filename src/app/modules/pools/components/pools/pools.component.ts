@@ -21,10 +21,11 @@ export class PoolsComponent {
   @Input() public userAccount: string
   @Input() public activePool: IPool
   @Input() public loading: boolean
-
+  @Input() public isLastPools: boolean
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
   @Output() public nextParticipantsLoad = new EventEmitter<IPool>()
+  @Output() public nextPoolsLoad = new EventEmitter<void>()
   @Output() public activePoolChange = new EventEmitter<number>()
 
   @HostBinding('class') private readonly classes = 'row'
@@ -41,12 +42,6 @@ export class PoolsComponent {
 
   public get isLastParticipants(): boolean {
     return this.activePool?.participants.length >= this.activePool?.participantsCount
-  }
-
-  public get isParticipant(): boolean {
-    return this.activePool?.participants.some(({ account }) => {
-      return account === this.userAccount
-    })
   }
 
   public get disabledEditTokenAddress(): boolean {
@@ -98,5 +93,9 @@ export class PoolsComponent {
 
   public nextParticipants(): void {
     this.nextParticipantsLoad.emit(this.activePool)
+  }
+
+  public nextPools(): void {
+    this.nextPoolsLoad.emit()
   }
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core'
 import abi from '@app/contracts/abi/contracts/PoolTemplate.sol/PoolTemplate.json'
 import {
   ICreatePoolRequestParams,
+  IDataLoadParams,
   IPageParams,
   IParticipant,
   IParticipantLoadParams,
@@ -110,7 +111,7 @@ export class ContractService {
     }
   }
 
-  public async dispatchPoolsData(params: IPageParams): Promise<void> {
+  public async dispatchPoolsData(params: IDataLoadParams): Promise<void> {
     if (!this.checkContract()) {
       return
     }
@@ -123,10 +124,15 @@ export class ContractService {
         const reqPools = poolsAccounts.map((poolAccount: string) => {
           return this.loadPoolData(poolAccount)
         })
-        const userPools: IPool[] = await Promise.all(reqPools)
+        const userPoolsSlice: IPool[] = await Promise.all(reqPools)
 
+        const userPools: IPool[] = params.mergeMode
+          ? [...this.stateService.value.userPools, ...userPoolsSlice]
+          : userPoolsSlice
+        console.log(userPoolsSlice)
         this.stateService.patchState({
           userPools,
+          isLastPools: params.size > userPoolsSlice.length,
         })
       }
     } catch (e) {

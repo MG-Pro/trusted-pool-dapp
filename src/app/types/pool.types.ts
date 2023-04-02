@@ -68,3 +68,5 @@ export interface IPageParams {
 export interface IParticipantLoadParams extends IPageParams {
   mergeMode?: boolean
 }
+
+export type IDataLoadParams = IParticipantLoadParams

@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
-import { LocalState } from '@app/modules/pools/pools.types'
+import { IDashboardLocalState } from '@app/modules/pools/pools.types'
 import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
 import { MAX_POOL_PARTICIPANTS } from '@app/settings'
 import {
   ICreatePoolRequestParams,
+  IDataLoadParams,
   IGlobalState,
-  IPageParams,
   IParticipantLoadParams,
   IPool,
 } from '@app/types'
@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     filter((userPools) => !!userPools?.length),
   )
 
-  public localState$ = new BehaviorSubject<LocalState>({
+  public localState$ = new BehaviorSubject<IDashboardLocalState>({
     showCreatingForm: false,
     activePool: null,
   })
@@ -54,12 +54,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     mergeMode: false,
   }
 
-  private readonly defaultPDataLoadParams: IPageParams = {
+  private readonly defaultPDataLoadParams: IDataLoadParams = {
     first: 0,
-    size: 10,
+    size: 2,
   }
 
   private pLoadParams: IParticipantLoadParams = { ...this.defaultPLoadParams }
+  private dLoadParams: IDataLoadParams = { ...this.defaultPDataLoadParams }
   private destroyed$ = new Subject<void>()
 
   constructor(
@@ -141,6 +142,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     )
     await this.loadData()
     this.closeNewForm()
+    this.goToActivePool(this.stateService.value.userPools.length - 1)
   }
 
   public async tokenAddressChange(eventData: [string, IPool]): Promise<void> {
@@ -172,11 +174,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     await this.contractService.dispatchParticipants(pool, this.pLoadParams)
   }
 
-  private patchLocalState(patch: Partial<LocalState>): void {
+  public nextPools(): void {
+    const params = {
+      ...this.defaultPDataLoadParams,
+      first: this.dLoadParams.first + this.defaultPDataLoadParams.size,
+      mergeMode: true,
+    }
+    console.log(params)
+    this.loadData(params)
+  }
+
+  private patchLocalState(patch: Partial<IDashboardLocalState>): void {
     this.localState$.next({ ...this.localState$.value, ...patch })
   }
 
-  private async loadData(): Promise<void> {
-    await this.contractService.dispatchPoolsData(this.defaultPDataLoadParams)
+  private async loadData(params: IDataLoadParams = this.defaultPDataLoadParams): Promise<void> {
+    this.dLoadParams = { ...this.dLoadParams, ...params }
+    await this.contractService.dispatchPoolsData(this.dLoadParams)
   }
 }

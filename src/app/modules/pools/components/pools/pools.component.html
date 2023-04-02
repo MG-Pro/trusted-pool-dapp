@@ -11,6 +11,14 @@
         {{ pool.name }}({{ pool.tokenName }})
         <span> {{ pool.privatable ? ('Private pool' | translate) : '' }} </span>
       </a>
+      <a
+        *ngIf="!isLastPools"
+        class="list-group-item c-pointer text-center list-group-item-action"
+        [routerLink]=""
+        (click)="nextPools()"
+      >
+        {{ 'Load more' | translate }}...
+      </a>
     </div>
   </div>
 
@@ -163,7 +171,7 @@
                 [disabled]="loading"
                 (click)="nextParticipants()"
               >
-                Next
+                {{ 'Load more' | translate }}
               </button>
             </div>
           </div>

@@ -43,9 +43,11 @@
           [userAccount]="params.state.userAccount"
           [activePool]="params.localState.activePool"
           [loading]="params.loading"
+          [isLastPools]="params.state.isLastPools"
           (claimTokens)="claimTokens($event)"
           (tokenAddressChange)="tokenAddressChange($event)"
           (nextParticipantsLoad)="nextParticipants($event)"
+          (nextPoolsLoad)="nextPools()"
           (activePoolChange)="goToActivePool($event)"
         ></app-pools>
       </ng-container>

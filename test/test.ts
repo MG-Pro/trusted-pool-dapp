@@ -643,7 +643,7 @@ describe('PoolFactory', () => {
         noAddressZeroInArray(poolAccounts)
         poolAccountsAcc.push(...poolAccounts)
       }
-
+      // TODO: fix it contractCount for another participants
       const contractCount: BigNumber = await poolFactoryContract
         .connect(participant1)
         .contractCount()

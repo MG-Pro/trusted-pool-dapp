@@ -1,4 +1,5 @@
 {
+  "Articles": {},
   "MaxPoolParticipantTsKey": "Max pool participant per one transaction is {{max}}. It will be split into {{tsCount}} transactions",
   "ApprovableTipKey": "Approvable pool",
   "PrivatableTipKey": "Private pool",
@@ -10,5 +11,6 @@
   "Approved": "Approved",
   "Approvable pool": "Approvable pool",
   "Waiting approve": "Waiting approve",
-  "Token address not set": "Token address not set"
+  "Token address not set": "Token address not set",
+  "Load more": "Load more"
 }
