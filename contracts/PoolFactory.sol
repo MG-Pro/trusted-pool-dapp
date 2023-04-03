@@ -151,7 +151,7 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     uint256 counter;
     list = new address[](0);
-    for (uint256 i; i < contractCount; ) {
+    for (uint256 i; i < contractCount; i++) {
       bool exist;
       try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
         exist = res;
@@ -161,7 +161,7 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
       if (exist) {
         counter++;
-        if (counter < first) {
+        if (counter < first + 1) {
           continue;
         }
 
@@ -179,10 +179,6 @@ contract PoolFactory is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if (list.length == size) {
           return list;
         }
-      }
-
-      unchecked {
-        i++;
       }
     }
   }

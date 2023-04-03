@@ -1,9 +1,9 @@
 import type { PoolFactory, PoolTemplate } from '@app/typechain'
 import type { IParticipantResponse, IPoolResponse } from '@app/types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
 import { expect } from 'chai'
 import type { ContractTransaction } from 'ethers'
-import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 
 import {
@@ -19,7 +19,6 @@ import {
   approverValueFee,
   upgradePoolFactory,
   splitParticipants,
-  getTestSigners,
   noAddressZeroInArray,
 } from './test.helpers'
 import {
@@ -599,58 +598,71 @@ describe('PoolFactory', () => {
   })
 
   describe('Pools pagination', () => {
-    it('Should create 200 pools and get addresses with pagination', async () => {
+    it('Should create pools and get addresses with pagination', async () => {
       const participantsCount = 3
-      const poolCount = 200
-      const first = 100
-      const size = 100
+      const poolCount1 = 50
+      const poolCount2 = 25
+      const size = 5
+      let first = -size
 
-      const { creator2 } = await getTestSigners()
-      const { poolFactoryContract, participant1 } = await loadFixture<IDeployPoolFactory>(
-        deployPoolFactory,
-      )
+      const { poolFactoryContract, participant1, creatorAndParticipant1, creator2 } =
+        await loadFixture<IDeployPoolFactory>(deployPoolFactory)
       const { name, tokenName, participants, shares, tokenAddress, approverAddress, privatable } =
         await preparePoolData(undefined, participantsCount)
 
-      await Promise.all(
-        Array(poolCount)
-          .fill(null)
-          .map(() => {
-            return poolFactoryContract.connect(creator2).createPoolContract(
-              {
-                name,
-                tokenAddress,
-                tokenName,
-                approver: approverAddress,
-                privatable,
-                finalized: true,
-                stableApproverFee: 0,
-              },
-              participants,
-              shares,
-            )
-          }),
-      )
-
-      const poolAccountsAcc: string[] = []
-      for (const _ of Array(Math.floor(poolCount / size)).fill(null)) {
-        const poolAccounts: string[] = await poolFactoryContract.findPoolsByParticipant(
-          participants[0],
-          first,
-          size,
+      async function poolPagination(
+        poolCount: number,
+        creator: SignerWithAddress,
+        participant: SignerWithAddress,
+      ): Promise<string[]> {
+        await Promise.all(
+          Array(poolCount)
+            .fill(null)
+            .map(() => {
+              return poolFactoryContract.connect(creator).createPoolContract(
+                {
+                  name,
+                  tokenAddress,
+                  tokenName,
+                  approver: approverAddress,
+                  privatable,
+                  finalized: true,
+                  stableApproverFee: 0,
+                },
+                participants,
+                shares,
+              )
+            }),
         )
-        expect(poolAccounts.length).to.equal(size)
-        noAddressZeroInArray(poolAccounts)
-        poolAccountsAcc.push(...poolAccounts)
-      }
-      // TODO: fix it contractCount for another participants
-      const contractCount: BigNumber = await poolFactoryContract
-        .connect(participant1)
-        .contractCount()
 
-      expect(poolCount).to.equal(contractCount)
-      expect(poolAccountsAcc.length).to.equal(contractCount)
-      noAddressZeroInArray(poolAccountsAcc)
+        const poolAccountsAcc: string[] = []
+        for (const _ of Array(Math.floor(poolCount / size)).fill(null)) {
+          const poolAccounts: string[] = await poolFactoryContract.findPoolsByParticipant(
+            participant.address,
+            (first += size),
+            size,
+          )
+          noAddressZeroInArray(poolAccounts)
+          poolAccounts.forEach((addr) => {
+            expect(poolAccountsAcc.includes(addr)).to.equal(false)
+          })
+          expect(poolAccounts.length).to.equal(size)
+
+          poolAccountsAcc.push(...poolAccounts)
+        }
+
+        return poolAccountsAcc
+      }
+
+      const poolAccounts1 = await poolPagination(
+        poolCount1,
+        creatorAndParticipant1,
+        creatorAndParticipant1,
+      )
+      const poolAccounts2 = await poolPagination(poolCount2, creator2, participant1)
+
+      expect(poolAccounts1.length).to.equal(poolCount1)
+      expect(poolAccounts2.length).to.equal(poolCount2)
     })
   })
 })
