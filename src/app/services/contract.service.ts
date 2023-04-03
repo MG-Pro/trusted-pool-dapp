@@ -134,6 +134,10 @@ export class ContractService {
           userPools,
           isLastPools: params.size > userPoolsSlice.length,
         })
+      } else {
+        this.stateService.patchState({
+          isLastPools: true,
+        })
       }
     } catch (e) {
       this.showError(e)
