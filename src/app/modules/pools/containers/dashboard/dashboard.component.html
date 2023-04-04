@@ -9,7 +9,7 @@
   <app-header
     [connected]="params.state.userConnected"
     [loading]="params.loading"
-    (connectWallet)="onConnectWallet()"
+    (connectWallet)="connectionService.connect()"
     class="mb-auto"
   ></app-header>
   <main class="pt-3 pb-3">
@@ -23,21 +23,13 @@
           <p *ngIf="!params.userPools?.length" class="col m-0 d-flex align-items-center">
             You have not participated in pools, yet
           </p>
-          <div
-            class="d-flex align-items-center col justify-content-end"
-            *ngIf="!params.localState.showCreatingForm"
-          >
+          <div class="d-flex align-items-center col justify-content-end">
             <p class="m-0">You can create new pool</p>
             <button class="btn btn-danger ms-3 fs-5" (click)="showCreatingForm()">Add</button>
           </div>
         </div>
       </div>
-      <app-new-pool
-        *ngIf="params.localState.showCreatingForm"
-        (closeForm)="closeNewForm()"
-        (saveForm)="saveNewForm($event)"
-      ></app-new-pool>
-      <ng-container *ngIf="params.state.userConnected && !params.localState.showCreatingForm">
+      <ng-container *ngIf="params.state.userConnected">
         <app-pools
           [pools]="params.userPools"
           [userAccount]="params.state.userAccount"
@@ -48,7 +40,7 @@
           (tokenAddressChange)="tokenAddressChange($event)"
           (nextParticipantsLoad)="nextParticipants($event)"
           (nextPoolsLoad)="nextPools()"
-          (activePoolChange)="goToActivePool($event)"
+          (activePoolChange)="goToPool($event)"
         ></app-pools>
       </ng-container>
       <div class="">{{ 'AppInfoKey' | translate }}</div>

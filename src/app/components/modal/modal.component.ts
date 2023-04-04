@@ -11,7 +11,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalComponent {
-  @Input() public content = ''
+  @Input() public content = ['']
   @Input() public header = ''
 
   constructor(public activeModal: NgbActiveModal) {}

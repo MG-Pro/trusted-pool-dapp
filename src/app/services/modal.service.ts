@@ -11,7 +11,7 @@ export class ModalService {
   private readonly defParams: NgbModalOptions = { backdrop: 'static', centered: true }
   constructor(private modalService: NgbModal) {}
 
-  public open(content: string, header = 'Attention!', params?: NgbModalOptions): NgbModalRef {
+  public open(content: string[], header = 'Attention!', params?: NgbModalOptions): NgbModalRef {
     const modalRef = this.modalService.open(ModalComponent, { ...this.defParams, ...params })
     modalRef.componentInstance.header = header
     modalRef.componentInstance.content = content

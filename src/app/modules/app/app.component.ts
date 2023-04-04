@@ -11,6 +11,7 @@ export class AppComponent implements OnDestroy {
   @HostBinding('class') private readonly classes = 'd-flex h-100 flex-column'
   constructor(private connectionService: ConnectionService, private translate: TranslateService) {
     translate.addLangs(['en'])
+    this.connectionService.initConnection()
   }
 
   public ngOnDestroy(): void {

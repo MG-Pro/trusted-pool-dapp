@@ -1,21 +1,14 @@
 import { ChangeDetectionStrategy, Component, HostBinding, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
 import { IDashboardLocalState } from '@app/modules/pools/pools.types'
-import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
-import { MAX_POOL_PARTICIPANTS } from '@app/settings'
-import {
-  ICreatePoolRequestParams,
-  IDataLoadParams,
-  IGlobalState,
-  IParticipantLoadParams,
-  IPool,
-} from '@app/types'
-import { TranslateService } from '@ngx-translate/core'
+import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
+import { IDataLoadParams, IGlobalState, IParticipantLoadParams, IPool } from '@app/types'
 import {
   BehaviorSubject,
   combineLatest,
   distinctUntilChanged,
   filter,
+  first,
   map,
   Observable,
   Subject,
@@ -44,7 +37,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   )
 
   public localState$ = new BehaviorSubject<IDashboardLocalState>({
-    showCreatingForm: false,
     activePool: null,
   })
 
@@ -53,12 +45,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     size: 25,
     mergeMode: false,
   }
-
   private readonly defaultPDataLoadParams: IDataLoadParams = {
     first: 0,
-    size: 2,
+    size: 50,
+    mergeMode: false,
   }
-
   private pLoadParams: IParticipantLoadParams = { ...this.defaultPLoadParams }
   private dLoadParams: IDataLoadParams = { ...this.defaultPDataLoadParams }
   private destroyed$ = new Subject<void>()
@@ -67,17 +58,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     public connectionService: ConnectionService,
     private stateService: GlobalStateService,
     private contractService: ContractService,
-    private modalService: ModalService,
-    private translate: TranslateService,
     private router: Router,
     private route: ActivatedRoute,
   ) {}
 
   public async ngOnInit(): Promise<void> {
-    await this.connectionService.initConnection()
-    if (this.connectionService.userConnected) {
-      await this.loadData()
-    }
+    this.state$
+      .pipe(
+        filter(({ userConnected }) => userConnected),
+        first(),
+      )
+      .subscribe(() => {
+        this.loadData()
+      })
 
     combineLatest([this.route.params, this.userPools$])
       .pipe(
@@ -93,10 +86,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
             if (userPools[activePoolId]) {
               this.activePoolChange(userPools[activePoolId])
             } else {
-              this.router.navigate(['/0'])
+              this.goToPool(0)
             }
           } else {
-            this.router.navigate(['/0'])
+            this.goToPool(0)
           }
         }
       })
@@ -107,42 +100,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroyed$.complete()
   }
 
-  public async onConnectWallet(): Promise<void> {
-    await this.connectionService.connect()
-  }
-
   public async showCreatingForm(): Promise<void> {
-    this.patchLocalState({ showCreatingForm: true })
-  }
-
-  public closeNewForm(): void {
-    this.patchLocalState({ showCreatingForm: false })
-  }
-
-  public async saveNewForm(poolData: Partial<IPool>): Promise<void> {
-    if (poolData.participants.length > MAX_POOL_PARTICIPANTS) {
-      const tsCount = Math.ceil(poolData.participants.length / MAX_POOL_PARTICIPANTS)
-      this.modalService
-        .open(
-          this.translate.instant('MaxPoolParticipantTsKey', {
-            max: MAX_POOL_PARTICIPANTS,
-            tsCount,
-          }),
-        )
-        .result.then((res) => {
-          console.log(res)
-        })
-        .catch(() => {})
-      return
-    }
-    poolData.finalized = true
-    await this.contractService.createNewPool(
-      poolData as ICreatePoolRequestParams,
-      poolData.participants,
-    )
-    await this.loadData()
-    this.closeNewForm()
-    this.goToActivePool(this.stateService.value.userPools.length - 1)
+    this.router.navigate(['/new-pool'])
   }
 
   public async tokenAddressChange(eventData: [string, IPool]): Promise<void> {
@@ -161,8 +120,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.contractService.dispatchParticipants(activePool, this.pLoadParams)
   }
 
-  public goToActivePool(activePool: number): void {
-    this.router.navigate(['/', activePool + ''])
+  public goToPool(activePool: number): void {
+    this.router.navigate(['/pools', activePool])
   }
 
   public async nextParticipants(pool: IPool): Promise<void> {
@@ -180,7 +139,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       first: this.dLoadParams.first + this.defaultPDataLoadParams.size,
       mergeMode: true,
     }
-    console.log(params)
     this.loadData(params)
   }
 

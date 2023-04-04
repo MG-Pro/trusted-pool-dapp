@@ -6,6 +6,8 @@ import { expect } from 'chai'
 import type { ContractTransaction } from 'ethers'
 import { ethers } from 'hardhat'
 
+import { Helpers } from '../src/app/helpers'
+
 import {
   createPoolAndReqData,
   createPoolContract,
@@ -18,7 +20,6 @@ import {
   valueFee,
   approverValueFee,
   upgradePoolFactory,
-  splitParticipants,
   noAddressZeroInArray,
 } from './test.helpers'
 import {
@@ -164,8 +165,8 @@ describe('PoolFactory', () => {
       )
       const pData1 = await preparePoolData(undefined, fullCount)
 
-      const pChunks: string[][] = splitParticipants(pData1.participants, participantsCount1)
-      const sChunks: number[][] = splitParticipants(pData1.shares, participantsCount1)
+      const pChunks: string[][] = Helpers.splitParticipants(pData1.participants, participantsCount1)
+      const sChunks: number[][] = Helpers.splitParticipants(pData1.shares, participantsCount1)
 
       await poolFactoryContract.connect(creator2).createPoolContract(
         {
@@ -231,9 +232,12 @@ describe('PoolFactory', () => {
         deployPoolFactory,
       )
       const pData1 = await preparePoolData(undefined, fullCount)
-      const [ps1, ps2]: string[][] = splitParticipants(pData1.participants, participantsCount1)
+      const [ps1, ps2]: string[][] = Helpers.splitParticipants(
+        pData1.participants,
+        participantsCount1,
+      )
 
-      const [ss1, ss2]: number[][] = splitParticipants(pData1.shares, participantsCount1)
+      const [ss1, ss2]: number[][] = Helpers.splitParticipants(pData1.shares, participantsCount1)
 
       await poolFactoryContract.connect(creator2).createPoolContract(
         {
@@ -277,9 +281,12 @@ describe('PoolFactory', () => {
       )
       const pData1 = await preparePoolData(undefined, fullCount)
 
-      const [ps1, ps2]: string[][] = splitParticipants(pData1.participants, participantsCount2)
+      const [ps1, ps2]: string[][] = Helpers.splitParticipants(
+        pData1.participants,
+        participantsCount2,
+      )
 
-      const [ss1, ss2]: number[][] = splitParticipants(pData1.shares, participantsCount2)
+      const [ss1, ss2]: number[][] = Helpers.splitParticipants(pData1.shares, participantsCount2)
       await poolFactoryContract.connect(creator2).createPoolContract(
         {
           name: pData1.name,
@@ -1016,9 +1023,9 @@ describe('Performance', () => {
       .map((_, j) => j)) {
       const pData1 = await preparePoolData(undefined, fullCount, 'pl1' + i)
 
-      const pChunks: string[][] = splitParticipants(pData1.participants, participantsCount3)
+      const pChunks: string[][] = Helpers.splitParticipants(pData1.participants, participantsCount3)
 
-      const sChunks: number[][] = splitParticipants(pData1.shares, participantsCount3)
+      const sChunks: number[][] = Helpers.splitParticipants(pData1.shares, participantsCount3)
 
       await poolFactoryContract.connect(creatorAndParticipant1).createPoolContract(
         {

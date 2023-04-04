@@ -83,6 +83,27 @@ export class ContractService {
     }
   }
 
+  public async addParticipants(participants: IParticipant[]): Promise<boolean> {
+    if (!this.checkContract()) {
+      return false
+    }
+    this.connectionService.setLoadingStatus()
+
+    try {
+      const tx = await this.poolFactoryContract.addParticipants(
+        participants.map(({ account }) => account),
+        participants.map(({ share }) => share),
+      )
+      await tx.wait()
+      return true
+    } catch (e) {
+      this.showError(e)
+      return false
+    } finally {
+      this.connectionService.setLoadingStatus(false)
+    }
+  }
+
   public async setTokenContract(tokenAddress: string, pool: IPool): Promise<void> {
     this.connectionService.setLoadingStatus()
     try {

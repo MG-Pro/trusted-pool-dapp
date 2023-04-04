@@ -1,11 +1,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
   HostBinding,
   OnDestroy,
   OnInit,
-  Output,
   TrackByFunction,
 } from '@angular/core'
 import {
@@ -18,6 +16,8 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms'
+import { Router } from '@angular/router'
+import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
 import {
   EVM_ADDRESS_REGEXP,
   FEE_TOKEN,
@@ -25,9 +25,13 @@ import {
   MIN_APPROVER_FEE,
   MIN_SHARE_AMOUNT,
 } from '@app/settings'
-import { IPool } from '@app/types'
+import { ICreatePoolRequestParams, IGlobalState, IParticipant, IPool } from '@app/types'
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal/modal-ref'
+import { TranslateService } from '@ngx-translate/core'
 import { ethers } from 'ethers'
-import { Subject, takeUntil } from 'rxjs'
+import { Observable, Subject, takeUntil, tap } from 'rxjs'
+
+import { Helpers } from '../../../../helpers'
 
 @Component({
   selector: 'app-new-pool',
@@ -36,10 +40,13 @@ import { Subject, takeUntil } from 'rxjs'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewPoolComponent implements OnInit, OnDestroy {
-  @Output() public closeForm = new EventEmitter<void>()
-  @Output() public saveForm = new EventEmitter<Partial<IPool>>()
+  @HostBinding('class') private readonly classes = 'main-layout flex-shrink-0 flex-grow-1'
 
-  @HostBinding('class') private readonly classes = 'row justify-content-center'
+  public state$: Observable<IGlobalState> = this.stateService.state$.pipe(
+    tap((state: IGlobalState) => {
+      // console.log('state', state)
+    }),
+  )
 
   public form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
@@ -66,7 +73,15 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   private formData: Partial<IPool>
   private destroyed$ = new Subject<void>()
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    public connectionService: ConnectionService,
+    private stateService: GlobalStateService,
+    private modalService: ModalService,
+    private translate: TranslateService,
+    private router: Router,
+    private contractService: ContractService,
+  ) {}
 
   public get participantsForm(): FormArray {
     return this.form.get('participants') as FormArray
@@ -98,7 +113,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
         this.form.get('stableApproverFee').updateValueAndValidity()
       })
     //
-    this.fillTestForm(10)
+    this.fillTestForm(5)
   }
 
   public ngOnDestroy(): void {
@@ -145,16 +160,41 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     this.participantsFormUp()
   }
 
-  public save(): void {
-    this.saveForm.emit(this.formData)
+  public async save(): Promise<void> {
+    if (this.form.participants.length > MAX_POOL_PARTICIPANTS) {
+      const modalRef: NgbModalRef = this.modalService.open([
+        this.translate.instant('MaxPoolParticipantTsKey', {
+          max: MAX_POOL_PARTICIPANTS,
+          tsCount: Math.ceil(this.form.participants.length / MAX_POOL_PARTICIPANTS),
+        }),
+      ])
+      return modalRef.result
+        .then(() => {
+          this.createSplittedPool(this.form)
+        })
+        .catch(() => {})
+    }
+    this.form.finalized = true
+    await this.contractService.createNewPool(
+      this.form as ICreatePoolRequestParams,
+      this.form.participants,
+    )
+
+    this.goToPool()
   }
 
   public close(): void {
-    this.closeForm.emit()
+    this.goToPool()
   }
 
   public trackById(_, fg: FormGroup): TrackByFunction<unknown> {
     return fg.get('account')?.value
+  }
+
+  private goToPool(): void {
+    const { length } = this.stateService.value.userPools
+    const activePool = length > 0 ? length - 1 : ''
+    this.router.navigate(['/pools', activePool])
   }
 
   private hasFieldError(field: string): boolean {
@@ -222,5 +262,19 @@ export class NewPoolComponent implements OnInit, OnDestroy {
           }),
         )
       })
+  }
+
+  private async createSplittedPool(poolData: Partial<IPool>): Promise<void> {
+    poolData.finalized = false
+    const [firstPChunks, ...pChunks]: IParticipant[][] = Helpers.splitParticipants(
+      poolData.participants,
+      this.MAX_POOL_PARTICIPANTS,
+    )
+    console.log(firstPChunks, pChunks)
+
+    await this.contractService.createNewPool(poolData as ICreatePoolRequestParams, firstPChunks)
+    for (const pChunk of pChunks) {
+      await this.contractService.addParticipants(pChunk)
+    }
   }
 }

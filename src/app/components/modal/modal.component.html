@@ -9,7 +9,7 @@
     ></button>
   </div>
   <div class="modal-body">
-    <p>{{ content }}</p>
+    <p *ngFor="let item of content">{{ item }}</p>
   </div>
   <div class="modal-footer border-dark border-opacity-50">
     <button type="button" class="btn btn-danger" (click)="activeModal.close(true)">OK</button>

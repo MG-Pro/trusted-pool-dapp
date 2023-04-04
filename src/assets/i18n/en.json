@@ -1,6 +1,6 @@
 {
   "Articles": {},
-  "MaxPoolParticipantTsKey": "Max pool participant per one transaction is {{max}}. It will be split into {{tsCount}} transactions",
+  "MaxPoolParticipantTsKey": "Max pool participants per one transaction is {{max}}. It will be split into {{tsCount}} transactions",
   "ApprovableTipKey": "Approvable pool",
   "PrivatableTipKey": "Private pool",
   "AppInfoKey": "App info text",
