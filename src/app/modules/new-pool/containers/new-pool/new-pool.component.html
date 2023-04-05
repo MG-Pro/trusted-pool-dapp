@@ -1,6 +1,8 @@
 <ng-container
   *ngIf="{
     state: state$ | async,
+    tsProcessing: tsProcessing$ | async,
+    initialized: initialized$ | async,
     loading: connectionService.loading$ | async
   } as params"
 >
@@ -13,196 +15,199 @@
 
   <main class="pt-3 pb-3">
     <app-notification id="main"></app-notification>
-    <div class="container d-flex flex-column align-items-center">
-      <div class="card text-bg-dark shadow-lg bg-opacity-75 col-8 mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="card-title m-0">{{ 'Transaction' | translate }} #1</h5>
-        </div>
-        <div class="card-body">
-          <h6 class="card-subtitle mb-4 fs-6">Processing...</h6>
-        </div>
-      </div>
+    <ng-container>
+      <div *ngIf="params.initialized" class="container d-flex flex-column align-items-center">
+        <app-processing
+          *ngIf="params.tsProcessing[1]"
+          [transactions]="params.tsProcessing"
+          class="mb-3"
+        ></app-processing>
+        <form class="card text-bg-dark shadow-lg bg-opacity-75 col-8" [formGroup]="form">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title m-0">{{ 'Creating new pool' | translate }}</h5>
+            <button class="btn-close btn-close-white fs-5" (click)="close()"></button>
+          </div>
+          <div class="card-body">
+            <h6 class="card-subtitle mb-4 fs-6 text-success">
+              Please, fill the form for creating new pool
+            </h6>
+            <div class="row mb-3">
+              <div class="col">
+                <label class="form-label">Pool name <span class="text-danger">*</span></label>
+                <input
+                  class="form-control bg-dark text-light border-opacity-50"
+                  formControlName="name"
+                  [class.is-invalid]="hasErrors('name')"
+                />
+                <p class="invalid-feedback mb-0">Input from 3 to 10 symbols</p>
+              </div>
 
-      <form class="card text-bg-dark shadow-lg bg-opacity-75 col-8" [formGroup]="form">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="card-title m-0">{{ 'Creating new pool' | translate }}</h5>
-          <button class="btn-close btn-close-white fs-5" (click)="close()"></button>
-        </div>
-        <div class="card-body">
-          <h6 class="card-subtitle mb-4 fs-6 text-success">
-            Please, fill the form for creating new pool
-          </h6>
-          <div class="row mb-3">
-            <div class="col">
-              <label class="form-label">Pool name <span class="text-danger">*</span></label>
-              <input
-                class="form-control bg-dark text-light border-opacity-50"
-                formControlName="name"
-                [class.is-invalid]="hasErrors('name')"
-              />
-              <p class="invalid-feedback mb-0">Input from 3 to 10 symbols</p>
+              <div class="col ps-0">
+                <label class="form-label">Token name <span class="text-danger">*</span></label>
+                <input
+                  class="form-control bg-dark text-light"
+                  formControlName="tokenName"
+                  [class.is-invalid]="hasErrors('tokenName')"
+                />
+                <p class="invalid-feedback mb-0">Input from 1 to 10 symbols</p>
+              </div>
             </div>
 
-            <div class="col ps-0">
-              <label class="form-label">Token name <span class="text-danger">*</span></label>
-              <input
-                class="form-control bg-dark text-light"
-                formControlName="tokenName"
-                [class.is-invalid]="hasErrors('tokenName')"
-              />
-              <p class="invalid-feedback mb-0">Input from 1 to 10 symbols</p>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Token address </label>
-            <input
-              class="form-control bg-dark text-light"
-              formControlName="tokenAddress"
-              [class.is-invalid]="hasErrors('tokenAddress')"
-            />
-            <p class="invalid-feedback mb-0">Token address not valid</p>
-          </div>
-          <div class="mb-3 form-check form-switch">
-            <input
-              class="form-check-input c-pointer"
-              type="checkbox"
-              role="switch"
-              formControlName="approvable"
-            />
-            <label class="form-check-label d-flex align-items-center"
-              ><span>Approvable pool</span>
-              <app-icon
-                class="text-danger ms-3"
-                icon="icon-info-circled"
-                [toolTipText]="'ApprovableTipKey' | translate"
-              ></app-icon
-            ></label>
-          </div>
-          <div class="row mb-3" *ngIf="form.get('approvable').value">
-            <div class="col-8">
-              <label class="form-label">Approver address <span class="text-danger">*</span></label>
+            <div class="mb-3">
+              <label class="form-label">Token address </label>
               <input
                 class="form-control bg-dark text-light"
-                formControlName="approverAddress"
-                [class.is-invalid]="hasErrors('approverAddress')"
+                formControlName="tokenAddress"
+                [class.is-invalid]="hasErrors('tokenAddress')"
               />
-              <p class="invalid-feedback mb-0">Address not valid</p>
+              <p class="invalid-feedback mb-0">Token address not valid</p>
             </div>
+            <div class="mb-3 form-check form-switch">
+              <input
+                class="form-check-input c-pointer"
+                type="checkbox"
+                role="switch"
+                formControlName="approvable"
+              />
+              <label class="form-check-label d-flex align-items-center"
+                ><span>Approvable pool</span>
+                <app-icon
+                  class="text-danger ms-3"
+                  icon="icon-info-circled"
+                  [toolTipText]="'ApprovableTipKey' | translate"
+                ></app-icon
+              ></label>
+            </div>
+            <div class="row mb-3" *ngIf="form.get('approvable').value">
+              <div class="col-8">
+                <label class="form-label"
+                  >Approver address <span class="text-danger">*</span></label
+                >
+                <input
+                  class="form-control bg-dark text-light"
+                  formControlName="approverAddress"
+                  [class.is-invalid]="hasErrors('approverAddress')"
+                />
+                <p class="invalid-feedback mb-0">Address not valid</p>
+              </div>
 
-            <div class="col-4 ps-0">
-              <label class="form-label"
-                >Approver`s fee {{ FEE_TOKEN.name }} <span class="text-danger">*</span></label
+              <div class="col-4 ps-0">
+                <label class="form-label"
+                  >Approver`s fee {{ FEE_TOKEN.name }} <span class="text-danger">*</span></label
+                >
+                <input
+                  type="number"
+                  class="form-control bg-dark text-light"
+                  formControlName="stableApproverFee"
+                  [class.is-invalid]="hasErrors('stableApproverFee')"
+                />
+                <p class="invalid-feedback mb-0">
+                  Min approver fee is {{ MIN_APPROVER_FEE }}{{ FEE_TOKEN.name }}
+                </p>
+              </div>
+            </div>
+            <div class="mb-3 form-check form-switch">
+              <input
+                class="form-check-input c-pointer"
+                type="checkbox"
+                role="switch"
+                formControlName="privatable"
+              />
+              <label class="form-check-label">
+                <span>Private pool</span>
+                <app-icon
+                  class="text-danger ms-3"
+                  icon="icon-info-circled"
+                  [toolTipText]="'PrivatableTipKey' | translate"
+                ></app-icon>
+              </label>
+            </div>
+            <div class="mb-3 d-flex justify-content-between" *ngIf="participantsForm.length">
+              <label class="form-label">Pool token amount: {{ tokenAmount | number }} </label>
+              <label
+                class="form-label"
+                [class.text-danger]="participantsForm.length > MAX_POOL_PARTICIPANTS"
+                >Participant count: {{ participantsForm.length }}</label
               >
-              <input
-                type="number"
-                class="form-control bg-dark text-light"
-                formControlName="stableApproverFee"
-                [class.is-invalid]="hasErrors('stableApproverFee')"
-              />
-              <p class="invalid-feedback mb-0">
-                Min approver fee is {{ MIN_APPROVER_FEE }}{{ FEE_TOKEN.name }}
-              </p>
             </div>
-          </div>
-          <div class="mb-3 form-check form-switch">
-            <input
-              class="form-check-input c-pointer"
-              type="checkbox"
-              role="switch"
-              formControlName="privatable"
-            />
-            <label class="form-check-label">
-              <span>Private pool</span>
-              <app-icon
-                class="text-danger ms-3"
-                icon="icon-info-circled"
-                [toolTipText]="'PrivatableTipKey' | translate"
-              ></app-icon>
-            </label>
-          </div>
-          <div class="mb-3 d-flex justify-content-between" *ngIf="participantsForm.length">
-            <label class="form-label">Pool token amount: {{ tokenAmount | number }} </label>
-            <label
-              class="form-label"
-              [class.text-danger]="participantsForm.length > MAX_POOL_PARTICIPANTS"
-              >Participant count: {{ participantsForm.length }}</label
-            >
-          </div>
-          <div class="mb-3" formArrayName="participants">
-            <cdk-virtual-scroll-viewport
-              *ngIf="participantsForm.length"
-              [itemSize]="participantItemHeight"
-              [minBufferPx]="participantItemHeight * 2"
-              [maxBufferPx]="participantItemHeight * 2"
-              [style.height]="participantViewportHeight + 'px'"
-              class=""
-            >
-              <div
-                class="card text-bg-dark border border-secondary mb-3"
-                *cdkVirtualFor="
-                  let participant of $any(participantsForm.controls);
-                  let i = index;
-                  trackBy: trackById
-                "
+            <div class="mb-3" formArrayName="participants">
+              <cdk-virtual-scroll-viewport
+                *ngIf="participantsForm.length"
+                [itemSize]="participantItemHeight"
+                [minBufferPx]="participantItemHeight * 2"
+                [maxBufferPx]="participantItemHeight * 2"
+                [style.height]="participantViewportHeight + 'px'"
+                class=""
               >
                 <div
-                  class="card-header d-flex justify-content-between align-items-center border-bottom border-secondary"
+                  class="card text-bg-dark border border-secondary mb-3"
+                  *cdkVirtualFor="
+                    let participant of $any(participantsForm.controls);
+                    let i = index;
+                    trackBy: trackById
+                  "
                 >
-                  <h6 class="card-title m-0">{{ 'Participant' | translate }} #{{ i + 1 }}</h6>
-                  <button
-                    class="btn-close btn-close-white fs-5"
-                    (click)="deleteParticipant(i)"
-                  ></button>
-                </div>
-                <div class="card-body" [formGroup]="participant">
-                  <div class="row">
-                    <div class="col-8">
-                      <label class="form-label">
-                        {{ 'Participant address' | translate }} <span class="text-danger">*</span>
-                      </label>
-                      <input
-                        class="form-control form-control-sm bg-dark text-light"
-                        formControlName="account"
-                        [class.is-invalid]="hasFormArrayError('address', i)"
-                      />
-                      <p class="invalid-feedback mb-0">Participant address not valid or not uniq</p>
-                    </div>
+                  <div
+                    class="card-header d-flex justify-content-between align-items-center border-bottom border-secondary"
+                  >
+                    <h6 class="card-title m-0">{{ 'Participant' | translate }} #{{ i + 1 }}</h6>
+                    <button
+                      class="btn-close btn-close-white fs-5"
+                      (click)="deleteParticipant(i)"
+                    ></button>
+                  </div>
+                  <div class="card-body" [formGroup]="participant">
+                    <div class="row">
+                      <div class="col-8">
+                        <label class="form-label">
+                          {{ 'Participant address' | translate }} <span class="text-danger">*</span>
+                        </label>
+                        <input
+                          class="form-control form-control-sm bg-dark text-light"
+                          formControlName="account"
+                          [class.is-invalid]="hasFormArrayError('address', i)"
+                        />
+                        <p class="invalid-feedback mb-0">
+                          Participant address not valid or not uniq
+                        </p>
+                      </div>
 
-                    <div class="col-4 ps-0">
-                      <label class="form-label">
-                        <span>Participant share in tokens</span>
-                        <span class="text-danger ms-1">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        class="form-control form-control-sm bg-dark text-light"
-                        formControlName="share"
-                        [class.is-invalid]="hasFormArrayError('share', i)"
-                      />
-                      <p class="invalid-feedback mb-0">
-                        Input value more than
-                        {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
-                      </p>
+                      <div class="col-4 ps-0">
+                        <label class="form-label">
+                          <span>Participant share in tokens</span>
+                          <span class="text-danger ms-1">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm bg-dark text-light"
+                          formControlName="share"
+                          [class.is-invalid]="hasFormArrayError('share', i)"
+                        />
+                        <p class="invalid-feedback mb-0">
+                          Input value more than
+                          {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </cdk-virtual-scroll-viewport>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <button class="btn btn-danger" (click)="addParticipant()">Add participant</button>
+              <div class="d-flex justify-content-end align-items-end">
+                <p class="text-danger m-0 me-3" *ngIf="!participantsForm.length">
+                  Please, add at least 1 participant
+                </p>
+                <button class="btn btn-success fs-5" [disabled]="form.invalid" (click)="save()">
+                  {{ 'Save' | translate }}
+                </button>
               </div>
-            </cdk-virtual-scroll-viewport>
+            </div>
           </div>
-          <div class="d-flex justify-content-center mb-3">
-            <button class="btn btn-danger" (click)="addParticipant()">Add participant</button>
-          </div>
-          <div class="d-flex justify-content-end align-items-baseline">
-            <p class="text-danger me-3" *ngIf="!participantsForm.length">
-              Please, add at least 1 participant
-            </p>
-            <button class="btn btn-success fs-5" [disabled]="form.invalid" (click)="save()">
-              Save
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div></ng-container
+    >
   </main>
 </ng-container>

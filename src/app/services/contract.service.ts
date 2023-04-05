@@ -45,9 +45,9 @@ export class ContractService {
   public async createNewPool(
     poolData: ICreatePoolRequestParams,
     participants: Partial<IParticipant>[],
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (!this.checkContract()) {
-      return
+      return false
     }
     this.connectionService.setLoadingStatus()
 
@@ -78,9 +78,11 @@ export class ContractService {
       await tr.wait()
     } catch (e) {
       this.showError(e)
+      return false
     } finally {
       this.connectionService.setLoadingStatus(false)
     }
+    return true
   }
 
   public async addParticipants(participants: IParticipant[]): Promise<boolean> {
@@ -94,6 +96,23 @@ export class ContractService {
         participants.map(({ account }) => account),
         participants.map(({ share }) => share),
       )
+      await tx.wait()
+      return true
+    } catch (e) {
+      this.showError(e)
+      return false
+    } finally {
+      this.connectionService.setLoadingStatus(false)
+    }
+  }
+
+  public async finalize(): Promise<boolean> {
+    if (!this.checkContract()) {
+      return false
+    }
+
+    try {
+      const tx = await this.poolFactoryContract.finalize()
       await tx.wait()
       return true
     } catch (e) {

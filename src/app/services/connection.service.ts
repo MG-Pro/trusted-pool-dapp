@@ -40,14 +40,17 @@ export class ConnectionService {
         'main',
       )
     }
+    this.stateService.patchState({ initialized: false })
     this.setLoadingStatus()
     const accounts = await this.getAccountConnection()
 
     if (!this.checkNetwork()) {
+      this.stateService.patchState({ initialized: true })
       return this.wrongNetworkMessage()
     }
 
     if (!accounts.length) {
+      this.stateService.patchState({ initialized: true })
       return this.wrongAccountMessage()
     }
 
@@ -58,6 +61,7 @@ export class ConnectionService {
       userConnected: true,
       poolFactoryContract: this.poolFactoryContract,
       userAccount: accounts[0]?.toLowerCase(),
+      initialized: true,
       signer,
     })
     this.setLoadingStatus(false)
@@ -94,6 +98,7 @@ export class ConnectionService {
     if (accounts.length) {
       await this.connect()
     }
+    this.stateService.patchState({ initialized: true })
     this.setLoadingStatus(false)
   }
 

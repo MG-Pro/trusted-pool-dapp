@@ -1,3 +1,4 @@
+import { ViewportScroller } from '@angular/common'
 import {
   ChangeDetectionStrategy,
   Component,
@@ -29,7 +30,7 @@ import { ICreatePoolRequestParams, IGlobalState, IParticipant, IPool } from '@ap
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal/modal-ref'
 import { TranslateService } from '@ngx-translate/core'
 import { ethers } from 'ethers'
-import { Observable, Subject, takeUntil, tap } from 'rxjs'
+import { BehaviorSubject, filter, first, map, Observable, Subject, takeUntil, tap } from 'rxjs'
 
 import { Helpers } from '../../../../helpers'
 
@@ -40,12 +41,24 @@ import { Helpers } from '../../../../helpers'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewPoolComponent implements OnInit, OnDestroy {
-  @HostBinding('class') private readonly classes = 'main-layout flex-shrink-0 flex-grow-1'
+  @HostBinding('class') private readonly classes: string = 'main-layout flex-shrink-0 flex-grow-1'
 
+  public tsProcessing$: BehaviorSubject<[number, number]> = new BehaviorSubject([0, 0])
   public state$: Observable<IGlobalState> = this.stateService.state$.pipe(
     tap((state: IGlobalState) => {
       // console.log('state', state)
     }),
+  )
+  public initialized$: Observable<boolean> = this.state$.pipe(
+    map((state: IGlobalState) => {
+      if (state.initialized && !state.userConnected) {
+        this.router.navigate(['/pools'])
+        return false
+      }
+      return true
+    }),
+    filter((initialized) => initialized),
+    first(),
   )
 
   public form = this.fb.group({
@@ -81,6 +94,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
     private translate: TranslateService,
     private router: Router,
     private contractService: ContractService,
+    private scroller: ViewportScroller,
   ) {}
 
   public get participantsForm(): FormArray {
@@ -113,7 +127,7 @@ export class NewPoolComponent implements OnInit, OnDestroy {
         this.form.get('stableApproverFee').updateValueAndValidity()
       })
     //
-    this.fillTestForm(5)
+    this.fillTestForm(15)
   }
 
   public ngOnDestroy(): void {
@@ -161,23 +175,23 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   }
 
   public async save(): Promise<void> {
-    if (this.form.participants.length > MAX_POOL_PARTICIPANTS) {
+    if (this.formData.participants.length > MAX_POOL_PARTICIPANTS) {
       const modalRef: NgbModalRef = this.modalService.open([
         this.translate.instant('MaxPoolParticipantTsKey', {
           max: MAX_POOL_PARTICIPANTS,
-          tsCount: Math.ceil(this.form.participants.length / MAX_POOL_PARTICIPANTS),
+          tsCount: Math.ceil(this.formData.participants.length / MAX_POOL_PARTICIPANTS),
         }),
       ])
       return modalRef.result
         .then(() => {
-          this.createSplittedPool(this.form)
+          this.createSplittedPool(this.formData)
         })
         .catch(() => {})
     }
-    this.form.finalized = true
+    this.formData.finalized = true
     await this.contractService.createNewPool(
-      this.form as ICreatePoolRequestParams,
-      this.form.participants,
+      this.formData as ICreatePoolRequestParams,
+      this.formData.participants,
     )
 
     this.goToPool()
@@ -265,16 +279,32 @@ export class NewPoolComponent implements OnInit, OnDestroy {
   }
 
   private async createSplittedPool(poolData: Partial<IPool>): Promise<void> {
-    poolData.finalized = false
-    const [firstPChunks, ...pChunks]: IParticipant[][] = Helpers.splitParticipants(
+    this.form.disable()
+    this.scroller.scrollToPosition([0, 0])
+    const chunks: IParticipant[][] = Helpers.splitParticipants(
       poolData.participants,
       this.MAX_POOL_PARTICIPANTS,
     )
-    console.log(firstPChunks, pChunks)
+    let currentTs = 0
+    const [firstPChunks, ...pChunks]: IParticipant[][] = chunks
+    const tsCount = chunks.length + 1
 
+    this.tsProcessing$.next([++currentTs, tsCount])
+    poolData.finalized = false
     await this.contractService.createNewPool(poolData as ICreatePoolRequestParams, firstPChunks)
+
+    this.tsProcessing$.next([++currentTs, tsCount])
+
     for (const pChunk of pChunks) {
-      await this.contractService.addParticipants(pChunk)
+      const success = await this.contractService.addParticipants(pChunk)
+      if (!success) {
+        break
+      }
+      this.tsProcessing$.next([++currentTs, tsCount])
     }
+
+    await this.contractService.finalize()
+    this.tsProcessing$.next([0, 0])
+    this.goToPool()
   }
 }

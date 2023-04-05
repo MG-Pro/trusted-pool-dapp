@@ -7,12 +7,13 @@ import { HeaderComponent } from '@app/components/header/header.component'
 import { IconComponent } from '@app/components/icon/icon.component'
 import { NotificationComponent } from '@app/components/notification/notification.component'
 import { NewPoolComponent } from '@app/modules/new-pool/containers/new-pool/new-pool.component'
+import { ProcessingComponent } from '@app/modules/new-pool/processing/processing.component'
 import { TranslateModule } from '@ngx-translate/core'
 
 const routes: Routes = [{ path: '', component: NewPoolComponent }]
 
 @NgModule({
-  declarations: [NewPoolComponent],
+  declarations: [NewPoolComponent, ProcessingComponent],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),

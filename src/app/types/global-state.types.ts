@@ -3,6 +3,7 @@ import { Contract, ethers, Signer } from 'ethers'
 import { IPool } from './pool.types'
 
 export interface IGlobalState {
+  initialized: boolean
   networkConnected: boolean
   userPools: IPool[]
   isLastPools?: boolean
