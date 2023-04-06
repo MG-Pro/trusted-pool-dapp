@@ -14,5 +14,7 @@
   "Token address not set": "Token address not set",
   "Load more": "Load more",
   "Save": "Save",
-  "Processing": "Processing"
+  "Processing": "Processing",
+  "Next transaction": "Next transaction",
+  "Cancel": "Cancel"
 }

@@ -4,9 +4,11 @@ import {
   EventEmitter,
   HostBinding,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  SimpleChanges,
   TrackByFunction,
 } from '@angular/core'
 import {
@@ -35,7 +37,7 @@ import { Subject, takeUntil } from 'rxjs'
   styleUrls: ['./pool-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PoolFormComponent implements OnInit, OnDestroy {
+export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public readOnly = false
 
   @Output() public closeForm = new EventEmitter<void>()
@@ -60,11 +62,11 @@ export class PoolFormComponent implements OnInit, OnDestroy {
     privatable: false,
     participants: this.fb.array([], [this.participantNumberValidator]),
   })
-
   public readonly participantItemHeight = 160
-  protected readonly FEE_TOKEN = FEE_TOKEN
-  protected readonly MIN_APPROVER_FEE = MIN_APPROVER_FEE
-  protected readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
+  public readonly FEE_TOKEN = FEE_TOKEN
+  public readonly MIN_APPROVER_FEE = MIN_APPROVER_FEE
+  public readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
+
   private formData: Partial<IPool>
   private destroyed$ = new Subject<void>()
 
@@ -106,6 +108,18 @@ export class PoolFormComponent implements OnInit, OnDestroy {
   public ngOnDestroy(): void {
     this.destroyed$.next()
     this.destroyed$.complete()
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
+    if (changes.hasOwnProperty('readOnly')) {
+      if (this.readOnly) {
+        this.form.disable()
+        this.participantsForm.disable()
+      } else {
+        this.form.enable()
+        this.participantsForm.enable()
+      }
+    }
   }
 
   public hasErrors(field: string): boolean {

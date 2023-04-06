@@ -1,6 +1,7 @@
 import { ViewportScroller } from '@angular/common'
 import { ChangeDetectionStrategy, Component, HostBinding } from '@angular/core'
 import { Router } from '@angular/router'
+import { ICreatingPoolProcessing } from '@app/modules/new-pool/new-pool.types'
 import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
 import { MAX_POOL_PARTICIPANTS } from '@app/settings'
 import { ICreatePoolRequestParams, IGlobalState, IParticipant, IPool } from '@app/types'
@@ -19,7 +20,13 @@ import { Helpers } from '../../../../helpers'
 export class NewPoolComponent {
   @HostBinding('class') private readonly classes: string = 'main-layout flex-shrink-0 flex-grow-1'
 
-  public tsProcessing$: BehaviorSubject<[number, number]> = new BehaviorSubject([0, 0])
+  public tsProcessing$: BehaviorSubject<ICreatingPoolProcessing> = new BehaviorSubject({
+    active: false,
+    pending: false,
+    currentTs: 0,
+    countTS: 0,
+    tsCalls: [],
+  })
   public state$: Observable<IGlobalState> = this.stateService.state$.pipe(
     tap((state: IGlobalState) => {
       // console.log('state', state)
@@ -36,7 +43,7 @@ export class NewPoolComponent {
     filter((initialized) => initialized),
     first(),
   )
-
+  public formDisabled$ = new BehaviorSubject<boolean>(false)
   public readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
 
   constructor(
@@ -76,6 +83,14 @@ export class NewPoolComponent {
     this.goToPool()
   }
 
+  public onNextTs(): void {
+    this.processingNextCall()
+  }
+
+  public onCancelTs(): void {
+    this.processingStop()
+  }
+
   private goToPool(): void {
     const { length } = this.stateService.value.userPools
     const activePool = length > 0 ? length - 1 : ''
@@ -83,31 +98,65 @@ export class NewPoolComponent {
   }
 
   private async createSplittedPool(poolData: Partial<IPool>): Promise<void> {
+    this.formDisabled$.next(true)
     this.scroller.scrollToPosition([0, 0])
     const chunks: IParticipant[][] = Helpers.splitParticipants(
       poolData.participants,
       this.MAX_POOL_PARTICIPANTS,
     )
-    let currentTs = 0
+
     const [firstPChunks, ...pChunks]: IParticipant[][] = chunks
-    const tsCount = chunks.length + 1
+    const countTS = chunks.length + 1
+    const tsCalls: Promise<boolean>[] = []
 
-    this.tsProcessing$.next([++currentTs, tsCount])
-    poolData.finalized = false
-    await this.contractService.createNewPool(poolData as ICreatePoolRequestParams, firstPChunks)
-
-    this.tsProcessing$.next([++currentTs, tsCount])
+    tsCalls.push(
+      this.contractService.createNewPool(
+        { ...poolData, finalized: false } as ICreatePoolRequestParams,
+        firstPChunks,
+      ),
+    )
 
     for (const pChunk of pChunks) {
-      const success = await this.contractService.addParticipants(pChunk)
-      if (!success) {
-        break
-      }
-      this.tsProcessing$.next([++currentTs, tsCount])
+      tsCalls.push(this.contractService.addParticipants(pChunk))
     }
 
-    await this.contractService.finalize()
-    this.tsProcessing$.next([0, 0])
-    this.goToPool()
+    tsCalls.push(this.contractService.finalize())
+
+    this.processingSetQueue({ tsCalls, countTS, currentTs: 0, active: true, pending: false })
+
+    // this.goToPool()
+  }
+
+  private processingSetQueue(p: ICreatingPoolProcessing): void {
+    this.tsProcessing$.next(p)
+  }
+
+  private async processingNextCall(): Promise<void> {
+    const { currentTs, countTS, tsCalls } = this.tsProcessing$.value
+
+    if (currentTs + 1 > countTS) {
+      this.processingStop()
+    }
+    this.tsProcessing$.next({
+      ...this.tsProcessing$.value,
+      pending: true,
+    })
+    console.log(tsCalls[currentTs])
+    await tsCalls[currentTs]
+    this.tsProcessing$.next({
+      ...this.tsProcessing$.value,
+      currentTs: currentTs + 1,
+      pending: false,
+    })
+  }
+
+  private processingStop(): void {
+    this.tsProcessing$.next({
+      active: false,
+      pending: false,
+      currentTs: 0,
+      countTS: 0,
+      tsCalls: [],
+    })
   }
 }

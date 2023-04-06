@@ -3,25 +3,32 @@
     state: state$ | async,
     tsProcessing: tsProcessing$ | async,
     initialized: initialized$ | async,
+    formDisabled: formDisabled$ | async,
     loading: connectionService.loading$ | async
   } as params"
 >
   <app-header
+    class="mb-auto"
     [connected]="params.state.userConnected"
     [loading]="params.loading"
     (connectWallet)="connectionService.connect()"
-    class="mb-auto"
   ></app-header>
 
   <main class="pt-3 pb-3">
     <app-notification id="main"></app-notification>
     <div *ngIf="params.initialized" class="container d-flex flex-column align-items-center">
       <app-processing
-        *ngIf="params.tsProcessing[1]"
-        [transactions]="params.tsProcessing"
         class="mb-3"
+        *ngIf="params.tsProcessing.active"
+        [tsProcessing]="params.tsProcessing"
+        (nextTs)="onNextTs()"
+        (cancel)="onCancelTs()"
       ></app-processing>
-      <app-pool-form (closeForm)="onCloseForm()" (createPool)="onCreate($event)"></app-pool-form>
+      <app-pool-form
+        [readOnly]="params.formDisabled"
+        (closeForm)="onCloseForm()"
+        (createPool)="onCreate($event)"
+      ></app-pool-form>
     </div>
   </main>
 </ng-container>

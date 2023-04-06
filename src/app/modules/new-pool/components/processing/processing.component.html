@@ -1,7 +1,7 @@
 <div class=" ">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="card-title m-0">
-      {{ 'Transaction' | translate }} # {{ transactions[0] }} / {{ transactions[1] }}
+      {{ 'Transaction' | translate }} # {{ tsProcessing.currentTs }} / {{ tsProcessing.countTS }}
     </h5>
   </div>
   <div class="card-body">
@@ -9,5 +9,13 @@
       <span class="spinner-border opacity-50 text-warning me-3"></span
       >{{ 'Processing' | translate }}...
     </h6>
+  </div>
+  <div class="card-footer d-flex justify-content-end">
+    <button [disabled]="tsProcessing.pending" (click)="onCancel()" class="btn btn-danger">
+      {{ 'Cancel' | translate }}
+    </button>
+    <button [disabled]="tsProcessing.pending" (click)="onNextTs()" class="btn btn-warning ms-3">
+      {{ 'Next transaction' | translate }}
+    </button>
   </div>
 </div>
