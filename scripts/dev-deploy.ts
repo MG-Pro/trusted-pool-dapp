@@ -21,6 +21,7 @@ async function deployPoolFactory(deployer: SignerWithAddress): Promise<void> {
   await addressExporter.save({
     PoolFactory: poolFactory.address,
   })
+  // await storageLayout.export()
 }
 
 async function deployTestERC20(deployer: SignerWithAddress): Promise<void> {

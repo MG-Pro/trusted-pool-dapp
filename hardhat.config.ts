@@ -1,12 +1,18 @@
 import * as path from 'path'
 
+import * as dotenv from 'dotenv'
 import { HardhatUserConfig } from 'hardhat/config'
 
 import '@nomicfoundation/hardhat-toolbox'
 import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
 import 'hardhat-address-exporter'
+import 'hardhat-storage-layout'
 import './tasks'
+
+dotenv.config()
+
+const { CMC_API_KEY } = process.env
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -28,6 +34,7 @@ const config: HardhatUserConfig = {
     showTimeSpent: true,
     enabled: true,
     excludeContracts: ['TestERC20.sol', 'TestPoolFactoryV2.sol'],
+    coinmarketcap: CMC_API_KEY,
   },
   networks: {
     hardhat: {

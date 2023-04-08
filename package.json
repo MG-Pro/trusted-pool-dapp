@@ -36,6 +36,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.8.2",
     "bootstrap": "^5.2.3",
     "ethers": "^5.7.2",
+    "hardhat-storage-layout": "^0.1.7",
     "rxjs": "~7.8.0",
     "tslib": "^2.5.0",
     "zone.js": "~0.13.0"
