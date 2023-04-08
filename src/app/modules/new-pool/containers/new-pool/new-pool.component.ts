@@ -1,13 +1,13 @@
 import { ViewportScroller } from '@angular/common'
 import { ChangeDetectionStrategy, Component, HostBinding } from '@angular/core'
 import { Router } from '@angular/router'
-import { ICreatingPoolProcessing } from '@app/modules/new-pool/new-pool.types'
+import { AsyncFnType, ICreatingPoolProcessing } from '@app/modules/new-pool/new-pool.types'
 import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
 import { MAX_POOL_PARTICIPANTS } from '@app/settings'
 import { ICreatePoolRequestParams, IGlobalState, IParticipant, IPool } from '@app/types'
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal/modal-ref'
 import { TranslateService } from '@ngx-translate/core'
-import { BehaviorSubject, filter, first, map, Observable, tap } from 'rxjs'
+import { BehaviorSubject, combineLatest, filter, first, map, Observable, tap } from 'rxjs'
 
 import { Helpers } from '../../../../helpers'
 
@@ -43,7 +43,16 @@ export class NewPoolComponent {
     filter((initialized) => initialized),
     first(),
   )
+
   public formDisabled$ = new BehaviorSubject<boolean>(false)
+
+  public isFormDisabled$ = combineLatest([this.state$, this.formDisabled$]).pipe(
+    map(([state, form]) => {
+      console.log(state.canCreatePool, form)
+      return !state.canCreatePool && form
+    }),
+  )
+
   public readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
 
   constructor(
@@ -89,6 +98,10 @@ export class NewPoolComponent {
 
   public onCancelTs(): void {
     this.processingStop()
+    this.formDisabled$.next(false)
+    if (this.tsProcessing$.value.currentTs > 0) {
+      this.goToPool()
+    }
   }
 
   private goToPool(): void {
@@ -107,56 +120,60 @@ export class NewPoolComponent {
 
     const [firstPChunks, ...pChunks]: IParticipant[][] = chunks
     const countTS = chunks.length + 1
-    const tsCalls: Promise<boolean>[] = []
+    const tsCalls: AsyncFnType[] = []
 
-    tsCalls.push(
-      this.contractService.createNewPool(
+    tsCalls.push(async () => {
+      return await this.contractService.createNewPool(
         { ...poolData, finalized: false } as ICreatePoolRequestParams,
         firstPChunks,
-      ),
-    )
+      )
+    })
 
     for (const pChunk of pChunks) {
-      tsCalls.push(this.contractService.addParticipants(pChunk))
+      tsCalls.push(async () => {
+        return await this.contractService.addParticipants(pChunk)
+      })
     }
 
-    tsCalls.push(this.contractService.finalize())
+    tsCalls.push(async () => {
+      return await this.contractService.finalize()
+    })
 
     this.processingSetQueue({ tsCalls, countTS, currentTs: 0, active: true, pending: false })
-
-    // this.goToPool()
   }
 
   private processingSetQueue(p: ICreatingPoolProcessing): void {
-    this.tsProcessing$.next(p)
+    this.patchProcessing(p)
   }
 
   private async processingNextCall(): Promise<void> {
     const { currentTs, countTS, tsCalls } = this.tsProcessing$.value
+    const nextTs = currentTs + 1
 
-    if (currentTs + 1 > countTS) {
-      this.processingStop()
+    this.patchProcessing({ pending: true })
+
+    const result = await tsCalls[currentTs]()
+    if (!result) {
+      this.patchProcessing({ pending: false })
+      return
     }
+
+    this.patchProcessing({ currentTs: nextTs, pending: false })
+
+    if (nextTs >= countTS) {
+      this.processingStop()
+      this.goToPool()
+    }
+  }
+
+  private patchProcessing(processing: Partial<ICreatingPoolProcessing>): void {
     this.tsProcessing$.next({
       ...this.tsProcessing$.value,
-      pending: true,
-    })
-    console.log(tsCalls[currentTs])
-    await tsCalls[currentTs]
-    this.tsProcessing$.next({
-      ...this.tsProcessing$.value,
-      currentTs: currentTs + 1,
-      pending: false,
+      ...processing,
     })
   }
 
   private processingStop(): void {
-    this.tsProcessing$.next({
-      active: false,
-      pending: false,
-      currentTs: 0,
-      countTS: 0,
-      tsCalls: [],
-    })
+    this.patchProcessing({ active: false, pending: false, currentTs: 0, countTS: 0, tsCalls: [] })
   }
 }

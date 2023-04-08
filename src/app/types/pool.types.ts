@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers'
 export enum PoolStatuses {
   Active = 'Active',
   Filled = 'Filled',
+  NoFinalized = 'NoFinalized',
 }
 
 export interface IParticipant {

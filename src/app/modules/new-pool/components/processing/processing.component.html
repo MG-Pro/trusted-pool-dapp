@@ -12,10 +12,16 @@
   </div>
   <div class="card-footer d-flex justify-content-end">
     <button [disabled]="tsProcessing.pending" (click)="onCancel()" class="btn btn-danger">
-      {{ 'Cancel' | translate }}
+      <span>{{ 'Cancel' | translate }}</span>
+      <app-icon
+        class="text-dark ms-3"
+        icon="icon-info-circled"
+        [toolTipText]="'Articles.CancelSeparatedPool' | translate"
+      ></app-icon>
     </button>
+
     <button [disabled]="tsProcessing.pending" (click)="onNextTs()" class="btn btn-warning ms-3">
-      {{ 'Next transaction' | translate }}
+      {{ buttonText | translate }}
     </button>
   </div>
 </div>

@@ -24,8 +24,17 @@
             You have not participated in pools, yet
           </p>
           <div class="d-flex align-items-center col justify-content-end">
-            <p class="m-0">You can create new pool</p>
-            <button class="btn btn-danger ms-3 fs-5" (click)="showCreatingForm()">Add</button>
+            <p class="m-0" *ngIf="params.state.canCreatePool">You can create new pool</p>
+            <p class="m-0" *ngIf="!params.state.canCreatePool">
+              You cannot create new pool while there is not finalized pool
+            </p>
+            <button
+              class="btn btn-danger ms-3 fs-5"
+              [disabled]="!params.state.canCreatePool"
+              (click)="showCreatingForm()"
+            >
+              Add
+            </button>
           </div>
         </div>
       </div>
@@ -41,6 +50,7 @@
           (nextParticipantsLoad)="nextParticipants($event)"
           (nextPoolsLoad)="nextPools()"
           (activePoolChange)="goToPool($event)"
+          (finalize)="finalizePool($event)"
         ></app-pools>
       </ng-container>
       <div class="">{{ 'AppInfoKey' | translate }}</div>

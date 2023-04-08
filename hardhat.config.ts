@@ -7,7 +7,7 @@ import '@nomicfoundation/hardhat-toolbox'
 import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
 import 'hardhat-address-exporter'
-import 'hardhat-storage-layout'
+// import 'hardhat-storage-layout'
 import './tasks'
 
 dotenv.config()

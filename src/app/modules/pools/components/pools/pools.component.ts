@@ -27,6 +27,7 @@ export class PoolsComponent {
   @Output() public nextParticipantsLoad = new EventEmitter<IPool>()
   @Output() public nextPoolsLoad = new EventEmitter<void>()
   @Output() public activePoolChange = new EventEmitter<number>()
+  @Output() public finalize = new EventEmitter<IPool>()
 
   @HostBinding('class') private readonly classes = 'row'
 
@@ -45,7 +46,12 @@ export class PoolsComponent {
   }
 
   public get disabledEditTokenAddress(): boolean {
-    return !!this.activePool?.tokenAddress || this.isEditTokenAddress || !this.isCreator
+    return (
+      !!this.activePool?.tokenAddress ||
+      this.isEditTokenAddress ||
+      !this.isCreator ||
+      !this.activePool.finalized
+    )
   }
 
   public prepParticipants(participants: IParticipant[]): IParticipant[] {
@@ -97,5 +103,9 @@ export class PoolsComponent {
 
   public nextPools(): void {
     this.nextPoolsLoad.emit()
+  }
+
+  public finalizePool(): void {
+    this.finalize.emit(this.activePool)
   }
 }

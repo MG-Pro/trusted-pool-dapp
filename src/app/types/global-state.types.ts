@@ -13,4 +13,5 @@ export interface IGlobalState {
   chainId?: number
   poolFactoryContract?: Contract
   signer?: Signer
+  canCreatePool: boolean
 }

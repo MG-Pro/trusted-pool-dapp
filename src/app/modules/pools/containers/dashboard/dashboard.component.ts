@@ -142,6 +142,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadData(params)
   }
 
+  public async finalizePool(pool: IPool): Promise<void> {
+    await this.contractService.finalize()
+  }
+
   private patchLocalState(patch: Partial<IDashboardLocalState>): void {
     this.localState$.next({ ...this.localState$.value, ...patch })
   }

@@ -22,6 +22,18 @@ export class ProcessingComponent {
   @HostBinding('class') private readonly classes: string =
     'card text-bg-dark shadow-lg bg-opacity-75 col-8 '
 
+  public get buttonText(): string {
+    console.log(this.tsProcessing)
+    switch (this.tsProcessing.currentTs) {
+      case 0:
+        return 'Create pool'
+      case this.tsProcessing.countTS - 1:
+        return 'Finalize'
+      default:
+        return 'Add participants'
+    }
+  }
+
   public onNextTs(): void {
     this.nextTs.emit()
   }

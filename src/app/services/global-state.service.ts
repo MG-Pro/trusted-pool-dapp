@@ -10,6 +10,7 @@ export class GlobalStateService {
     networkConnected: false,
     initialized: false,
     userPools: [],
+    canCreatePool: false,
   })
 
   public get value(): IGlobalState {

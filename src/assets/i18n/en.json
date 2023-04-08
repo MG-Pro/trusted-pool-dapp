@@ -1,5 +1,7 @@
 {
-  "Articles": {},
+  "Articles": {
+    "CancelSeparatedPool": "CancelSeparatedPool"
+  },
   "MaxPoolParticipantTsKey": "Max pool participants per one transaction is {{max}}. It will be split into {{tsCount}} transactions",
   "ApprovableTipKey": "Approvable pool",
   "PrivatableTipKey": "Private pool",
@@ -16,5 +18,8 @@
   "Save": "Save",
   "Processing": "Processing",
   "Next transaction": "Next transaction",
-  "Cancel": "Cancel"
+  "Cancel": "Cancel",
+  "Create pool": "Create pool",
+  "Add participants": "Add participants",
+  "Finalize": "Finalize"
 }

@@ -237,10 +237,15 @@ export class ContractService {
     const approverAddress =
       item.approver !== ethers.constants.AddressZero ? item.approver?.toLowerCase() : null
 
+    const status = !finalized
+      ? PoolStatuses.NoFinalized
+      : this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber())
+
     return {
       finalized,
       tokenAddress,
       approverAddress,
+      status,
       name: ethers.utils.parseBytes32String(item.name),
       contractAddress: poolAccount?.toLowerCase(),
       tokenName: ethers.utils.parseBytes32String(item.tokenName),
@@ -248,7 +253,6 @@ export class ContractService {
       adminAddress: item.admin?.toLowerCase(),
       approved: item.approved,
       privatable: item.privatable,
-      status: this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber()),
       tokenAmount: item.tokenAmount.toNumber(),
       participantsCount: item.participantsCount.toNumber(),
       participants: [],
