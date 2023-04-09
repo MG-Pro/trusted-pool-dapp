@@ -21,5 +21,12 @@
   "Cancel": "Cancel",
   "Create pool": "Create pool",
   "Add participants": "Add participants",
-  "Finalize": "Finalize"
+  "Add participant": "Add participant",
+  "Finalize": "Finalize",
+  "Address not valid": "Address not valid",
+  "Address not uniq": "Address not uniq",
+  "Participant share in tokens": "Participant share in tokens",
+  "Input value more than {min} tokens": "Input value more than {{min}} tokens",
+  "Please, fill the form for creating new pool": "Please, fill the form for creating new pool",
+  "Input from {min} to {max} symbols": "Input from {min} to {max} symbols"
 }

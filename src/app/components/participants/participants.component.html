@@ -41,19 +41,19 @@
                 *ngIf="participantsForm.at(i).hasError('isAddress', 'account')"
                 class="invalid-feedback mb-0"
               >
-                Participant address not valid
+                {{ 'Address not valid' | translate }}
               </p>
               <p
                 *ngIf="participantsForm.at(i).hasError('participantsUniq')"
                 class="invalid-feedback mb-0"
               >
-                Participant address not uniq
+                {{ 'Address not uniq' | translate }}
               </p>
             </div>
 
             <div class="col-4 ps-0">
               <label class="form-label">
-                <span>Participant share in tokens</span>
+                <span>{{ 'Participant share in tokens' | translate }}</span>
                 <span class="text-danger ms-1">*</span>
               </label>
               <input
@@ -63,8 +63,9 @@
                 [class.is-invalid]="hasErrors('share', i)"
               />
               <p class="invalid-feedback mb-0">
-                Input value more than
-                {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
+                {{
+                  'Input value more than {min} tokens' | translate : { min: MIN_SHARE_AMOUNT - 1 }
+                }}
               </p>
             </div>
           </div>
@@ -78,7 +79,7 @@
         [disabled]="participantsForm.disabled"
         (click)="addParticipant()"
       >
-        Add participant
+        {{ 'Add participant' | translate }}
       </button>
     </div>
   </div>

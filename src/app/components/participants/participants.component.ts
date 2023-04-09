@@ -48,6 +48,7 @@ export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
     participants: this.fb.array([]),
   })
 
+  public readonly MIN_SHARE_AMOUNT = MIN_SHARE_AMOUNT
   public readonly participantItemHeight = 160
   private destroyed$ = new Subject<void>()
 

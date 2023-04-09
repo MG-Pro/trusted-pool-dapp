@@ -11,14 +11,11 @@ import {
   SimpleChanges,
 } from '@angular/core'
 import { FormBuilder, FormControl, ValidatorFn, Validators } from '@angular/forms'
-import {
-  EVM_ADDRESS_REGEXP,
-  FEE_TOKEN,
-  MAX_POOL_PARTICIPANTS,
-  MIN_APPROVER_FEE,
-} from '@app/settings'
+import { FEE_TOKEN, MAX_POOL_PARTICIPANTS, MIN_APPROVER_FEE } from '@app/settings'
 import { IParticipant, IPool } from '@app/types'
 import { Subject, takeUntil } from 'rxjs'
+
+import { AppValidators } from '../../../../helpers'
 
 @Component({
   selector: 'app-pool-form',
@@ -40,13 +37,10 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
   public form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(10)]],
     tokenName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(10)]],
-    tokenAddress: ['', [Validators.pattern(EVM_ADDRESS_REGEXP)]],
+    tokenAddress: ['', [AppValidators.isAddress]],
     approverAddress: [
       '',
-      [
-        Validators.pattern(EVM_ADDRESS_REGEXP),
-        this.conditionalRequired(() => this.form.get('approvable').value),
-      ],
+      [AppValidators.isAddress, this.conditionalRequired(() => this.form.get('approvable').value)],
     ],
     stableApproverFee: [MIN_APPROVER_FEE, [Validators.required, Validators.min(MIN_APPROVER_FEE)]],
     approvable: false,
@@ -127,9 +121,9 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
           this.form.hasError('maxlength', [field])
         )
       case 'tokenAddress':
-        return this.form.hasError('pattern', [field])
+        return this.form.hasError('isAddress', [field])
       case 'approverAddress':
-        return this.form.hasError('required', [field]) || this.form.hasError('pattern', [field])
+        return this.form.hasError('required', [field]) || this.form.hasError('isAddress', [field])
       case 'stableApproverFee':
         return this.form.hasError('required', [field]) || this.form.hasError('min', [field])
       default:

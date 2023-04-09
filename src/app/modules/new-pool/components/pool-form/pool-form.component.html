@@ -5,7 +5,7 @@
   </div>
   <div class="card-body">
     <h6 class="card-subtitle mb-4 fs-6 text-success">
-      Please, fill the form for creating new pool
+      {{ 'Please, fill the form for creating new pool' | translate }}
     </h6>
     <div class="row mb-3">
       <div class="col">
@@ -15,7 +15,9 @@
           formControlName="name"
           [class.is-invalid]="hasErrors('name')"
         />
-        <p class="invalid-feedback mb-0">Input from 3 to 10 symbols</p>
+        <p class="invalid-feedback mb-0">
+          {{ 'Input from {min} to {max} symbols' | translate : { min: 3, max: 10 } }}
+        </p>
       </div>
 
       <div class="col ps-0">
@@ -25,7 +27,9 @@
           formControlName="tokenName"
           [class.is-invalid]="hasErrors('tokenName')"
         />
-        <p class="invalid-feedback mb-0">Input from 1 to 10 symbols</p>
+        <p class="invalid-feedback mb-0">
+          {{ 'Input from {min} to {max} symbols' | translate : { min: 1, max: 10 } }}
+        </p>
       </div>
     </div>
 
@@ -36,7 +40,7 @@
         formControlName="tokenAddress"
         [class.is-invalid]="hasErrors('tokenAddress')"
       />
-      <p class="invalid-feedback mb-0">Token address not valid</p>
+      <p class="invalid-feedback mb-0">{{ 'Address not valid' | translate }}</p>
     </div>
     <div class="mb-3 form-check form-switch">
       <input
@@ -62,7 +66,7 @@
           formControlName="approverAddress"
           [class.is-invalid]="hasErrors('approverAddress')"
         />
-        <p class="invalid-feedback mb-0">Address not valid</p>
+        <p class="invalid-feedback mb-0">{{ 'Address not valid' | translate }}</p>
       </div>
 
       <div class="col-4 ps-0">
