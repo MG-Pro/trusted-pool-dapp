@@ -9,7 +9,9 @@
     </h6>
     <div class="row mb-3">
       <div class="col">
-        <label class="form-label">Pool name <span class="text-danger">*</span></label>
+        <label class="form-label">
+          {{ 'Pool name' | translate }} <span class="text-danger">*</span>
+        </label>
         <input
           class="form-control bg-dark text-light border-opacity-50"
           formControlName="name"
@@ -19,9 +21,10 @@
           {{ 'Input from {min} to {max} symbols' | translate : { min: 3, max: 10 } }}
         </p>
       </div>
-
       <div class="col ps-0">
-        <label class="form-label">Token name <span class="text-danger">*</span></label>
+        <label class="form-label">
+          {{ 'Token name' | translate }} <span class="text-danger">*</span>
+        </label>
         <input
           class="form-control bg-dark text-light"
           formControlName="tokenName"
@@ -32,9 +35,8 @@
         </p>
       </div>
     </div>
-
     <div class="mb-3">
-      <label class="form-label">Token address </label>
+      <label class="form-label">{{ 'Token address' | translate }} </label>
       <input
         class="form-control bg-dark text-light"
         formControlName="tokenAddress"
@@ -50,17 +52,20 @@
         formControlName="approvable"
       />
       <label class="form-check-label d-flex align-items-center"
-        ><span>Approvable pool</span>
+        ><span>{{ 'Approvable pool' | translate }}</span>
         <app-icon
           class="text-danger ms-3"
           icon="icon-info-circled"
           [toolTipText]="'ApprovableTipKey' | translate"
-        ></app-icon
-      ></label>
+        >
+        </app-icon>
+      </label>
     </div>
     <div class="row mb-3" *ngIf="form.get('approvable').value">
       <div class="col-8">
-        <label class="form-label">Approver address <span class="text-danger">*</span></label>
+        <label class="form-label">
+          {{ 'Approver address' | translate }} <span class="text-danger">*</span>
+        </label>
         <input
           class="form-control bg-dark text-light"
           formControlName="approverAddress"
@@ -71,8 +76,9 @@
 
       <div class="col-4 ps-0">
         <label class="form-label"
-          >Approver`s fee {{ FEE_TOKEN.name }} <span class="text-danger">*</span></label
-        >
+          >{{ 'Approver`s fee' | translate }} {{ FEE_TOKEN.name }}
+          <span class="text-danger">*</span>
+        </label>
         <input
           type="number"
           class="form-control bg-dark text-light"
@@ -80,7 +86,7 @@
           [class.is-invalid]="hasErrors('stableApproverFee')"
         />
         <p class="invalid-feedback mb-0">
-          Min approver fee is {{ MIN_APPROVER_FEE }}{{ FEE_TOKEN.name }}
+          {{ 'Min approver fee is' | translate }} {{ MIN_APPROVER_FEE }}{{ FEE_TOKEN.name }}
         </p>
       </div>
     </div>
@@ -92,7 +98,7 @@
         formControlName="privatable"
       />
       <label class="form-check-label">
-        <span>Private pool</span>
+        <span>{{ 'Private pool' | translate }}</span>
         <app-icon
           class="text-danger ms-3"
           icon="icon-info-circled"
@@ -101,19 +107,21 @@
       </label>
     </div>
     <div class="mb-3 d-flex justify-content-between" *ngIf="participants.length">
-      <label class="form-label">Pool token amount: {{ tokenAmount | number }} </label>
+      <label class="form-label"
+        >{{ 'Token amount' | translate }}: {{ tokenAmount | number }}
+      </label>
       <label class="form-label" [class.text-danger]="participants.length > MAX_POOL_PARTICIPANTS"
-        >Participant count: {{ participants.length }}</label
-      >
+        >{{ 'Participant count' | translate }}: {{ participants.length }}
+      </label>
     </div>
     <ng-content></ng-content>
     <div class="d-flex justify-content-end align-items-center">
       <div class="d-flex justify-content-end align-items-end">
         <p class="text-danger m-0 me-3" *ngIf="!participants.length">
-          Please, add at least 1 participant
+          {{ 'Please, add at least 1 participant' | translate }}
         </p>
         <button class="btn btn-success fs-5" [disabled]="saveDisabled" (click)="onSave()">
-          {{ 'Save' | translate }}
+          {{ 'Create pool' | translate }}
         </button>
       </div>
     </div>
