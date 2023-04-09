@@ -1,3 +1,6 @@
+import { AbstractControl, ValidationErrors } from '@angular/forms'
+import { ethers } from 'ethers'
+
 export class Helpers {
   public static splitParticipants<T = unknown>(participants: T[], size: number): T[][] {
     const pChunks: T[][] = []
@@ -6,5 +9,11 @@ export class Helpers {
       pChunks.push(chunk)
     }
     return pChunks
+  }
+}
+
+export class AppValidators {
+  public static isAddress({ value = '' }: AbstractControl): ValidationErrors {
+    return !ethers.utils.isAddress(value.trim().toLowerCase()) ? { isAddress: true } : null
   }
 }

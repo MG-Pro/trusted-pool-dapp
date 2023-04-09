@@ -96,90 +96,19 @@
         ></app-icon>
       </label>
     </div>
-    <div class="mb-3 d-flex justify-content-between" *ngIf="participantsForm.length">
+    <div class="mb-3 d-flex justify-content-between" *ngIf="participants.length">
       <label class="form-label">Pool token amount: {{ tokenAmount | number }} </label>
-      <label
-        class="form-label"
-        [class.text-danger]="participantsForm.length > MAX_POOL_PARTICIPANTS"
-        >Participant count: {{ participantsForm.length }}</label
+      <label class="form-label" [class.text-danger]="participants.length > MAX_POOL_PARTICIPANTS"
+        >Participant count: {{ participants.length }}</label
       >
     </div>
-    <div class="mb-3" formArrayName="participants">
-      <cdk-virtual-scroll-viewport
-        *ngIf="participantsForm.length"
-        [itemSize]="participantItemHeight"
-        [minBufferPx]="participantItemHeight * 2"
-        [maxBufferPx]="participantItemHeight * 2"
-        [style.height]="participantViewportHeight + 'px'"
-        class=""
-      >
-        <div
-          class="card text-bg-dark border border-secondary mb-3"
-          *cdkVirtualFor="
-            let participant of $any(participantsForm.controls);
-            let i = index;
-            trackBy: trackById
-          "
-        >
-          <div
-            class="card-header d-flex justify-content-between align-items-center border-bottom border-secondary"
-          >
-            <h6 class="card-title m-0">{{ 'Participant' | translate }} #{{ i + 1 }}</h6>
-            <button
-              class="btn-close btn-close-white fs-5"
-              [disabled]="form.disabled"
-              (click)="deleteParticipant(i)"
-            ></button>
-          </div>
-          <div class="card-body" [formGroup]="participant">
-            <div class="row">
-              <div class="col-8">
-                <label class="form-label">
-                  {{ 'Participant address' | translate }} <span class="text-danger">*</span>
-                </label>
-                <input
-                  class="form-control form-control-sm bg-dark text-light"
-                  formControlName="account"
-                  [class.is-invalid]="hasFormArrayError('address', i)"
-                />
-                <p class="invalid-feedback mb-0">Participant address not valid or not uniq</p>
-              </div>
-
-              <div class="col-4 ps-0">
-                <label class="form-label">
-                  <span>Participant share in tokens</span>
-                  <span class="text-danger ms-1">*</span>
-                </label>
-                <input
-                  type="number"
-                  class="form-control form-control-sm bg-dark text-light"
-                  formControlName="share"
-                  [class.is-invalid]="hasFormArrayError('share', i)"
-                />
-                <p class="invalid-feedback mb-0">
-                  Input value more than
-                  {{ participantsForm.at(i).getError('min', 'share')?.min - 1 }} tokens
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </cdk-virtual-scroll-viewport>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center">
-      <button class="btn btn-danger" [disabled]="form.disabled" (click)="addParticipant()">
-        Add participant
-      </button>
+    <ng-content></ng-content>
+    <div class="d-flex justify-content-end align-items-center">
       <div class="d-flex justify-content-end align-items-end">
-        <p class="text-danger m-0 me-3" *ngIf="!participantsForm.length">
+        <p class="text-danger m-0 me-3" *ngIf="!participants.length">
           Please, add at least 1 participant
         </p>
-        <button
-          class="btn btn-success fs-5"
-          [disabled]="form.invalid || form.disabled"
-          (click)="onSave()"
-        >
+        <button class="btn btn-success fs-5" [disabled]="saveDisabled" (click)="onSave()">
           {{ 'Save' | translate }}
         </button>
       </div>

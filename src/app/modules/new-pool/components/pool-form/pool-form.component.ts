@@ -9,26 +9,15 @@ import {
   OnInit,
   Output,
   SimpleChanges,
-  TrackByFunction,
 } from '@angular/core'
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms'
+import { FormBuilder, FormControl, ValidatorFn, Validators } from '@angular/forms'
 import {
   EVM_ADDRESS_REGEXP,
   FEE_TOKEN,
   MAX_POOL_PARTICIPANTS,
   MIN_APPROVER_FEE,
-  MIN_SHARE_AMOUNT,
 } from '@app/settings'
-import { IPool } from '@app/types'
-import { ethers } from 'ethers'
+import { IParticipant, IPool } from '@app/types'
 import { Subject, takeUntil } from 'rxjs'
 
 @Component({
@@ -39,6 +28,8 @@ import { Subject, takeUntil } from 'rxjs'
 })
 export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public readOnly = false
+  @Input() public participants: IParticipant[] = []
+  @Input() public participantsValidness = false
 
   @Output() public closeForm = new EventEmitter<void>()
   @Output() public createPool = new EventEmitter<Partial<IPool>>()
@@ -60,9 +51,8 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
     stableApproverFee: [MIN_APPROVER_FEE, [Validators.required, Validators.min(MIN_APPROVER_FEE)]],
     approvable: false,
     privatable: false,
-    participants: this.fb.array([], [this.participantNumberValidator]),
   })
-  public readonly participantItemHeight = 160
+
   public readonly FEE_TOKEN = FEE_TOKEN
   public readonly MIN_APPROVER_FEE = MIN_APPROVER_FEE
   public readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
@@ -72,21 +62,15 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(private fb: FormBuilder) {}
 
-  public get participantViewportHeight(): number {
-    const viewportHeight = this.participantItemHeight * 3
-    const h = this.participantsForm.length * this.participantItemHeight
-    return h > viewportHeight ? viewportHeight : h
-  }
-
-  public get participantsForm(): FormArray {
-    return this.form.get('participants') as FormArray
-  }
-
   public get tokenAmount(): number {
-    return this.participantsForm.controls.reduce((acc, form) => {
-      acc += parseInt(form.get('share').value || 0, 10)
+    return this.participants.reduce((acc, p) => {
+      acc += p.share || 0
       return acc
     }, 0)
+  }
+
+  public get saveDisabled(): boolean {
+    return this.form.invalid || this.form.disabled || !this.participantsValidness
   }
 
   public ngOnInit(): void {
@@ -102,7 +86,8 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
         this.form.get('stableApproverFee').updateValueAndValidity()
       })
 
-    this.fillTestForm(15)
+    // test only
+    this.form.patchValue({ name: 'VC2', tokenName: 'MTG' })
   }
 
   public ngOnDestroy(): void {
@@ -114,55 +99,14 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
     if (changes.hasOwnProperty('readOnly')) {
       if (this.readOnly) {
         this.form.disable()
-        this.participantsForm.disable()
       } else {
         this.form.enable()
-        this.participantsForm.enable()
       }
     }
   }
 
   public hasErrors(field: string): boolean {
     return this.form.get(field).dirty && this.hasFieldError(field)
-  }
-
-  public hasFormArrayError(field: string, id: number): boolean {
-    const form = this.participantsForm.at(id)
-    switch (field) {
-      case 'address':
-        return form.hasError('pattern', [field]) || form.hasError('participantsUniq', [field])
-      case 'share':
-        return form.hasError('min', [field])
-      default:
-        return false
-    }
-  }
-
-  public addParticipant(): void {
-    this.participantsForm.push(
-      this.fb.group({
-        account: [
-          '',
-          [
-            Validators.required,
-            Validators.pattern(EVM_ADDRESS_REGEXP),
-            this.participantsUniqValidator,
-          ],
-        ],
-        share: [null, [Validators.required, Validators.min(MIN_SHARE_AMOUNT)]],
-      }),
-    )
-
-    this.participantsFormUp()
-  }
-
-  public deleteParticipant(id: number): void {
-    this.participantsForm.removeAt(id)
-    this.participantsFormUp()
-  }
-
-  public trackById(_, fg: FormGroup): TrackByFunction<unknown> {
-    return fg.get('account')?.value
   }
 
   public onClose(): void {
@@ -193,18 +137,6 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private participantNumberValidator(formArray: FormArray): ValidationErrors {
-    return !formArray.length ? { participantNumber: true } : null
-  }
-
-  private participantsUniqValidator(control: FormControl): ValidationErrors {
-    const formArray = control.parent?.parent as FormArray
-    const isUniq =
-      formArray?.controls.some((formGroup) => formGroup.get('address')?.value === control.value) ||
-      true
-    return !isUniq ? { participantsUniq: true } : null
-  }
-
   private conditionalRequired(condition: () => boolean): ValidatorFn {
     return (control: FormControl) => {
       if (control.parent) {
@@ -212,31 +144,5 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
       }
       return null
     }
-  }
-
-  private participantsFormUp(): void {
-    this.form.markAsDirty()
-    this.participantsForm.controls = [...this.participantsForm.controls]
-  }
-
-  private fillTestForm(pCount = 10): void {
-    this.form.patchValue({ name: 'VC2', tokenName: 'MTG' })
-    this.participantsForm.push(
-      this.fb.group({
-        account: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-        share: 5000,
-      }),
-    )
-
-    Array(pCount - 1)
-      .fill(null)
-      .forEach((_, i) => {
-        this.participantsForm.push(
-          this.fb.group({
-            account: ethers.Wallet.createRandom().address,
-            share: 5000 + i * 100,
-          }),
-        )
-      })
   }
 }

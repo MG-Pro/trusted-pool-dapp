@@ -1,7 +1,11 @@
 import { ViewportScroller } from '@angular/common'
 import { ChangeDetectionStrategy, Component, HostBinding } from '@angular/core'
 import { Router } from '@angular/router'
-import { AsyncFnType, ICreatingPoolProcessing } from '@app/modules/new-pool/new-pool.types'
+import {
+  AsyncFnType,
+  ICreatingPoolProcessing,
+  INewPoolState,
+} from '@app/modules/new-pool/new-pool.types'
 import { ConnectionService, ContractService, GlobalStateService, ModalService } from '@app/services'
 import { MAX_POOL_PARTICIPANTS } from '@app/settings'
 import { ICreatePoolRequestParams, IGlobalState, IParticipant, IPool } from '@app/types'
@@ -19,6 +23,12 @@ import { Helpers } from '../../../../helpers'
 })
 export class NewPoolComponent {
   @HostBinding('class') private readonly classes: string = 'main-layout flex-shrink-0 flex-grow-1'
+
+  public localState$ = new BehaviorSubject<INewPoolState>({
+    participants: [],
+    formDisabled: false,
+    participantsValidness: false,
+  })
 
   public tsProcessing$: BehaviorSubject<ICreatingPoolProcessing> = new BehaviorSubject({
     active: false,
@@ -44,12 +54,9 @@ export class NewPoolComponent {
     first(),
   )
 
-  public formDisabled$ = new BehaviorSubject<boolean>(false)
-
-  public isFormDisabled$ = combineLatest([this.state$, this.formDisabled$]).pipe(
-    map(([state, form]) => {
-      console.log(state.canCreatePool, form)
-      return !state.canCreatePool && form
+  public isFormDisabled$ = combineLatest([this.state$, this.localState$]).pipe(
+    map(([state, { formDisabled }]) => {
+      return !state.canCreatePool && formDisabled
     }),
   )
 
@@ -98,10 +105,18 @@ export class NewPoolComponent {
 
   public onCancelTs(): void {
     this.processingStop()
-    this.formDisabled$.next(false)
+    this.patchLocalState({ formDisabled: false })
     if (this.tsProcessing$.value.currentTs > 0) {
       this.goToPool()
     }
+  }
+
+  public onParticipantsValidness(status: boolean): void {
+    this.patchLocalState({ participantsValidness: status })
+  }
+
+  public onParticipantsChanges(participants: IParticipant[]): void {
+    this.patchLocalState({ participants })
   }
 
   private goToPool(): void {
@@ -111,7 +126,7 @@ export class NewPoolComponent {
   }
 
   private async createSplittedPool(poolData: Partial<IPool>): Promise<void> {
-    this.formDisabled$.next(true)
+    this.patchLocalState({ formDisabled: true })
     this.scroller.scrollToPosition([0, 0])
     const chunks: IParticipant[][] = Helpers.splitParticipants(
       poolData.participants,
@@ -170,6 +185,13 @@ export class NewPoolComponent {
     this.tsProcessing$.next({
       ...this.tsProcessing$.value,
       ...processing,
+    })
+  }
+
+  private patchLocalState(part: Partial<INewPoolState>): void {
+    this.localState$.next({
+      ...this.localState$.value,
+      ...part,
     })
   }
 

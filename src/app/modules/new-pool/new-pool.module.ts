@@ -1,4 +1,3 @@
-import { ScrollingModule } from '@angular/cdk/scrolling'
 import { CommonModule } from '@angular/common'
 import { NgModule } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
@@ -6,6 +5,7 @@ import { RouterModule, Routes } from '@angular/router'
 import { HeaderComponent } from '@app/components/header/header.component'
 import { IconComponent } from '@app/components/icon/icon.component'
 import { NotificationComponent } from '@app/components/notification/notification.component'
+import { ParticipantsComponent } from '@app/components/participants/participants.component'
 import { PoolFormComponent } from '@app/modules/new-pool/components/pool-form/pool-form.component'
 import { ProcessingComponent } from '@app/modules/new-pool/components/processing/processing.component'
 import { NewPoolComponent } from '@app/modules/new-pool/containers/new-pool/new-pool.component'
@@ -22,8 +22,8 @@ const routes: Routes = [{ path: '', component: NewPoolComponent }]
     TranslateModule,
     ReactiveFormsModule,
     IconComponent,
-    ScrollingModule,
     NotificationComponent,
+    ParticipantsComponent,
   ],
 })
 export class NewPoolModule {}

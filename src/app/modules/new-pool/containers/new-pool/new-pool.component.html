@@ -4,6 +4,7 @@
     tsProcessing: tsProcessing$ | async,
     initialized: initialized$ | async,
     isFormDisabled: isFormDisabled$ | async,
+    localState: localState$ | async,
     loading: connectionService.loading$ | async
   } as params"
 >
@@ -26,8 +27,14 @@
       ></app-processing>
       <app-pool-form
         [readOnly]="params.isFormDisabled"
+        [participants]="params.localState.participants"
+        [participantsValidness]="params.localState.participantsValidness"
         (closeForm)="onCloseForm()"
         (createPool)="onCreate($event)"
+        ><app-participants
+          (participantsChanges)="onParticipantsChanges($event)"
+          (validnessChanges)="onParticipantsValidness($event)"
+        ></app-participants
       ></app-pool-form>
     </div>
   </main>
