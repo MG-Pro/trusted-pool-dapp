@@ -38,7 +38,7 @@ import { AppValidators } from '../../helpers'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() public participants: IParticipant[] = []
+  @Input() public excludedParticipants: string[] = []
   @Input() public readOnly = false
 
   @Output() public participantsChanges = new EventEmitter<IParticipant[]>()
@@ -75,14 +75,10 @@ export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
         this.validnessChanges.emit(status === 'VALID')
       })
 
-    this.fillTestForm(15)
+    // this.fillTestForm(15)
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
-    if (changes.hasOwnProperty('participants')) {
-      this.participantsForm.patchValue(this.participants)
-    }
-
     if (changes.hasOwnProperty('readOnly')) {
       if (this.readOnly) {
         this.form.disable()
@@ -120,7 +116,7 @@ export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
           account: ['', [Validators.required, AppValidators.isAddress]],
           share: [null, [Validators.required, Validators.min(MIN_SHARE_AMOUNT)]],
         },
-        { validators: [this.participantsUniqValidator] },
+        { validators: [this.participantsUniqValidator.bind(this)] },
       ),
     )
 
@@ -152,11 +148,10 @@ export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
       }
       return acc
     }, [])
-
-    const notUniq = accs?.some((v) => {
+    const array: string[] = Array.isArray(accs) ? [...accs, ...this.excludedParticipants] : null
+    const notUniq = array?.some((v) => {
       return v === value
     })
-
     return notUniq ? { participantsUniq: true } : null
   }
 

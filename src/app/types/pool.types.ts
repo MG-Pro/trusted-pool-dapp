@@ -5,6 +5,7 @@ export enum PoolStatuses {
   Active = 'Active',
   Filled = 'Filled',
   NoFinalized = 'NoFinalized',
+  WaitApprove = 'WaitApprove',
 }
 
 export interface IParticipant {

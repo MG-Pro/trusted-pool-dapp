@@ -2,7 +2,13 @@ import { ChangeDetectionStrategy, Component, HostBinding, OnDestroy, OnInit } fr
 import { ActivatedRoute, Router } from '@angular/router'
 import { IDashboardLocalState } from '@app/modules/pools/pools.types'
 import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
-import { IDataLoadParams, IGlobalState, IParticipantLoadParams, IPool } from '@app/types'
+import {
+  IDataLoadParams,
+  IGlobalState,
+  IParticipant,
+  IParticipantLoadParams,
+  IPool,
+} from '@app/types'
 import {
   BehaviorSubject,
   combineLatest,
@@ -38,6 +44,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   public localState$ = new BehaviorSubject<IDashboardLocalState>({
     activePool: null,
+    showAddParticipants: false,
   })
 
   private readonly defaultPLoadParams: IParticipantLoadParams = {
@@ -142,8 +149,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadData(params)
   }
 
-  public async finalizePool(pool: IPool): Promise<void> {
+  public async finalizePool(): Promise<void> {
     await this.contractService.finalize()
+  }
+
+  public async onAddParticipants(): Promise<void> {
+    this.patchLocalState({ showAddParticipants: true })
+  }
+
+  public async closeAddParticipants(): Promise<void> {
+    this.patchLocalState({ showAddParticipants: false })
+  }
+
+  public async addToPool(): Promise<void> {
+    console.log(11)
+  }
+
+  public onParticipantsChanges(participants: IParticipant[]): void {
+    this.patchLocalState({ participants })
+  }
+
+  public onValidnessChanges(participantsValidness: boolean): void {
+    this.patchLocalState({ participantsValidness })
+  }
+
+  public mapToAccount(participants: IParticipant[] = []): string[] {
+    return participants.map((p) => p.account)
   }
 
   private patchLocalState(patch: Partial<IDashboardLocalState>): void {

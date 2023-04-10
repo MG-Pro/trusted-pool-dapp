@@ -73,24 +73,22 @@ export class NewPoolComponent {
   ) {}
 
   public async onCreate(poolData: Partial<IPool>): Promise<void> {
-    if (poolData.participants.length > MAX_POOL_PARTICIPANTS) {
+    const participants: IParticipant[] = this.localState$.value.participants
+    if (participants.length > MAX_POOL_PARTICIPANTS) {
       const modalRef: NgbModalRef = this.modalService.open([
         this.translate.instant('MaxPoolParticipantTsKey', {
           max: MAX_POOL_PARTICIPANTS,
-          tsCount: Math.ceil(poolData.participants.length / MAX_POOL_PARTICIPANTS),
+          tsCount: Math.ceil(participants.length / MAX_POOL_PARTICIPANTS),
         }),
       ])
       return modalRef.result
         .then(() => {
-          this.createSplittedPool(poolData)
+          this.createSplittedPool(poolData, participants)
         })
         .catch(() => {})
     }
     poolData.finalized = true
-    await this.contractService.createNewPool(
-      poolData as ICreatePoolRequestParams,
-      poolData.participants,
-    )
+    await this.contractService.createNewPool(poolData as ICreatePoolRequestParams, participants)
 
     this.goToPool()
   }
@@ -104,9 +102,10 @@ export class NewPoolComponent {
   }
 
   public onCancelTs(): void {
+    const { currentTs } = this.tsProcessing$.value
     this.processingStop()
     this.patchLocalState({ formDisabled: false })
-    if (this.tsProcessing$.value.currentTs > 0) {
+    if (currentTs > 0) {
       this.goToPool()
     }
   }
@@ -125,11 +124,14 @@ export class NewPoolComponent {
     this.router.navigate(['/pools', activePool])
   }
 
-  private async createSplittedPool(poolData: Partial<IPool>): Promise<void> {
+  private async createSplittedPool(
+    poolData: Partial<IPool>,
+    participants: IParticipant[],
+  ): Promise<void> {
     this.patchLocalState({ formDisabled: true })
     this.scroller.scrollToPosition([0, 0])
     const chunks: IParticipant[][] = Helpers.splitParticipants(
-      poolData.participants,
+      participants,
       this.MAX_POOL_PARTICIPANTS,
     )
 

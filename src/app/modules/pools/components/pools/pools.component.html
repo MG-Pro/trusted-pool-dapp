@@ -24,22 +24,13 @@
   <div class="col-10 card text-bg-dark shadow-lg bg-opacity-75">
     <div class="card-header d-flex">
       <h5 class="m-0"># {{ activePool?.name }} ({{ activePool?.tokenName }})</h5>
-      <div
+      <app-pool-actions-panel
         class="ms-auto"
-        [class.text-warning]="activePool?.status === 'Active'"
-        [class.text-success]="activePool?.status === 'Filled'"
-        [class.text-danger]="activePool?.status === 'NoFinalized'"
-      >
-        <button
-          class="me-3 btn btn-success btn-sm"
-          [disabled]="!isCreator"
-          (click)="finalizePool()"
-        >
-          {{ 'Finalize' | translate }}
-        </button>
-        <span class="">Status: </span>
-        <span class="">{{ activePool?.status }}</span>
-      </div>
+        [isCreator]="isCreator"
+        [activePool]="activePool"
+        (finalize)="finalizePool()"
+        (addParticipants)="onAddParticipants()"
+      ></app-pool-actions-panel>
     </div>
     <div class="card-body">
       <div class="row mb-3">

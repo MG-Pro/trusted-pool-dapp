@@ -24,6 +24,7 @@
   "Cancel": "Cancel",
   "Create pool": "Create pool",
   "Add participants": "Add participants",
+  "Status": "Status",
   "Add participant": "Add participant",
   "Finalize": "Finalize",
   "Address not valid": "Address not valid",
@@ -37,5 +38,6 @@
   "Pool name": "Pool name",
   "Token name": "Token name",
   "Token address": "Token address",
-  "Token amount": "Token amount"
+  "Token amount": "Token amount",
+  "Add to pool": "Add to pool"
 }

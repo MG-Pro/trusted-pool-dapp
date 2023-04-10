@@ -5,6 +5,8 @@ import { RouterModule, Routes } from '@angular/router'
 import { HeaderComponent } from '@app/components/header/header.component'
 import { IconComponent } from '@app/components/icon/icon.component'
 import { NotificationComponent } from '@app/components/notification/notification.component'
+import { ParticipantsComponent } from '@app/components/participants/participants.component'
+import { PoolActionsPanelComponent } from '@app/modules/pools/components/pool-actions-panel/pool-actions-panel.component'
 import { PoolsComponent } from '@app/modules/pools/components/pools/pools.component'
 import { TranslateModule } from '@ngx-translate/core'
 
@@ -16,7 +18,7 @@ const routes: Routes = [
 ]
 
 @NgModule({
-  declarations: [DashboardComponent, PoolsComponent],
+  declarations: [DashboardComponent, PoolsComponent, PoolActionsPanelComponent],
   imports: [
     CommonModule,
     HeaderComponent,
@@ -25,6 +27,7 @@ const routes: Routes = [
     ReactiveFormsModule,
     IconComponent,
     NotificationComponent,
+    ParticipantsComponent,
   ],
   providers: [],
 })

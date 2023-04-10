@@ -28,6 +28,7 @@ export class PoolsComponent {
   @Output() public nextPoolsLoad = new EventEmitter<void>()
   @Output() public activePoolChange = new EventEmitter<number>()
   @Output() public finalize = new EventEmitter<IPool>()
+  @Output() public addParticipants = new EventEmitter<void>()
 
   @HostBinding('class') private readonly classes = 'row'
 
@@ -107,5 +108,9 @@ export class PoolsComponent {
 
   public finalizePool(): void {
     this.finalize.emit(this.activePool)
+  }
+
+  public onAddParticipants(): void {
+    this.addParticipants.emit()
   }
 }
