@@ -10,7 +10,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core'
-import { FormBuilder, FormControl, ValidatorFn, Validators } from '@angular/forms'
+import { FormBuilder, Validators } from '@angular/forms'
 import { FEE_TOKEN, MAX_POOL_PARTICIPANTS, MIN_APPROVER_FEE } from '@app/settings'
 import { IParticipant, IPool } from '@app/types'
 import { Subject, takeUntil } from 'rxjs'
@@ -40,7 +40,10 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
     tokenAddress: ['', [AppValidators.isAddress]],
     approverAddress: [
       '',
-      [AppValidators.isAddress, this.conditionalRequired(() => this.form.get('approvable').value)],
+      [
+        AppValidators.isAddress,
+        AppValidators.conditionalRequired(() => this.form.get('approvable').value),
+      ],
     ],
     stableApproverFee: [MIN_APPROVER_FEE, [Validators.required, Validators.min(MIN_APPROVER_FEE)]],
     approvable: false,
@@ -97,6 +100,8 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
         this.form.enable()
       }
     }
+
+    // console.log(this.form, this.participantsValidness)
   }
 
   public hasErrors(field: string): boolean {
@@ -128,15 +133,6 @@ export class PoolFormComponent implements OnInit, OnChanges, OnDestroy {
         return this.form.hasError('required', [field]) || this.form.hasError('min', [field])
       default:
         return false
-    }
-  }
-
-  private conditionalRequired(condition: () => boolean): ValidatorFn {
-    return (control: FormControl) => {
-      if (control.parent) {
-        return condition() ? Validators.required(control) : null
-      }
-      return null
     }
   }
 }
