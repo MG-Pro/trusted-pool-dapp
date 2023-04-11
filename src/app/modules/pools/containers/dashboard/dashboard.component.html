@@ -29,11 +29,11 @@
               You cannot create new pool while there is not finalized pool
             </p>
             <button
-              class="btn btn-danger ms-3 fs-5"
+              class="btn btn-warning ms-3 fs-5"
               [disabled]="!params.state.canCreatePool"
               (click)="showCreatingForm()"
             >
-              Add
+              {{ 'Create pool' | translate }}
             </button>
           </div>
         </div>
@@ -43,6 +43,7 @@
           class="mb-3"
           [pools]="params.userPools"
           [userAccount]="params.state.userAccount"
+          [participants]="params.state.participants"
           [activePool]="params.localState.activePool"
           [loading]="params.loading"
           [isLastPools]="params.state.isLastPools"
@@ -52,29 +53,49 @@
           (nextPoolsLoad)="nextPools()"
           (activePoolChange)="goToPool($event)"
           (finalize)="finalizePool()"
-          (addParticipants)="onAddParticipants()"
+          (addParticipants)="showParticipantsForm()"
         ></app-pools>
       </ng-container>
 
-      <div *ngIf="params.localState.showAddParticipants" class="row justify-content-end">
+      <div *ngIf="params.localState.showParticipantsForm" class="row justify-content-end">
         <div class="col-10 card text-bg-dark shadow-lg bg-opacity-75">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="m-0">{{ 'Add participant' | translate }}</h5>
-            <button
-              class="btn-close btn-close-white fs-5"
-              (click)="closeAddParticipants()"
-            ></button>
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="m-0">{{ 'Add participant' | translate }}</h5>
+              <div class="d-flex align-items-center" *ngIf="params.localState.participants.length">
+                <button
+                  class="btn-close btn-close-white fs-5"
+                  (click)="closeParticipantsForm()"
+                ></button>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="">
+                {{ 'Token amount' | translate }}:
+                {{ tokenAmount(params.localState.participants) | number }}
+              </span>
+              <div class="">
+                <span [class.text-danger]="isOverParticipants">
+                  {{ 'Participant count' | translate }}:
+                  {{ params.localState.participants.length }}
+                </span>
+                <span>
+                  ({{ 'Max participants per Ts' | translate }}: {{ MAX_POOL_PARTICIPANTS }})
+                </span>
+              </div>
+            </div>
           </div>
           <app-participants
             class="card-body"
-            [excludedParticipants]="mapToAccount(params.localState?.activePool?.participants)"
+            [readOnly]="params.loading"
+            [excludedParticipants]="mapToAccount(params.state?.participants)"
             (participantsChanges)="onParticipantsChanges($event)"
             (validnessChanges)="onValidnessChanges($event)"
           ></app-participants>
           <div class="card-footer d-flex justify-content-end">
             <button
               class="btn btn-success fs-5"
-              [disabled]="!params.localState.participantsValidness"
+              [disabled]="!params.localState.participantsValidness || isOverParticipants"
               (click)="addToPool()"
             >
               {{ 'Add to pool' | translate }}

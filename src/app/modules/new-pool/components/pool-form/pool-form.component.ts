@@ -11,11 +11,10 @@ import {
   SimpleChanges,
 } from '@angular/core'
 import { FormBuilder, Validators } from '@angular/forms'
+import { AppValidators } from '@app/helpers/validators'
 import { FEE_TOKEN, MAX_POOL_PARTICIPANTS, MIN_APPROVER_FEE } from '@app/settings'
 import { IParticipant, IPool } from '@app/types'
 import { Subject, takeUntil } from 'rxjs'
-
-import { AppValidators } from '../../../../helpers'
 
 @Component({
   selector: 'app-pool-form',

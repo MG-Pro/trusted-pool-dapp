@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, HostBinding, OnDestroy, OnInit } fr
 import { ActivatedRoute, Router } from '@angular/router'
 import { IDashboardLocalState } from '@app/modules/pools/pools.types'
 import { ConnectionService, ContractService, GlobalStateService } from '@app/services'
+import { MAX_POOL_PARTICIPANTS } from '@app/settings'
 import {
   IDataLoadParams,
   IGlobalState,
@@ -40,13 +41,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public userPools$: Observable<IPool[]> = this.state$.pipe(
     map((s) => s.userPools),
     filter((userPools) => !!userPools?.length),
+    tap((pools) => {
+      console.log(pools)
+      if (this.localState$.value.activePool) {
+        const activePool = pools.find(
+          ({ contractAddress }) =>
+            contractAddress === this.localState$.value.activePool.contractAddress,
+        )
+        this.patchLocalState({ activePool })
+      }
+    }),
   )
+
+  public readonly MAX_POOL_PARTICIPANTS = MAX_POOL_PARTICIPANTS
 
   public localState$ = new BehaviorSubject<IDashboardLocalState>({
     activePool: null,
-    showAddParticipants: false,
+    showParticipantsForm: false,
+    participants: [],
   })
-
   private readonly defaultPLoadParams: IParticipantLoadParams = {
     first: 0,
     size: 25,
@@ -59,6 +72,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
   private pLoadParams: IParticipantLoadParams = { ...this.defaultPLoadParams }
   private dLoadParams: IDataLoadParams = { ...this.defaultPDataLoadParams }
+
   private destroyed$ = new Subject<void>()
 
   constructor(
@@ -68,6 +82,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
   ) {}
+
+  public get isOverParticipants(): boolean {
+    return this.localState$.value.participants.length > MAX_POOL_PARTICIPANTS
+  }
 
   public async ngOnInit(): Promise<void> {
     this.state$
@@ -84,20 +102,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         distinctUntilChanged(([prevParams], [curParams]) => {
           return prevParams.id === curParams.id
         }),
+        filter(([_, userPools]) => !!userPools.length),
         takeUntil(this.destroyed$),
       )
       .subscribe(([params, userPools]) => {
-        if (userPools.length) {
-          if (params.id) {
-            const activePoolId = params.id ? +params.id : 0
-            if (userPools[activePoolId]) {
-              this.activePoolChange(userPools[activePoolId])
-            } else {
-              this.goToPool(0)
-            }
-          } else {
-            this.goToPool(0)
-          }
+        const activePoolId = params.id ? +params.id : 0
+        if (userPools[activePoolId]) {
+          this.activePoolChange(userPools[activePoolId])
+        } else {
+          this.goToPool(0)
         }
       })
   }
@@ -151,18 +164,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   public async finalizePool(): Promise<void> {
     await this.contractService.finalize()
+    await this.loadData()
   }
 
-  public async onAddParticipants(): Promise<void> {
-    this.patchLocalState({ showAddParticipants: true })
+  public async showParticipantsForm(): Promise<void> {
+    this.patchLocalState({ showParticipantsForm: true })
   }
 
-  public async closeAddParticipants(): Promise<void> {
-    this.patchLocalState({ showAddParticipants: false })
+  public async closeParticipantsForm(): Promise<void> {
+    this.patchLocalState({ showParticipantsForm: false })
   }
 
   public async addToPool(): Promise<void> {
-    console.log(11)
+    await this.contractService.addParticipants(this.localState$.value.participants)
+    this.patchLocalState({ participants: [], showParticipantsForm: false })
+    await this.loadData()
   }
 
   public onParticipantsChanges(participants: IParticipant[]): void {
@@ -175,6 +191,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   public mapToAccount(participants: IParticipant[] = []): string[] {
     return participants.map((p) => p.account)
+  }
+
+  public tokenAmount(participants: IParticipant[]): number {
+    return participants.reduce((acc, p) => {
+      acc += p.share || 0
+      return acc
+    }, 0)
   }
 
   private patchLocalState(patch: Partial<IDashboardLocalState>): void {

@@ -24,7 +24,6 @@ export interface IPool {
   filledAmount: number
   adminAddress: string
   participantsCount: number
-  participants: IParticipant[]
   approverAddress: string
   privatable: boolean
   approved: boolean

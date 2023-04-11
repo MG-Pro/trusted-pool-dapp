@@ -169,7 +169,7 @@ export class ContractService {
         const userPools: IPool[] = params.mergeMode
           ? [...this.stateService.value.userPools, ...userPoolsSlice]
           : userPoolsSlice
-        console.log(userPoolsSlice)
+
         this.stateService.patchState({
           userPools,
           isLastPools: params.size > userPoolsSlice.length,
@@ -194,19 +194,14 @@ export class ContractService {
     try {
       const instance: Contract = this.getPoolTemplateInstance(contractAddress)
 
-      const participants: IParticipantResponse[] = !privatable
+      const participantsRes: IParticipantResponse[] = !privatable
         ? await instance.getParticipants(params.first, params.size)
         : [await instance.getParticipant()]
 
-      this.stateService.patchState({
-        userPools: this.stateService.state$.value.userPools.map((poolItem: IPool) => {
-          if (poolItem.contractAddress === contractAddress) {
-            const ps: IParticipant[] = participants.map((p) => this.participantMapper(p))
+      const ps: IParticipant[] = participantsRes.map((p) => this.participantMapper(p))
 
-            poolItem.participants = params.mergeMode ? [...poolItem.participants, ...ps] : ps
-          }
-          return poolItem
-        }),
+      this.stateService.patchState({
+        participants: params.mergeMode ? [...this.stateService.value.participants, ...ps] : ps,
       })
     } catch (e) {
       this.showError(e)
@@ -240,7 +235,7 @@ export class ContractService {
     const status = !finalized
       ? PoolStatuses.NoFinalized
       : this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber())
-
+    console.log(item.participantsCount.toNumber())
     return {
       finalized,
       tokenAddress,
@@ -255,7 +250,6 @@ export class ContractService {
       privatable: item.privatable,
       tokenAmount: item.tokenAmount.toNumber(),
       participantsCount: item.participantsCount.toNumber(),
-      participants: [],
     }
   }
 

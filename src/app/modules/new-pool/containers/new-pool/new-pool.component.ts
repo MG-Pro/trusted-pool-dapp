@@ -13,7 +13,7 @@ import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal/modal-ref'
 import { TranslateService } from '@ngx-translate/core'
 import { BehaviorSubject, combineLatest, filter, first, map, Observable, tap } from 'rxjs'
 
-import { Helpers } from '../../../../helpers'
+import { Helpers } from '../../../../helpers/helpers'
 
 @Component({
   selector: 'app-new-pool',

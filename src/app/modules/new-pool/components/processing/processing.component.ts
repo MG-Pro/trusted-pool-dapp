@@ -23,7 +23,6 @@ export class ProcessingComponent {
     'card text-bg-dark shadow-lg bg-opacity-75 col-8 '
 
   public get buttonText(): string {
-    console.log(this.tsProcessing)
     switch (this.tsProcessing.currentTs) {
       case 0:
         return 'Create pool'

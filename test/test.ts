@@ -6,7 +6,7 @@ import { expect } from 'chai'
 import type { ContractTransaction } from 'ethers'
 import { ethers } from 'hardhat'
 
-import { Helpers } from '../src/app/helpers'
+import { Helpers } from '../src/app/helpers/helpers'
 
 import {
   createPoolAndReqData,

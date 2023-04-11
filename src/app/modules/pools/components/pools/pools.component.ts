@@ -22,6 +22,7 @@ export class PoolsComponent {
   @Input() public activePool: IPool
   @Input() public loading: boolean
   @Input() public isLastPools: boolean
+  @Input() public participants: IParticipant[]
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
   @Output() public nextParticipantsLoad = new EventEmitter<IPool>()
@@ -43,7 +44,7 @@ export class PoolsComponent {
   }
 
   public get isLastParticipants(): boolean {
-    return this.activePool?.participants.length >= this.activePool?.participantsCount
+    return this.participants.length >= this.activePool?.participantsCount
   }
 
   public get disabledEditTokenAddress(): boolean {
