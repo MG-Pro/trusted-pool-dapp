@@ -1,0 +1,30 @@
+name: Deploy to GitHub Pages via angular-cli-ghpages
+
+on: 
+  push:
+    branches: [ "prod" ]
+  pull_request:
+    branches: [ "prod" ]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16.x
+        cache: 'npm'
+
+    - name: Prepare and deploy
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        npm install
+        # npm run lint
+        # npm test -- --watch=false --progress=false --browsers=ChromeHeadlessCI
+        ####
+        npm run ng -- deploy --cname=app.trustedpool.dappdao.xyz --name=MG --email=mail@example.org
