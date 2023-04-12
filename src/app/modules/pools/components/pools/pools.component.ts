@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  HostBinding,
-  Input,
-  Output,
-} from '@angular/core'
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core'
 import { FormControl, Validators } from '@angular/forms'
 import { EVM_ADDRESS_REGEXP } from '@app/settings'
 import { IParticipant, IPool } from '@app/types'
@@ -17,11 +10,9 @@ import { IParticipant, IPool } from '@app/types'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PoolsComponent {
-  @Input() public pools: IPool[]
   @Input() public userAccount: string
   @Input() public activePool: IPool
   @Input() public loading: boolean
-  @Input() public isLastPools: boolean
   @Input() public participants: IParticipant[]
   @Output() public tokenAddressChange = new EventEmitter<[string, IPool]>()
   @Output() public claimTokens = new EventEmitter<IPool>()
@@ -30,8 +21,6 @@ export class PoolsComponent {
   @Output() public activePoolChange = new EventEmitter<number>()
   @Output() public finalize = new EventEmitter<IPool>()
   @Output() public addParticipants = new EventEmitter<void>()
-
-  @HostBinding('class') private readonly classes = 'row'
 
   public editTokenAddressControl = new FormControl('', [
     Validators.required,
@@ -87,24 +76,12 @@ export class PoolsComponent {
     this.cancelEditTokenAddress()
   }
 
-  public isTabActive(pool: IPool): boolean {
-    return this.activePool?.contractAddress === pool.contractAddress
-  }
-
-  public setActivePool(pool: number): void {
-    this.activePoolChange.emit(pool)
-  }
-
   public claim(): void {
     this.claimTokens.emit(this.activePool)
   }
 
   public nextParticipants(): void {
     this.nextParticipantsLoad.emit(this.activePool)
-  }
-
-  public nextPools(): void {
-    this.nextPoolsLoad.emit()
   }
 
   public finalizePool(): void {

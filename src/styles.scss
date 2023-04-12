@@ -93,3 +93,22 @@ input:focus {
 .c-pointer {
   cursor: pointer;
 }
+
+.app-list-group-item {
+  color: $white !important;
+  background-color: RGBA(33, 37, 41, var(--bs-bg-opacity, 1)) !important;
+
+  &.app-selected {
+    background-color: $warning !important;
+    color: $dark!important;
+    font-weight: bold!important;
+  }
+
+  &.app-danger {
+    background-color: $danger !important;
+    color: $dark!important;
+    font-weight: bold!important;
+  }
+}
+
+

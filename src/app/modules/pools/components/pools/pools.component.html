@@ -1,27 +1,5 @@
-<ng-container *ngIf="pools?.length && activePool">
-  <div class="col-2 list-group list-group-light">
-    <a
-      class="list-group-item list-group-item-action c-pointer"
-      [routerLink]=""
-      *ngFor="let pool of pools; index as i"
-      [class.text-bg-danger]="!pool.finalized"
-      [class.text-bg-warning]="isTabActive(pool)"
-      (click)="setActivePool(i)"
-    >
-      {{ pool.name }}({{ pool.tokenName }})
-      <span> {{ pool.privatable ? ('Private pool' | translate) : '' }} </span>
-    </a>
-    <a
-      *ngIf="!isLastPools"
-      class="list-group-item c-pointer text-center list-group-item-action"
-      [routerLink]=""
-      (click)="nextPools()"
-    >
-      {{ 'Load more' | translate }}...
-    </a>
-  </div>
-
-  <div class="col-10 card text-bg-dark shadow-lg bg-opacity-75">
+<ng-container *ngIf="activePool">
+  <div class="card text-bg-dark shadow-lg bg-opacity-75">
     <div class="card-header d-flex">
       <h5 class="m-0"># {{ activePool?.name }} ({{ activePool?.tokenName }})</h5>
       <app-pool-actions-panel

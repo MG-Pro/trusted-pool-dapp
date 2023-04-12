@@ -1,0 +1,21 @@
+<div class="list-group">
+  <a
+    *ngFor="let pool of pools; index as i"
+    class="list-group-item list-group-item-action c-pointer app-list-group-item bg-opacity-75"
+    [routerLink]=""
+    [class.app-danger]="!pool.finalized"
+    [class.app-selected]="isTabActive(pool)"
+    (click)="onActivePool(i)"
+  >
+    {{ pool.name }}({{ pool.tokenName }})
+    <span> {{ pool.privatable ? ('Private pool' | translate) : '' }} </span>
+  </a>
+  <a
+    *ngIf="!isLastPools"
+    class="list-group-item c-pointer text-center list-group-item-action app-list-group-item bg-opacity-75"
+    [routerLink]=""
+    (click)="onNextPools()"
+  >
+    {{ 'Load more' | translate }}...
+  </a>
+</div>

@@ -235,7 +235,7 @@ export class ContractService {
     const status = !finalized
       ? PoolStatuses.NoFinalized
       : this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber())
-    console.log(item.participantsCount.toNumber())
+
     return {
       finalized,
       tokenAddress,

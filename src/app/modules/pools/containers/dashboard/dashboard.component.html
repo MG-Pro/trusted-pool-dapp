@@ -15,47 +15,50 @@
   <main class="pt-3 pb-3">
     <app-notification id="main"></app-notification>
     <div class="container">
-      <div class="dashboard fs-5 mb-3" *ngIf="params.state.userConnected">
-        <div class="row mb-5">
-          <p *ngIf="params.userPools?.length" class="col m-0 d-flex align-items-center">
-            You participated in {{ params.userPools?.length }} pools
+      <div class="row fs-5 mb-3" *ngIf="params.state.userConnected">
+        <p *ngIf="params.userPools?.length" class="col m-0 d-flex align-items-center">
+          You participated in {{ params.userPools?.length }} pools
+        </p>
+        <p *ngIf="!params.userPools?.length" class="col m-0 d-flex align-items-center">
+          You have not participated in pools, yet
+        </p>
+        <div class="d-flex align-items-center col justify-content-end">
+          <p class="m-0" *ngIf="params.state.canCreatePool">You can create new pool</p>
+          <p class="m-0" *ngIf="!params.state.canCreatePool">
+            You cannot create new pool while there is not finalized pool
           </p>
-          <p *ngIf="!params.userPools?.length" class="col m-0 d-flex align-items-center">
-            You have not participated in pools, yet
-          </p>
-          <div class="d-flex align-items-center col justify-content-end">
-            <p class="m-0" *ngIf="params.state.canCreatePool">You can create new pool</p>
-            <p class="m-0" *ngIf="!params.state.canCreatePool">
-              You cannot create new pool while there is not finalized pool
-            </p>
-            <button
-              class="btn btn-warning ms-3 fs-5"
-              [disabled]="!params.state.canCreatePool"
-              (click)="showCreatingForm()"
-            >
-              {{ 'Create pool' | translate }}
-            </button>
-          </div>
+          <button
+            class="btn btn-warning ms-3 fs-5"
+            [disabled]="!params.state.canCreatePool"
+            (click)="showCreatingForm()"
+          >
+            {{ 'Create pool' | translate }}
+          </button>
         </div>
       </div>
-      <ng-container *ngIf="params.state.userConnected">
-        <app-pools
-          class="mb-3"
+      <div *ngIf="params.state.userConnected" class="row mb-3">
+        <app-pools-menu
+          class="col-2"
           [pools]="params.userPools"
+          [activePool]="params.localState.activePool"
+          [isLastPools]="params.state.isLastPools"
+          (activePoolChange)="goToPool($event)"
+          (nextPools)="nextPools()"
+        ></app-pools-menu>
+        <app-pools
+          class="col-10"
           [userAccount]="params.state.userAccount"
           [participants]="params.state.participants"
           [activePool]="params.localState.activePool"
           [loading]="params.loading"
-          [isLastPools]="params.state.isLastPools"
           (claimTokens)="claimTokens($event)"
           (tokenAddressChange)="tokenAddressChange($event)"
           (nextParticipantsLoad)="nextParticipants($event)"
-          (nextPoolsLoad)="nextPools()"
           (activePoolChange)="goToPool($event)"
           (finalize)="finalizePool()"
           (addParticipants)="showParticipantsForm()"
         ></app-pools>
-      </ng-container>
+      </div>
 
       <div *ngIf="params.localState.showParticipantsForm" class="row justify-content-end">
         <div class="col-10 card text-bg-dark shadow-lg bg-opacity-75">
