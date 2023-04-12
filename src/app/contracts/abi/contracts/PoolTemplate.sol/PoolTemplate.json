@@ -76,6 +76,11 @@
   },
   {
     "inputs": [],
+    "name": "OnlyParticipantOrAdmin",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "StartIndexGreaterThanItemsCount",
     "type": "error"
   },
@@ -338,7 +343,7 @@
         "type": "address"
       }
     ],
-    "name": "hasParticipant",
+    "name": "hasParticipantOrAdmin",
     "outputs": [
       {
         "internalType": "bool",

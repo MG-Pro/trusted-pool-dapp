@@ -725,7 +725,10 @@ describe('PoolTemplate', () => {
       )
 
       const poolReq = poolTemplateContract.connect(stranger1).getPoolData()
-      await expect(poolReq).to.revertedWithCustomError(poolTemplateContract, 'OnlyParticipant')
+      await expect(poolReq).to.revertedWithCustomError(
+        poolTemplateContract,
+        'OnlyParticipantOrAdmin',
+      )
     })
 
     it('Should revert if start pagination index was wrong', async () => {
