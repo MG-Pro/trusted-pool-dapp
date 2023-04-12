@@ -1,6 +1,6 @@
 name: Deploy to GitHub Pages via angular-cli-ghpages
 
-on: 
+on:
   push:
     branches: [ "prod" ]
   pull_request:
@@ -17,7 +17,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: 16.x
-        cache: 'npm'
 
     - name: Prepare and deploy
       env:
@@ -27,4 +26,4 @@ jobs:
         # npm run lint
         # npm test -- --watch=false --progress=false --browsers=ChromeHeadlessCI
         ####
-        npm run ng -- deploy --cname=app.trustedpool.dappdao.xyz --name=MG --email=mail@example.org
+        npm run ng -- deploy --name=MG --email=mail@example.org
