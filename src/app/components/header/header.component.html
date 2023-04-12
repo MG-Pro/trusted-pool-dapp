@@ -1,12 +1,55 @@
 <ng-container>
   <div class="container">
-    <div class=""><app-logo></app-logo></div>
-    <div class="mr-auto d-flex align-items-center">
-      <span *ngIf="loading" class="spinner-border opacity-50 text-warning me-3"></span>
-      <button *ngIf="!connected" class="btn btn-warning fs-5" (click)="onConnectWallet()">
-        Connect Wallet
-      </button>
-      <div class="fs-5" *ngIf="connected">Connected</div>
+    <a routerLink="/pools" class=""><app-logo></app-logo></a>
+    <div class="d-flex justify-content-between flex-grow-1 ps-5 pe-5">
+      <ul class="nav fs-5">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/pools" routerLinkActive="active">
+            {{ 'Pools' | translate }}</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/new-pool"
+            routerLinkActive="active"
+            [class.disabled]="!state.canCreatePool || !state.userConnected"
+          >
+            {{ 'Create pool' | translate }}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/marketplace"
+            routerLinkActive="active"
+            [class.disabled]="true"
+          >
+            {{ 'Marketplace' | translate }}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/account"
+            routerLinkActive="active"
+            [class.disabled]="true"
+          >
+            {{ 'Account' | translate }}
+          </a>
+        </li>
+      </ul>
+      <div class="mr-auto d-flex align-items-center">
+        <span *ngIf="loading" class="spinner-border opacity-50 text-warning me-3"></span>
+        <button
+          *ngIf="!state.userConnected"
+          class="btn btn-warning fs-5"
+          (click)="onConnectWallet()"
+        >
+          {{ 'Connect Wallet' | translate }}
+        </button>
+        <div class="fs-5" *ngIf="state.userConnected">{{ 'Connected' | translate }}</div>
+      </div>
     </div>
   </div>
 </ng-container>

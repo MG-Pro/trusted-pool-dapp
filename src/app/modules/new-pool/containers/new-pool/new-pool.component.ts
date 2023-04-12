@@ -48,7 +48,7 @@ export class NewPoolComponent {
         this.router.navigate(['/pools'])
         return false
       }
-      return true
+      return state.initialized
     }),
     filter((initialized) => initialized),
     first(),

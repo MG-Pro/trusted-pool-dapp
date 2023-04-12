@@ -7,7 +7,7 @@
   } as params"
 >
   <app-header
-    [connected]="params.state.userConnected"
+    [state]="params.state"
     [loading]="params.loading"
     (connectWallet)="connectionService.connect()"
     class="mb-auto"

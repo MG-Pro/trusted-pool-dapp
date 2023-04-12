@@ -1,4 +1,9 @@
 @import "../node_modules/bootstrap/scss/functions";
+@import "../node_modules/bootstrap/scss/variables";
+
+$nav-link-color: $light;
+$nav-link-hover-color: $warning;
+$app-bg: linear-gradient(0deg, rgba(2, 0, 36, 1) 0%, rgba(28, 11, 68, 1) 24%, rgba(15, 50, 157, 1) 82%, rgba(6, 0, 255, 1) 100%);
 
 :root {
   --bs-body-font-family: Roboto, sans-serif;
@@ -8,8 +13,6 @@
   --app-danger-color: RGBA(220, 53, 69, var(--bs-bg-opacity, 1));
   --app-warn-color: RGBA(255, 193, 7, var(--bs-bg-opacity, 1));
 }
-
-@import "../node_modules/bootstrap/scss/variables";
 
 @import "../node_modules/bootstrap/scss/maps";
 @import "../node_modules/bootstrap/scss/mixins";
@@ -33,13 +36,14 @@
 @import "../node_modules/bootstrap/scss/tooltip";
 @import "../node_modules/bootstrap/scss/modal";
 @import "../node_modules/bootstrap/scss/list-group";
+@import "../node_modules/bootstrap/scss/nav";
 
 @import "../node_modules/bootstrap/scss/utilities/api";
 
 @import "icons/css/tpdao.css";
 
 .main-layout {
-  background: linear-gradient(0deg, rgba(2, 0, 36, 1) 0%, rgba(28, 11, 68, 1) 24%, rgba(15, 50, 157, 1) 82%, rgba(6, 0, 255, 1) 100%);
+  background: $app-bg;
   color: var(--app-font-light-color);
 }
 
@@ -49,6 +53,12 @@ body {
 
 a {
   text-decoration: none;
+
+  &.nav-link {
+    &.active {
+      color: $warning;
+    }
+  }
 }
 
 button:focus,

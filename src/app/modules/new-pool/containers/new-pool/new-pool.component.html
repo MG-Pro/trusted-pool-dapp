@@ -10,7 +10,7 @@
 >
   <app-header
     class="mb-auto"
-    [connected]="params.state.userConnected"
+    [state]="params.state"
     [loading]="params.loading"
     (connectWallet)="connectionService.connect()"
   ></app-header>
