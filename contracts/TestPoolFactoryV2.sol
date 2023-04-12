@@ -153,7 +153,7 @@ contract TestPoolFactoryV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable
     list = new address[](0);
     for (uint256 i; i < contractCount; ) {
       bool exist;
-      try PoolTemplate(contracts[i]).hasParticipant(_address) returns (bool res) {
+      try PoolTemplate(contracts[i]).hasParticipantOrAdmin(_address) returns (bool res) {
         exist = res;
       } catch {
         exist = false;

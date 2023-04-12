@@ -23,6 +23,7 @@ struct ParticipantView {
 
 error OnlyAdmin();
 error OnlyParticipant();
+error OnlyParticipantOrAdmin();
 error OnlyFactory();
 error OnlyFinalized();
 error OnlyApproved();
@@ -70,6 +71,11 @@ contract PoolTemplate is Initializable {
 
   modifier onlyParticipant() {
     _onlyParticipant();
+    _;
+  }
+
+  modifier onlyParticipantOrAdmin() {
+    _onlyParticipantOrAdmin();
     _;
   }
 
@@ -157,7 +163,7 @@ contract PoolTemplate is Initializable {
   function getPoolData()
     external
     view
-    onlyParticipant
+    onlyParticipantOrAdmin
     returns (
       address admin,
       bytes32 name,
@@ -198,7 +204,7 @@ contract PoolTemplate is Initializable {
     _setTokenAddress(_tokenAddress);
   }
 
-  function tokenBalance() public view onlyParticipant returns (uint256) {
+  function tokenBalance() public view onlyParticipantOrAdmin returns (uint256) {
     return
       !_isZeroAddress(poolTokenAddress) ? IERC20(poolTokenAddress).balanceOf(address(this)) : 0;
   }
@@ -236,14 +242,14 @@ contract PoolTemplate is Initializable {
       );
   }
 
-  function hasParticipant(address _address) external view onlyFactory returns (bool) {
-    return participants[_address] != 0;
+  function hasParticipantOrAdmin(address _address) external view onlyFactory returns (bool) {
+    return participants[_address] != 0 || _address == poolAdmin;
   }
 
   function getParticipants(
     uint256 first,
     uint256 size
-  ) external view onlyParticipant returns (ParticipantView[] memory pList) {
+  ) external view onlyParticipantOrAdmin returns (ParticipantView[] memory pList) {
     if (poolParticipantsCount == 0) {
       return new ParticipantView[](0);
     }
@@ -303,6 +309,12 @@ contract PoolTemplate is Initializable {
   function _onlyParticipant() private view {
     if (participants[msg.sender] == 0) {
       revert OnlyParticipant();
+    }
+  }
+
+  function _onlyParticipantOrAdmin() private view {
+    if (participants[msg.sender] == 0 && poolAdmin != msg.sender) {
+      revert OnlyParticipantOrAdmin();
     }
   }
 
