@@ -29,6 +29,7 @@
       "@app/services": ["src/app/services/index.ts"],
       "@app/components/*": ["src/app/components/*"],
       "@app/modules/*": ["src/app/modules/*"],
+      "@app/helpers/*": ["src/app/helpers/*"],
       "@app/typechain": ["typechain-types/index"]
     }
   },

@@ -1,22 +1,49 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+struct PoolData {
+  bytes32 name;
+  bytes32 tokenName;
+  address tokenAddress;
+  address approver;
+  bool privatable;
+  bool finalized;
+  uint256 stableApproverFee;
+}
+
+struct ParticipantView {
+  address account;
+  uint256 share;
+  uint256 claimed;
+  uint256 accrued;
+}
+
+error OnlyAdmin();
+error OnlyParticipant();
+error OnlyFactory();
+error OnlyFinalized();
+error OnlyApproved();
+error OnlyForPublicPool();
+error NoZeroAddress();
+error LengthsNotMatched();
+error MustBeGreaterZero();
+error NotUniq();
+error AlreadyApproved();
+error NoTokenContract();
+error NoTokensForClaim();
+error StartIndexGreaterThanItemsCount();
+error AlreadyFinalized();
+error TokenAddressAlreadySet();
+error AddressNotContract();
+
+function _isZeroAddress(address _address) pure returns (bool) {
+  return _address == address(0);
+}
+
 contract PoolTemplate is Initializable {
-  struct Participant {
-    address account;
-    uint256 share;
-    uint256 claimed;
-    uint256 accrued;
-  }
-
-  error OnlyAdmin();
-  error OnlyParticipant();
-  error OnlyFactory();
-  error OnlyFinalized();
-
   bool public finalized;
 
   bool private poolApproved;
@@ -27,7 +54,7 @@ contract PoolTemplate is Initializable {
   address private poolFactory;
   bytes32 private poolName;
   bytes32 private poolTokenName;
-
+  uint256 private poolStableApproverFee;
   uint256 private poolParticipantsCount;
   uint256 private poolTokenAmount;
   uint256 private poolOverallClaimed;
@@ -56,57 +83,75 @@ contract PoolTemplate is Initializable {
     _;
   }
 
-  function init(
-    address _creator,
-    bytes32 _name,
-    address _tokenAddress,
-    bytes32 _tokenName,
-    address _approver,
-    bool _privatable
-  ) external initializer {
+  modifier onlyNoFinalized() {
+    _checkFinalizing();
+    _;
+  }
+
+  function init(address _creator, PoolData calldata data) external initializer {
     poolFactory = msg.sender;
     poolAdmin = _creator;
-    poolName = _name;
-    poolTokenName = _tokenName;
-    poolPrivatable = _privatable;
+    poolName = data.name;
+    poolTokenName = data.tokenName;
+    poolPrivatable = data.privatable;
 
-    if (!_isZeroAddress(_tokenAddress)) {
-      _setTokenAddress(_tokenAddress);
+    if (!_isZeroAddress(data.tokenAddress)) {
+      _setTokenAddress(data.tokenAddress);
     }
 
-    if (!_isZeroAddress(_approver)) {
-      poolApprover = _approver;
+    if (!_isZeroAddress(data.approver)) {
+      poolApprover = data.approver;
+      poolStableApproverFee = data.stableApproverFee;
     } else {
       poolApproved = true;
     }
   }
 
   function changeAdmin(address _newAdmin) external onlyAdmin {
-    require(!_isZeroAddress(_newAdmin), "Zero address do not allowed");
+    if (_isZeroAddress(_newAdmin)) {
+      revert NoZeroAddress();
+    }
+
     poolAdmin = _newAdmin;
   }
 
-  function finalize() external onlyFactory {
-    require(!finalized, "Pool already finalized");
+  function finalize() external onlyFactory onlyNoFinalized {
     finalized = true;
   }
 
-  function addParticipants(Participant[] calldata _participants) external onlyFactory {
-    require(!finalized, "Pool already finalized");
+  function addParticipants(
+    address[] calldata _participants,
+    uint256[] calldata _shares
+  ) external onlyFactory onlyNoFinalized {
     uint256 sum;
-    for (uint256 i; i < _participants.length; i++) {
-      Participant memory item = _participants[i];
-      require(item.share > 0, "Share value must be greater 0");
-      require(participants[item.account] == 0, "Participant not uniq");
-      participants[item.account] = item.share;
-      participantsMapper[poolParticipantsCount] = item.account;
+    uint length = _participants.length;
+    if (length != _shares.length) {
+      revert LengthsNotMatched();
+    }
+
+    uint tempPoolParticipantsCount = poolParticipantsCount;
+    for (uint256 i; i < length; ) {
+      address p = _participants[i];
+      uint s = _shares[i];
+
+      if (s == 0) {
+        revert MustBeGreaterZero();
+      }
+
+      if (participants[p] != 0) {
+        revert NotUniq();
+      }
+      participants[p] = s;
+      participantsMapper[tempPoolParticipantsCount] = p;
 
       unchecked {
-        poolParticipantsCount++;
-        sum += item.share;
+        tempPoolParticipantsCount++;
+        sum += s;
+        ++i;
       }
     }
     poolTokenAmount = sum;
+    poolParticipantsCount = tempPoolParticipantsCount;
   }
 
   function getPoolData()
@@ -142,7 +187,9 @@ contract PoolTemplate is Initializable {
   }
 
   function approvePool() external onlyFactory onlyFinalized returns (bool) {
-    require(!poolApproved, "Pool already approved");
+    if (poolApproved) {
+      revert AlreadyApproved();
+    }
     poolApproved = true;
     return true;
   }
@@ -157,27 +204,31 @@ contract PoolTemplate is Initializable {
   }
 
   function claimTokens() external onlyFinalized {
-    require(!_isZeroAddress(poolTokenAddress), "Token contract address no set");
+    if (_isZeroAddress(poolTokenAddress)) {
+      revert NoTokenContract();
+    }
+
     uint256 accrued = _calculateAccrued(msg.sender);
-    require(accrued > 0, "There are not tokens for claim");
+    if (accrued == 0) {
+      revert NoTokensForClaim();
+    }
     participantsClaims[msg.sender] += accrued;
     poolOverallClaimed += accrued;
-    bool success = IERC20(poolTokenAddress).transfer(msg.sender, accrued);
-    require(success, "Claim error");
+    IERC20(poolTokenAddress).transfer(msg.sender, accrued);
   }
 
   function getApprovalData()
     external
     view
     onlyFactory
-    returns (bool approved, address approver, address creator)
+    returns (bool approved, address approver, uint stableApproverFee)
   {
-    return (poolApproved, poolApprover, poolAdmin);
+    return (poolApproved, poolApprover, poolStableApproverFee);
   }
 
-  function getParticipant() external view onlyParticipant returns (Participant memory) {
+  function getParticipant() external view onlyParticipant returns (ParticipantView memory) {
     return
-      Participant(
+      ParticipantView(
         msg.sender,
         participants[msg.sender],
         participantsClaims[msg.sender],
@@ -186,44 +237,52 @@ contract PoolTemplate is Initializable {
   }
 
   function hasParticipant(address _address) external view onlyFactory returns (bool) {
-    return participants[_address] > 0;
+    return participants[_address] != 0;
   }
 
   function getParticipants(
     uint256 first,
     uint256 size
-  ) external view onlyParticipant returns (Participant[] memory) {
+  ) external view onlyParticipant returns (ParticipantView[] memory pList) {
     if (poolParticipantsCount == 0) {
-      return new Participant[](0);
+      return new ParticipantView[](0);
     }
-    require(!poolPrivatable, "Forbidden for private pool");
-    require(poolParticipantsCount > first, "Start index greater than count of participants");
-
+    if (poolPrivatable) {
+      revert OnlyForPublicPool();
+    }
+    if (first > poolParticipantsCount) {
+      revert StartIndexGreaterThanItemsCount();
+    }
     if (size > poolParticipantsCount - first) {
       size = poolParticipantsCount - first;
     }
-    Participant[] memory pList = new Participant[](size);
 
+    pList = new ParticipantView[](size);
     uint256 counter;
-    for (uint256 i = first; i < first + size; i++) {
-      pList[counter] = Participant(
+    for (uint256 i = first; i < first + size; ) {
+      pList[counter] = ParticipantView(
         participantsMapper[i],
         participants[participantsMapper[i]],
         participantsClaims[participantsMapper[i]],
         _calculateAccrued(participantsMapper[i])
       );
       unchecked {
+        i++;
         counter++;
       }
     }
-
-    return pList;
   }
 
   function _setTokenAddress(address _tokenAddress) private {
-    require(poolApproved, "Pool is not approved");
-    require(_isZeroAddress(poolTokenAddress), "Token address already set");
-    require(_tokenAddress.code.length != 0, "Address is not contract");
+    if (!poolApproved) {
+      revert OnlyApproved();
+    }
+    if (!_isZeroAddress(poolTokenAddress)) {
+      revert TokenAddressAlreadySet();
+    }
+    if (_tokenAddress.code.length == 0) {
+      revert AddressNotContract();
+    }
     poolTokenAddress = _tokenAddress;
   }
 
@@ -233,10 +292,6 @@ contract PoolTemplate is Initializable {
       ((overallBalance + poolOverallClaimed) * participants[_address]) /
       poolTokenAmount -
       participantsClaims[_address];
-  }
-
-  function _isZeroAddress(address _address) private pure returns (bool) {
-    return _address == address(0);
   }
 
   function _onlyAdmin() private view {
@@ -260,6 +315,12 @@ contract PoolTemplate is Initializable {
   function _onlyFinalized() private view {
     if (!finalized) {
       revert OnlyFinalized();
+    }
+  }
+
+  function _checkFinalizing() private view {
+    if (finalized) {
+      revert AlreadyFinalized();
     }
   }
 }

@@ -1,0 +1,176 @@
+<ng-container *ngIf="pools?.length && activePool">
+  <div class="col-2 list-group list-group-light">
+    <a
+      class="list-group-item list-group-item-action c-pointer"
+      [routerLink]=""
+      *ngFor="let pool of pools; index as i"
+      [class.text-bg-danger]="!pool.finalized"
+      [class.text-bg-warning]="isTabActive(pool)"
+      (click)="setActivePool(i)"
+    >
+      {{ pool.name }}({{ pool.tokenName }})
+      <span> {{ pool.privatable ? ('Private pool' | translate) : '' }} </span>
+    </a>
+    <a
+      *ngIf="!isLastPools"
+      class="list-group-item c-pointer text-center list-group-item-action"
+      [routerLink]=""
+      (click)="nextPools()"
+    >
+      {{ 'Load more' | translate }}...
+    </a>
+  </div>
+
+  <div class="col-10 card text-bg-dark shadow-lg bg-opacity-75">
+    <div class="card-header d-flex">
+      <h5 class="m-0"># {{ activePool?.name }} ({{ activePool?.tokenName }})</h5>
+      <app-pool-actions-panel
+        class="ms-auto"
+        [isCreator]="isCreator"
+        [activePool]="activePool"
+        (finalize)="finalizePool()"
+        (addParticipants)="onAddParticipants()"
+      ></app-pool-actions-panel>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-6">
+          <h6 class="card-title">Pool contract address:</h6>
+          <p class="card-text">{{ activePool?.contractAddress }}</p>
+        </div>
+        <div class="col-3">
+          <h6 class="card-title">Token name:</h6>
+          <p class="card-text">{{ activePool?.tokenName }}</p>
+        </div>
+
+        <div class="col-3">
+          <h6 class="card-title">Token amount/filled:</h6>
+          <p class="card-text">
+            {{ activePool?.tokenAmount | number }}/{{ activePool?.filledAmount | number }}
+          </p>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-6">
+          <h6 class="card-title">Token contract address:</h6>
+          <p class="card-text d-flex" [class.text-danger]="!activePool?.tokenAddress">
+            {{
+              activePool?.tokenAddress
+                ? activePool?.tokenAddress
+                : ('Token address not set' | translate)
+            }}
+            <button
+              class="ms-auto btn btn-success btn-sm"
+              [disabled]="disabledEditTokenAddress"
+              (click)="onEditTokenAddress()"
+            >
+              Edit
+            </button>
+          </p>
+          <div class="" *ngIf="isEditTokenAddress">
+            <div class="text-warning mb-1">
+              Be careful! This operation can only be performed once
+            </div>
+            <div class="d-flex">
+              <input
+                class="form-control form-control-sm bg-dark text-light me-2"
+                [formControl]="editTokenAddressControl"
+                [class.is-invalid]="editTokenAddressControl.invalid"
+              />
+              <button
+                class="btn btn-success btn-sm me-2"
+                [disabled]="editTokenAddressControl.invalid"
+                (click)="saveTokenAddress()"
+              >
+                Save
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="cancelEditTokenAddress()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-3">
+          <h6 class="card-title" *ngIf="activePool?.privatable">
+            <span>{{ 'Private pool' | translate }} </span>
+            <app-icon
+              class="text-warning ms-1"
+              icon="icon-info-circled"
+              [toolTipText]="'PrivatableTipKey' | translate"
+            ></app-icon>
+          </h6>
+        </div>
+
+        <div class="col-3">
+          <div *ngIf="activePool.approverAddress">
+            <h6 class="card-title" *ngIf="true">
+              <span>{{ 'Approvable pool' | translate }} </span>
+              <app-icon
+                class="text-warning ms-1"
+                icon="icon-info-circled"
+                [toolTipText]="'ApprovableTipKey' | translate"
+              ></app-icon>
+            </h6>
+            <p
+              class="card-text"
+              [class.text-danger]="!activePool?.approved"
+              [class.text-success]="activePool?.approved"
+            >
+              {{ (activePool?.approved ? 'Approved' : 'Waiting approve') | translate }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <h6 class="card-title">
+          Participants: <span>{{ activePool?.participantsCount }}</span>
+        </h6>
+      </div>
+      <div class="d-flex overflow-auto">
+        <div
+          class="card text-bg-dark me-2 mb-2 w250"
+          *ngFor="let participant of prepParticipants(participants)"
+          [class.border-warning]="isOwner(participant)"
+        >
+          <h6 class="card-header">
+            {{ participant.account }}
+          </h6>
+          <div class="card-body">
+            <h5 class="card-title fs-6 m-0">
+              Share/Accrued/Claimed:
+              <span
+                >{{ participant.share | number }}/{{ participant.accrued | number }}/{{
+                  participant.claimed | number
+                }}</span
+              >
+            </h5>
+            <div class="d-flex">
+              <button
+                *ngIf="isOwner(participant)"
+                [disabled]="!canClaim(participant)"
+                class="ms-auto btn btn-success btn-sm"
+                (click)="claim()"
+              >
+                Claim
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card text-bg-dark me-2 mb-2 w250"
+          *ngIf="!activePool?.privatable && !isLastParticipants && participants.length"
+        >
+          <div class="card-body d-flex align-items-center">
+            <button
+              class="m-auto btn btn-warning btn-sm fs-3"
+              [disabled]="loading"
+              (click)="nextParticipants()"
+            >
+              {{ 'Load more' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

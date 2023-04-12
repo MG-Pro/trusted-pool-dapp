@@ -1,4 +1,4 @@
-@import "../node_modules/bootstrap/scss/bootstrap";
+@import "../node_modules/bootstrap/scss/functions";
 
 :root {
   --bs-body-font-family: Roboto, sans-serif;
@@ -8,6 +8,35 @@
   --app-danger-color: RGBA(220, 53, 69, var(--bs-bg-opacity, 1));
   --app-warn-color: RGBA(255, 193, 7, var(--bs-bg-opacity, 1));
 }
+
+@import "../node_modules/bootstrap/scss/variables";
+
+@import "../node_modules/bootstrap/scss/maps";
+@import "../node_modules/bootstrap/scss/mixins";
+@import "../node_modules/bootstrap/scss/root";
+
+@import "../node_modules/bootstrap/scss/utilities";
+@import "../node_modules/bootstrap/scss/reboot";
+@import "../node_modules/bootstrap/scss/type";
+@import "../node_modules/bootstrap/scss/images";
+@import "../node_modules/bootstrap/scss/containers";
+@import "../node_modules/bootstrap/scss/grid";
+@import "../node_modules/bootstrap/scss/helpers";
+
+@import "../node_modules/bootstrap/scss/card";
+@import "../node_modules/bootstrap/scss/forms";
+@import "../node_modules/bootstrap/scss/close";
+@import "../node_modules/bootstrap/scss/buttons";
+@import "../node_modules/bootstrap/scss/navbar";
+@import "../node_modules/bootstrap/scss/alert";
+@import "../node_modules/bootstrap/scss/spinners";
+@import "../node_modules/bootstrap/scss/tooltip";
+@import "../node_modules/bootstrap/scss/modal";
+@import "../node_modules/bootstrap/scss/list-group";
+
+@import "../node_modules/bootstrap/scss/utilities/api";
+
+@import "icons/css/tpdao.css";
 
 .main-layout {
   background: linear-gradient(0deg, rgba(2, 0, 36, 1) 0%, rgba(28, 11, 68, 1) 24%, rgba(15, 50, 157, 1) 82%, rgba(6, 0, 255, 1) 100%);
@@ -49,4 +78,8 @@ input:focus {
 .w250 {
   width: 250px;
   min-width: 250px;
+}
+
+.c-pointer {
+  cursor: pointer;
 }

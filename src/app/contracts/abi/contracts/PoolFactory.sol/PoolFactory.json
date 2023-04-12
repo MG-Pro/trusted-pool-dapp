@@ -1,6 +1,46 @@
 [
   {
     "inputs": [],
+    "name": "AlreadyApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ApproverOnly",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ContractNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CreatorHaveFinalizingPool",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientFunds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoFinalizingPoolForSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoStableContract",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "StartIndexGreaterThanItemsCount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "WrongParticipantCount",
     "type": "error"
   },
@@ -103,31 +143,14 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "account",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "share",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "claimed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accrued",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct PoolTemplate.Participant[]",
+        "internalType": "address[]",
         "name": "_participants",
-        "type": "tuple[]"
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_shares",
+        "type": "uint256[]"
       }
     ],
     "name": "addParticipants",
@@ -164,61 +187,56 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_name",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_tokenName",
-        "type": "bytes32"
-      },
-      {
         "components": [
           {
+            "internalType": "bytes32",
+            "name": "name",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "tokenName",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
-            "name": "account",
+            "name": "tokenAddress",
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "share",
-            "type": "uint256"
+            "internalType": "address",
+            "name": "approver",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "privatable",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "finalized",
+            "type": "bool"
           },
           {
             "internalType": "uint256",
-            "name": "claimed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "accrued",
+            "name": "stableApproverFee",
             "type": "uint256"
           }
         ],
-        "internalType": "struct PoolTemplate.Participant[]",
+        "internalType": "struct PoolData",
+        "name": "data",
+        "type": "tuple"
+      },
+      {
+        "internalType": "address[]",
         "name": "_participants",
-        "type": "tuple[]"
+        "type": "address[]"
       },
       {
-        "internalType": "address",
-        "name": "_approver",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_privatable",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "_finalized",
-        "type": "bool"
+        "internalType": "uint256[]",
+        "name": "_shares",
+        "type": "uint256[]"
       }
     ],
     "name": "createPoolContract",
@@ -239,13 +257,23 @@
         "internalType": "address",
         "name": "_address",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "first",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "size",
+        "type": "uint256"
       }
     ],
-    "name": "getContractAddressesByParticipant",
+    "name": "findPoolsByParticipant",
     "outputs": [
       {
         "internalType": "address[]",
-        "name": "",
+        "name": "list",
         "type": "address[]"
       }
     ],
@@ -313,19 +341,6 @@
         "type": "uint256"
       }
     ],
-    "name": "setApproverFeeValue",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_fee",
-        "type": "uint256"
-      }
-    ],
     "name": "setFeeValue",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -342,19 +357,6 @@
     "name": "setStableContract",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stableApproverFeeValue",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

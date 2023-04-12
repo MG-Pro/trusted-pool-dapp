@@ -8,7 +8,10 @@ import { BehaviorSubject } from 'rxjs'
 export class GlobalStateService {
   public state$: BehaviorSubject<IGlobalState> = new BehaviorSubject<IGlobalState>({
     networkConnected: false,
+    initialized: false,
     userPools: [],
+    participants: [],
+    canCreatePool: true,
   })
 
   public get value(): IGlobalState {

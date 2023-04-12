@@ -1,5 +1,5 @@
 import { PoolFactory, PoolTemplate, TestERC20 } from '@app/typechain'
-import { IParticipant, IParticipantResponse, IPoolResponse } from '@app/types'
+import { IParticipantResponse, IPoolResponse } from '@app/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers'
 
 export interface ICreatePool extends ITestSigners {
@@ -13,7 +13,8 @@ export interface ICreatePool extends ITestSigners {
 export interface ICreatePoolTemplateContract extends ITestSigners {
   poolTemplateContract: PoolTemplate
   poolFactoryContract: PoolFactory
-  participants: IParticipant[]
+  participants: string[]
+  shares: number[]
   privatable: boolean
   tokenAmount: number
   poolAccounts: string[]

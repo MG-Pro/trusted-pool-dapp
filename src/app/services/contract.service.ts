@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core'
 import abi from '@app/contracts/abi/contracts/PoolTemplate.sol/PoolTemplate.json'
-import { NotificationService, StatusClasses } from '@app/modules/notification'
 import {
+  ICreatePoolRequestParams,
+  IDataLoadParams,
+  IPageParams,
   IParticipant,
   IParticipantLoadParams,
   IParticipantResponse,
@@ -12,8 +14,11 @@ import {
 import { TransactionResponse } from '@ethersproject/abstract-provider/src.ts'
 import { Contract, ethers, Signer } from 'ethers'
 
+import { StatusClasses } from '../types/notification.types'
+
 import { ConnectionService } from './connection.service'
 import { GlobalStateService } from './global-state.service'
+import { NotificationService } from './notification.service'
 
 @Injectable({
   providedIn: 'root',
@@ -37,32 +42,82 @@ export class ContractService {
     return this.stateService.state$.value?.userAccount
   }
 
-  public async createNewPool(poolData: Partial<IPool>): Promise<void> {
+  public async createNewPool(
+    poolData: ICreatePoolRequestParams,
+    participants: Partial<IParticipant>[],
+  ): Promise<boolean> {
     if (!this.checkContract()) {
-      return
+      return false
     }
     this.connectionService.setLoadingStatus()
+
+    const stableApproverFee = poolData.approverAddress ? poolData.stableApproverFee : 0
 
     const tokenAddress = poolData.tokenAddress
       ? poolData.tokenAddress
       : ethers.constants.AddressZero
 
-    const participants: IParticipant[] = poolData.participants.map((p) => ({
-      ...p,
-      claimed: 0,
-      accrued: 0,
-    }))
+    const approver = poolData.approverAddress
+      ? poolData.approverAddress
+      : ethers.constants.AddressZero
 
     try {
       const tr: TransactionResponse = await this.poolFactoryContract.createPoolContract(
-        poolData.name,
-        tokenAddress,
-        poolData.tokenName,
-        participants,
+        {
+          approver,
+          stableApproverFee,
+          tokenAddress,
+          name: ethers.utils.formatBytes32String(poolData.name),
+          tokenName: ethers.utils.formatBytes32String(poolData.tokenName),
+          privatable: poolData.privatable,
+          finalized: poolData.finalized,
+        },
+        participants.map(({ account }) => account),
+        participants.map(({ share }) => share),
       )
       await tr.wait()
     } catch (e) {
       this.showError(e)
+      return false
+    } finally {
+      this.connectionService.setLoadingStatus(false)
+    }
+    return true
+  }
+
+  public async addParticipants(participants: IParticipant[]): Promise<boolean> {
+    if (!this.checkContract()) {
+      return false
+    }
+    this.connectionService.setLoadingStatus()
+
+    try {
+      const tx = await this.poolFactoryContract.addParticipants(
+        participants.map(({ account }) => account),
+        participants.map(({ share }) => share),
+      )
+      await tx.wait()
+      return true
+    } catch (e) {
+      this.showError(e)
+      return false
+    } finally {
+      this.connectionService.setLoadingStatus(false)
+    }
+  }
+
+  public async finalize(): Promise<boolean> {
+    if (!this.checkContract()) {
+      return false
+    }
+
+    try {
+      const tx = await this.poolFactoryContract.finalize()
+      await tx.wait()
+      return true
+    } catch (e) {
+      this.showError(e)
+      return false
     } finally {
       this.connectionService.setLoadingStatus(false)
     }
@@ -96,23 +151,32 @@ export class ContractService {
     }
   }
 
-  public async dispatchPoolsData(): Promise<void> {
+  public async dispatchPoolsData(params: IDataLoadParams): Promise<void> {
     if (!this.checkContract()) {
       return
     }
     this.connectionService.setLoadingStatus()
 
     try {
-      const poolsAccounts: string[] = await this.loadPoolAddresses()
+      const poolsAccounts: string[] = await this.loadPoolAddresses(params)
 
       if (poolsAccounts.length) {
         const reqPools = poolsAccounts.map((poolAccount: string) => {
           return this.loadPoolData(poolAccount)
         })
-        const userPools: IPool[] = await Promise.all(reqPools)
+        const userPoolsSlice: IPool[] = await Promise.all(reqPools)
+
+        const userPools: IPool[] = params.mergeMode
+          ? [...this.stateService.value.userPools, ...userPoolsSlice]
+          : userPoolsSlice
 
         this.stateService.patchState({
           userPools,
+          isLastPools: params.size > userPoolsSlice.length,
+        })
+      } else {
+        this.stateService.patchState({
+          isLastPools: true,
         })
       }
     } catch (e) {
@@ -123,24 +187,21 @@ export class ContractService {
   }
 
   public async dispatchParticipants(
-    { contractAddress }: IPool,
+    { contractAddress, privatable }: IPool,
     params: IParticipantLoadParams,
   ): Promise<void> {
     this.connectionService.setLoadingStatus(true)
     try {
-      const participants: IParticipantResponse[] = await this.getPoolTemplateInstance(
-        contractAddress,
-      ).getParticipants(params.first, params.size)
+      const instance: Contract = this.getPoolTemplateInstance(contractAddress)
+
+      const participantsRes: IParticipantResponse[] = !privatable
+        ? await instance.getParticipants(params.first, params.size)
+        : [await instance.getParticipant()]
+
+      const ps: IParticipant[] = participantsRes.map((p) => this.participantMapper(p))
 
       this.stateService.patchState({
-        userPools: this.stateService.state$.value.userPools.map((poolItem: IPool) => {
-          if (poolItem.contractAddress === contractAddress) {
-            const ps: IParticipant[] = participants.map((p) => this.participantMapper(p))
-
-            poolItem.participants = params.mergeMode ? [...poolItem.participants, ...ps] : ps
-          }
-          return poolItem
-        }),
+        participants: params.mergeMode ? [...this.stateService.value.participants, ...ps] : ps,
       })
     } catch (e) {
       this.showError(e)
@@ -150,32 +211,45 @@ export class ContractService {
   }
 
   private async loadPoolData(poolAccount: string): Promise<IPool> {
-    const res: IPoolResponse = await this.getPoolTemplateInstance(poolAccount).getPoolData()
-    return this.poolMapper(res, poolAccount)
+    const poolTemplateInstance: Contract = this.getPoolTemplateInstance(poolAccount)
+    const res: IPoolResponse = await poolTemplateInstance.getPoolData()
+    const finalized: boolean = await poolTemplateInstance.finalized()
+    return this.poolMapper(res, finalized, poolAccount)
   }
 
-  private async loadPoolAddresses(): Promise<string[]> {
-    return this.poolFactoryContract.getContractAddressesByParticipant(this.userAccount)
+  private async loadPoolAddresses(params: IPageParams): Promise<string[]> {
+    return this.poolFactoryContract.findPoolsByParticipant(
+      this.userAccount,
+      params.first,
+      params.size,
+    )
   }
 
-  private poolMapper(item: IPoolResponse, poolAccount: string): IPool {
+  private poolMapper(item: IPoolResponse, finalized: boolean, poolAccount: string): IPool {
     const tokenAddress =
       item.tokenAddress !== ethers.constants.AddressZero ? item.tokenAddress?.toLowerCase() : null
 
+    const approverAddress =
+      item.approver !== ethers.constants.AddressZero ? item.approver?.toLowerCase() : null
+
+    const status = !finalized
+      ? PoolStatuses.NoFinalized
+      : this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber())
+    console.log(item.participantsCount.toNumber())
     return {
-      approved: item.approved,
-      approverAddress: item.approver,
-      privatable: item.privatable,
+      finalized,
       tokenAddress,
-      contractAddress: poolAccount?.toLowerCase(),
+      approverAddress,
+      status,
       name: ethers.utils.parseBytes32String(item.name),
+      contractAddress: poolAccount?.toLowerCase(),
       tokenName: ethers.utils.parseBytes32String(item.tokenName),
-      adminAddress: item.admin?.toLowerCase(),
-      status: this.convertStatus(item.filledAmount.toNumber(), item.tokenAmount.toNumber()),
-      tokenAmount: item.tokenAmount.toNumber(),
       filledAmount: item.filledAmount.toNumber(),
+      adminAddress: item.admin?.toLowerCase(),
+      approved: item.approved,
+      privatable: item.privatable,
+      tokenAmount: item.tokenAmount.toNumber(),
       participantsCount: item.participantsCount.toNumber(),
-      participants: [],
     }
   }
 
