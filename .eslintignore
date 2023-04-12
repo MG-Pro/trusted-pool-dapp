@@ -1,7 +1,0 @@
-# /node_modules/* and /bower_components/* in the project root are ignored by default
-/.vscode/
-/coverage/
-/dist/
-/*.stories.ts
-**/polyfills.ts
-**/test-setup.ts
