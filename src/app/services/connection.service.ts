@@ -46,11 +46,13 @@ export class ConnectionService {
 
     if (!this.checkNetwork()) {
       this.stateService.patchState({ initialized: true })
+      this.setLoadingStatus(false)
       return this.wrongNetworkMessage()
     }
 
     if (!accounts.length) {
       this.stateService.patchState({ initialized: true })
+      this.setLoadingStatus(false)
       return this.wrongAccountMessage()
     }
 
@@ -82,6 +84,7 @@ export class ConnectionService {
     this.setLoadingStatus(true)
     this.wallet = await detectEthereumProvider({ mustBeMetaMask: true })
     if (!this.wallet) {
+      this.setLoadingStatus(false)
       return
     }
     this.provider = new ethers.providers.Web3Provider(this.wallet, 'any')
@@ -123,7 +126,7 @@ export class ConnectionService {
     } catch (e) {
       return null
     }
-    const contract = new Contract(address, abi, this.provider.getSigner())
+    const contract: Contract = new Contract(address, abi, this.provider.getSigner())
 
     if (await contract.deployed()) {
       return contract

@@ -12,7 +12,7 @@
     "test-contract": "hardhat test",
     "dev-network": "hardhat node",
     "dev-deploy": "hardhat run scripts/dev-deploy.ts --network localhost",
-    "prod-deploy": "hardhat run scripts/deploy.ts --network goerli",
+    "sepolia-deploy": "hardhat run scripts/deploy.ts --network sepolia",
     "coverage": "hardhat coverage",
     "prettier": "prettier --write 'contracts/**/*.sol'",
     "lint": "ng lint",

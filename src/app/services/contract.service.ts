@@ -60,7 +60,15 @@ export class ContractService {
     const approver = poolData.approverAddress
       ? poolData.approverAddress
       : ethers.constants.AddressZero
-
+    console.dir({
+      approver,
+      stableApproverFee,
+      tokenAddress,
+      name: ethers.utils.formatBytes32String(poolData.name),
+      tokenName: ethers.utils.formatBytes32String(poolData.tokenName),
+      privatable: poolData.privatable,
+      finalized: poolData.finalized,
+    })
     try {
       const tr: TransactionResponse = await this.poolFactoryContract.createPoolContract(
         {

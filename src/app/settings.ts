@@ -1,8 +1,7 @@
 export const HARDHAT_ID = 1337
+export const SEPOLIA = 11155111
 
-export const allowedNetworks: number[] = [HARDHAT_ID]
-
-export const EVM_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/g
+export const allowedNetworks: number[] = [HARDHAT_ID, SEPOLIA]
 
 export const MIN_SHARE_AMOUNT = 1
 export const MAX_POOL_PARTICIPANTS = 10

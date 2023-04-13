@@ -12,7 +12,7 @@ import './tasks'
 
 dotenv.config()
 
-const { CMC_API_KEY } = process.env
+const { CMC_API_KEY, API_URL, PRIVATE_KEY } = process.env
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -39,6 +39,11 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 1337,
+    },
+    sepolia: {
+      chainId: 11155111,
+      url: API_URL,
+      accounts: [PRIVATE_KEY],
     },
   },
   abiExporter: {

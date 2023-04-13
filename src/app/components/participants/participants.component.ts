@@ -74,7 +74,7 @@ export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
         this.validnessChanges.emit(status === 'VALID')
       })
 
-    this.fillTestForm(15)
+    // this.fillTestForm(15)
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
