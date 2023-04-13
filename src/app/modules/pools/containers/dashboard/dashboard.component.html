@@ -45,7 +45,7 @@
           (activePoolChange)="goToPool($event)"
           (nextPools)="nextPools()"
         ></app-pools-menu>
-        <app-pools
+        <app-pool-view
           class="col-10"
           [userAccount]="params.state.userAccount"
           [participants]="params.state.participants"
@@ -57,7 +57,7 @@
           (activePoolChange)="goToPool($event)"
           (finalize)="finalizePool()"
           (addParticipants)="showParticipantsForm()"
-        ></app-pools>
+        ></app-pool-view>
       </div>
 
       <div *ngIf="params.localState.showParticipantsForm" class="row justify-content-end">

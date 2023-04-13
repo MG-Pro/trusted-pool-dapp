@@ -42,7 +42,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     map((s) => s.userPools),
     filter((userPools) => !!userPools?.length),
     tap((pools) => {
-      console.log(pools)
       if (this.localState$.value.activePool) {
         const activePool = pools.find(
           ({ contractAddress }) =>

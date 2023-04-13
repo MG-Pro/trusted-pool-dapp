@@ -1,4 +1,4 @@
-<div class="list-group">
+<div class="list-group" *ngIf="pools?.length">
   <a
     *ngFor="let pool of pools; index as i"
     class="list-group-item list-group-item-action c-pointer app-list-group-item bg-opacity-75"

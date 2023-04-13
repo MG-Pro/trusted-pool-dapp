@@ -74,7 +74,7 @@ export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
         this.validnessChanges.emit(status === 'VALID')
       })
 
-    this.fillTestForm(3)
+    this.fillTestForm(15)
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
@@ -156,12 +156,12 @@ export class ParticipantsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private fillTestForm(pCount = 10): void {
-    // this.participantsForm.push(
-    //   this.fb.group({
-    //     account: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-    //     share: 5000,
-    //   }),
-    // )
+    this.participantsForm.push(
+      this.fb.group({
+        account: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+        share: 5000,
+      }),
+    )
 
     Array(pCount - 1)
       .fill(null)

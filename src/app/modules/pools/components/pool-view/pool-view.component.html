@@ -60,10 +60,10 @@
                 [disabled]="editTokenAddressControl.invalid"
                 (click)="saveTokenAddress()"
               >
-                Save
+                {{ 'Save' | translate }}
               </button>
               <button class="btn btn-danger btn-sm" (click)="cancelEditTokenAddress()">
-                Cancel
+                {{ 'Cancel' | translate }}
               </button>
             </div>
           </div>
@@ -101,7 +101,7 @@
       </div>
       <div class="mb-3">
         <h6 class="card-title">
-          Participants: <span>{{ activePool?.participantsCount }}</span>
+          {{ 'Participants' | translate }}: <span>{{ activePool?.participantsCount }}</span>
         </h6>
       </div>
       <div class="d-flex overflow-auto">

@@ -1,15 +1,23 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core'
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core'
 import { FormControl, Validators } from '@angular/forms'
-import { EVM_ADDRESS_REGEXP } from '@app/settings'
+import { AppValidators } from '@app/helpers/validators'
 import { IParticipant, IPool } from '@app/types'
 
 @Component({
-  selector: 'app-pools',
-  templateUrl: './pools.component.html',
-  styleUrls: ['./pools.component.scss'],
+  selector: 'app-pool-view',
+  templateUrl: './pool-view.component.html',
+  styleUrls: ['./pool-view.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PoolsComponent {
+export class PoolViewComponent implements OnChanges {
   @Input() public userAccount: string
   @Input() public activePool: IPool
   @Input() public loading: boolean
@@ -24,7 +32,7 @@ export class PoolsComponent {
 
   public editTokenAddressControl = new FormControl('', [
     Validators.required,
-    Validators.pattern(EVM_ADDRESS_REGEXP),
+    AppValidators.isAddress,
   ])
   public isEditTokenAddress = false
 
@@ -43,6 +51,12 @@ export class PoolsComponent {
       !this.isCreator ||
       !this.activePool.finalized
     )
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
+    if (changes.hasOwnProperty('activePool')) {
+      this.isEditTokenAddress = false
+    }
   }
 
   public prepParticipants(participants: IParticipant[]): IParticipant[] {

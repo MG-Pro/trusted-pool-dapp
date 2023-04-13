@@ -3,5 +3,5 @@
 /* eslint-disable */
 
 export const ContractAddresses_1337 = {
-  PoolFactory: '0xf5059a5D33d5853360D16C683c16e67980206f36',
+  PoolFactory: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
 }

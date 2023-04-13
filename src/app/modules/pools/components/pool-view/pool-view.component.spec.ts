@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 
-import { PoolsComponent } from './pools.component'
+import { PoolViewComponent } from './pool-view.component'
 
 describe('PoolsComponent', () => {
-  let component: PoolsComponent
-  let fixture: ComponentFixture<PoolsComponent>
+  let component: PoolViewComponent
+  let fixture: ComponentFixture<PoolViewComponent>
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PoolsComponent],
+      imports: [PoolViewComponent],
     }).compileComponents()
 
-    fixture = TestBed.createComponent(PoolsComponent)
+    fixture = TestBed.createComponent(PoolViewComponent)
     component = fixture.componentInstance
     fixture.detectChanges()
   })
